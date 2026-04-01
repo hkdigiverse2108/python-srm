@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Feedback — CRM AI SETU</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --crm-primary: #4e73df;
+            --crm-primary-soft: rgba(78, 115, 223, 0.1);
+            --crm-bg: #f8f9fc;
+            --crm-surface: #ffffff;
+            --crm-text: #2c3e50;
+            --crm-border: #e0e6ed;
+            --crm-danger-soft: rgba(220, 53, 69, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --crm-bg: #0f172a;
+            --crm-surface: #1e293b;
+            --crm-text: #f1f5f9;
+            --crm-border: #334155;
+            --crm-primary-soft: rgba(78, 115, 223, 0.2);
+            --crm-danger-soft: rgba(220, 53, 69, 0.2);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--crm-bg);
+            color: var(--crm-text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .feedback-card {
+            background: var(--crm-surface);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+            border: none;
+        }
+
+        .brand-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--crm-primary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--crm-text);
+            opacity: 0.9;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 10px;
+            padding: 12px 15px;
+            border: 1px solid var(--crm-border);
+            background-color: var(--crm-bg);
+            color: var(--crm-text);
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 3px var(--crm-primary-soft);
+            border-color: var(--crm-primary);
+            background-color: var(--crm-surface);
+        }
+
+        .star-rating {
+            display: flex;
+            flex-direction: row-reverse;
+            justify-content: flex-end;
+            gap: 5px;
+        }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            font-size: 1.5rem;
+            color: var(--crm-border);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .star-rating input:checked~label,
+        .star-rating label:hover,
+        .star-rating label:hover~label {
+            color: #ffc107;
+            /* Bootstrap warning yellow */
+        }
+
+        .btn-submit {
+            background: var(--crm-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--crm-primary-soft);
+        }
+
+        .agent-info {
+            background: var(--crm-primary-soft);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .agent-avatar {
+            width: 45px;
+            height: 45px;
+            background: var(--crm-primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--crm-bg);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            color: #2ecc71;
+            margin-bottom: 20px;
+            animation: scaleUp 0.5s ease-out;
+        }
+
+        @keyframes scaleUp {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="feedback-card">
+        <div class="brand-logo">CRM AI SETU</div>
+        <h4 class="text-center mb-4">Share Your Feedback</h4>
+
+        <div id="agent-display" class="agent-info">
+            <div class="agent-avatar" id="agent-initials">?</div>
+            <div>
+                <div class="text-muted small">Assisted By</div>
+                <div class="fw-bold" id="agent-name">Our Representative</div>
+                <div class="text-muted" style="font-size: 0.8rem;" id="agent-role"></div>
+            </div>
+        </div>
+
+        <form id="feedback-form">
+            <div class="mb-3">
+                <label class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="client-name" placeholder="Enter your name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Mobile Number</label>
+                <input type="tel" class="form-control" id="client-mobile" placeholder="Enter mobile number" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Shop Name / Business Name *</label>
+                <input type="text" class="form-control" id="shop-name" placeholder="Enter shop name" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Product *</label>
+                <select class="form-select" id="feedback-product" required>
+                    <option value="" selected disabled>Select Product</option>
+                    <option value="CRM Enterprise">CRM Enterprise</option>
+                    <option value="AI Analytics">AI Analytics</option>
+                    <option value="ERP Solution">ERP Solution</option>
+                </select>
+            </div>
+
+
+            <div class="mb-3">
+                <label class="form-label">Sales Person Rating</label>
+                <div class="star-rating" id="sales-stars">
+                    <input type="radio" name="sales_rating" id="s5" value="5"><label for="s5">★</label>
+                    <input type="radio" name="sales_rating" id="s4" value="4"><label for="s4">★</label>
+                    <input type="radio" name="sales_rating" id="s3" value="3"><label for="s3">★</label>
+                    <input type="radio" name="sales_rating" id="s2" value="2"><label for="s2">★</label>
+                    <input type="radio" name="sales_rating" id="s1" value="1"><label for="s1">★</label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Comments</label>
+                <textarea class="form-control" id="feedback-comment" rows="3"
+                    placeholder="Tell us more about your experience..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-submit">Submit Feedback</button>
+        </form>
+    </div>
+
+    <div id="loading-screen" class="success-overlay" style="display: flex;">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h5 class="fw-bold">Loading Form...</h5>
+        <p class="text-muted small">Connecting to server</p>
+    </div>
+
+    <div id="error-screen" class="success-overlay" style="background: var(--crm-danger-soft);">
+        <i class="bi bi-wifi-off text-danger mb-3" style="font-size: 4rem;"></i>
+        <h3 class="fw-bold text-danger">Connection Error</h3>
+        <p class="text-muted px-4">Cannot reach the server. Please ensure you are on the same Wi-Fi network as the
+            agent's computer.</p>
+        <button class="btn btn-outline-danger mt-3 px-4 rounded-pill" onclick="location.reload()">Try Again</button>
+        <div class="mt-4 small text-muted">Server URL: <br><span id="debug-host" style="font-family: monospace;"></span>
+        </div>
+    </div>
+
+    <div id="success-screen" class="success-overlay">
+        <i class="bi bi-check-circle-fill success-icon"></i>
+        <h2 class="fw-bold">Thank You!</h2>
+        <p class="text-muted">Your feedback has been submitted successfully.</p>
+        <button class="btn btn-primary mt-4 px-5 rounded-pill" onclick="location.reload()">Done</button>
+    </div>
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js?v=20260326"></script>
+    <script>
+        // Detection
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+
+        const agentNameEl = document.getElementById('agent-name');
+        const agentRoleEl = document.getElementById('agent-role');
+        const initialsEl = document.getElementById('agent-initials');
+        const loadingScreen = document.getElementById('loading-screen');
+        const errorScreen = document.getElementById('error-screen');
+
+        // Fetch Agent Details dynamically
+        const fetchAgent = async () => {
+            const host = window.location.origin;
+            document.getElementById('debug-host').textContent = host;
+
+            try {
+                // Check if server is even reachable
+                const health = await fetch(`${host}/api/health`).catch(e => { throw e; });
+                if (!health.ok) throw new Error("Server health check failed");
+
+                if (refCode) {
+                    const response = await fetch(`${host}/api/users/public/lookup/${refCode}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        agentNameEl.textContent = data.name;
+                        agentRoleEl.textContent = data.role || '';
+                        initialsEl.textContent = data.name.split(' ').map(n => n[0]).join('').toUpperCase();
+                    } else {
+                        // Lookup failed — keep neutral placeholder, don't show role name
+                        agentNameEl.textContent = 'Our Representative';
+                        agentRoleEl.textContent = '';
+                        initialsEl.textContent = 'OR';
+                    }
+                } else {
+                    // No ref code in URL — agent unknown
+                    agentNameEl.textContent = 'Our Representative';
+                    agentRoleEl.textContent = '';
+                    initialsEl.textContent = 'OR';
+                }
+                loadingScreen.style.display = 'none'; // Success
+            } catch (e) {
+                console.error("Could not reach backend:", e);
+                loadingScreen.style.display = 'none';
+                errorScreen.style.display = 'flex';
+            }
+        };
+        fetchAgent();
+
+        // Handle Form Submission
+        document.getElementById('feedback-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const rules = {
+                'client-name': 'Name is required',
+                'client-mobile': 'Mobile number is required',
+                'shop-name': 'Shop name is required',
+                'feedback-product': 'Please select a product',
+                'sales-stars': () => !!document.querySelector('input[name="sales_rating"]:checked') || 'Please provide a rating'
+            };
+
+            if (!window.validateForm(this, rules)) {
+                return;
+            }
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const payload = {
+                client_name: document.getElementById('client-name').value,
+                mobile: document.getElementById('client-mobile').value,
+                shop_name: document.getElementById('shop-name').value,
+                product: document.getElementById('feedback-product').value,
+                rating: parseInt(document.querySelector('input[name="sales_rating"]:checked')?.value || 0),
+                comments: document.getElementById('feedback-comment').value,
+                agent_name: agentNameEl.textContent,
+                referral_code: refCode
+            };
+
+            try {
+                const host = window.location.origin;
+                const response = await fetch(`${host}/api/feedback/public/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    document.getElementById('success-screen').style.display = 'flex';
+                } else {
+                    const error = await response.json();
+                    alert("Failed to submit: " + (error.detail || "Unknown error"));
+                }
+            } catch (err) {
+                console.error("Submission Error:", err);
+                alert("Network error. Please ensure you are connected to the same network as the server.");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Feedback';
+            }
+        });
+    </script>
+</body>
+
+</html>

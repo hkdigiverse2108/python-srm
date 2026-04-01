@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<!-- frontend/template/admin.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Users & Roles SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260326">
+    <link rel="stylesheet" href="../css/components.css?v=20260326">
+    <style>
+        .table-premium thead th {
+            background-color: var(--bg-app) !important;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+        }
+
+        .table-premium tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .table-premium tbody tr:hover {
+            background-color: var(--bg-app) !important;
+        }
+
+        .table-premium tbody td {
+            padding: 1rem 1.5rem;
+            vertical-align: middle;
+            color: var(--text-1);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .avatar-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--primary-soft);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .btn-premium-action {
+            height: 45px;
+            border-radius: 12px;
+            padding: 0 24px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        @media (max-width: 767.98px) {
+            .btn-premium-action {
+                padding: 0 16px;
+                font-size: 0.85rem;
+                height: 40px;
+            }
+        }
+
+        .btn-premium-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.2);
+        }
+
+        .settings-btn-icon {
+            padding: 8px;
+            border-radius: 8px;
+            background-color: var(--bg-app);
+            border: 1px solid var(--border);
+            color: var(--text-3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .settings-btn-icon:hover {
+            background-color: var(--border-subtle);
+            color: var(--primary);
+            border-color: var(--primary-soft);
+        }
+
+        .role-pill {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+
+        .role-admin { border-color: var(--badge-admin-bg); color: var(--badge-admin-text); background-color: transparent; }
+        .role-manager { border-color: var(--badge-pm-bg); color: var(--badge-pm-text); background-color: transparent; }
+        .role-sales { border-color: var(--badge-sales-bg); color: var(--badge-sales-text); background-color: transparent; }
+        .role-tele { border-color: var(--badge-telesales-bg); color: var(--badge-telesales-text); background-color: transparent; }
+
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background-color: var(--success-light);
+            color: var(--success-text);
+        }
+
+        .status-inactive {
+            background-color: var(--warning-light);
+            color: var(--warning-text);
+        }
+
+
+        .action-btn-pill {
+            width: 34px;
+            height: 34px;
+            padding: 0;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .action-btn-pill:hover {
+            background-color: var(--bg-app);
+            color: var(--primary);
+            border-color: var(--primary-soft);
+            transform: scale(1.05);
+        }
+
+        .action-btn-pill.delete:hover {
+            background-color: var(--danger-light);
+            color: var(--danger-text);
+            border-color: var(--danger-light);
+        }
+
+        /* Scale down the entire modal uniformly to fit shorter screens without altering internal proportions */
+        #addUserModal .modal-content,
+        #editUserModal .modal-content {
+            zoom: 0.9;
+        }
+
+        /* Center modals natively in the workspace excluding the sidebar */
+        @media (min-width: 992px) {
+            body:not(.sidebar-collapsed) #addUserModal,
+            body:not(.sidebar-collapsed) #editUserModal {
+                padding-left: 210px !important;
+            }
+            body.sidebar-collapsed #addUserModal,
+            body.sidebar-collapsed #editUserModal {
+                padding-left: 48px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="main-wrapper flex-grow-1">
+            <div class="page-content-standard">
+                <!-- Removed inner p-4 to prevent double padding -->
+
+                    <div class="page-header-glass d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div>
+                            <h2 class="page-section-title fw-bold mb-1">Users &amp; Roles</h2>
+                            <p class="text-muted mb-0 small">Manage system access and role assignments.</p>
+                        </div>
+                        <button class="btn-premium-action text-white shadow-sm" style="background: var(--primary);" onclick="addUser()">
+                            <i class="bi bi-plus-circle-fill"></i> Add User
+                        </button>
+                    </div>
+
+                    <!-- Filter Bar (same component as Leaves / Issues pages) -->
+                    <div id="filter-wrapper" class="mb-4"></div>
+
+                    <!-- Users Table -->
+                    <div class="grid-card">
+                        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                            <h6 class="fw-bold mb-0" style="color:var(--text-main);"><i class="bi bi-people-fill me-2 text-primary"></i>Account Directory</h6>
+                            <span id="user-count" class="text-muted small"></span>
+                        </div>
+                        <div class="table-responsive p-2">
+                            <table class="table table-premium table-sm mb-0" style="font-size:0.82rem; min-width:800px;">
+                                <thead style="background:var(--bg-app); border-bottom: 1px solid var(--border);">
+                                    <tr>
+                                        <th class="ps-4 text-uppercase small fw-bold text-muted" style="min-width:200px;">User</th>
+                                        <th class="text-uppercase small fw-bold text-muted" style="min-width:120px;">Emp. Code</th>
+                                        <th class="text-uppercase small fw-bold text-muted" style="min-width:130px;">Role</th>
+                                        <th class="text-uppercase small fw-bold text-muted" style="min-width:90px;">Status</th>
+                                        <th class="pe-4 text-end text-uppercase small fw-bold text-muted" style="min-width:100px;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5">
+                                            <div class="spinner-border spinner-border-sm text-primary"></div>
+                                            <span class="ms-2 text-muted">Loading users...</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add User Modal -->
+        <div class="modal fade modal-premium" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-md-down modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addUserModalLabel">
+                            <i class="bi bi-person-plus-fill text-primary"></i> 
+                            Add New System User
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-4">Provide the following details to register a new account and set their system permissions.</p>
+                        
+                        <form id="addUserForm">
+                            <div class="row g-4">
+                                <!-- Account Information Section -->
+                                <div class="col-md-6 border-end pe-md-4">
+                                    <h6 class="form-section-title"><i class="bi bi-shield-lock"></i> Account Credentials</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">FULL NAME <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-premium-control" id="userName" required placeholder="e.g. Jane Doe">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">EMAIL ADDRESS <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-premium-control" id="userEmail" required placeholder="name@example.com">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">PASSWORD <span class="text-danger">*</span></label>
+                                        <div class="position-relative">
+                                            <input type="password" class="form-premium-control" id="userPassword" required 
+                                                placeholder="Min 8 chars, 1 Upper, 1 Lower, 1 Digit"
+                                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}">
+                                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('userPassword', 'user-pwd-icon')">
+                                                <i class="bi bi-eye" id="user-pwd-icon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-0">
+                                        <label class="form-premium-label">SYSTEM ROLE <span class="text-danger">*</span></label>
+                                        <select class="form-select form-premium-control" id="userRole" required>
+                                            <option value="" disabled selected>Select a role...</option>
+                                            <option value="ADMIN">Admin</option>
+                                            <option value="PROJECT_MANAGER">Project Manager</option>
+                                            <option value="SALES">Sales</option>
+                                            <option value="TELESALES">Telesales</option>
+                                            <option value="PROJECT_MANAGER_AND_SALES">PM &amp; Sales</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Professional Details Section -->
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="form-section-title"><i class="bi bi-briefcase"></i> Employment Details</h6>
+                                    
+                                    <div class="mb-3" id="empCodeField">
+                                        <label class="form-premium-label">EMPLOYEE CODE</label>
+                                        <input type="text" class="form-premium-control" id="userEmpCode" placeholder="Auto-generated if blank">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">JOINING DATE</label>
+                                        <input type="date" class="form-premium-control" id="userJoiningDate">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">DEPARTMENT</label>
+                                        <input type="text" class="form-premium-control" id="userDepartment" placeholder="e.g. Sales">
+                                    </div>
+                                    
+                                    <div class="mb-0">
+                                        <label class="form-premium-label">BASE SALARY</label>
+                                        <div class="input-group-premium">
+                                            <span class="input-group-text">Rs.</span>
+                                            <input type="number" class="form-premium-control" id="userBaseSalary" placeholder="e.g. 25000" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer pt-3 pb-4">
+                        <button type="button" class="btn btn-outline-secondary btn-lg px-4 me-2 fw-bold" data-bs-dismiss="modal" style="font-size: 0.95rem;">Cancel</button>
+                        <button type="submit" form="addUserForm" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm" id="submitUserBtn" style="font-size: 0.95rem;">
+                            <i class="bi bi-person-plus me-2"></i> Create User
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Code Settings Modal -->
+        <div class="modal fade" id="empSettingsModal" tabindex="-1" aria-labelledby="empSettingsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="empSettingsModalLabel">Code Generation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="empSettingsForm">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold">PREFIX</label>
+                                <input type="text" class="form-control" id="empPrefix" placeholder="e.g. EMP" required>
+                                <div class="form-text">e.g. EMP- for EMP-001</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label text-muted small fw-bold">NEXT SEQUENCE</label>
+                                <input type="number" class="form-control" id="empNextSeq" placeholder="e.g. 1" min="1" required>
+                                <div class="form-text">Set to 1 to reset numbering.</div>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary fw-bold" id="saveEmpSettingsBtn">
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit User Modal -->
+        <div class="modal fade modal-premium" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-fullscreen-md-down modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editUserModalLabel">
+                            <i class="bi bi-pencil-square text-primary"></i> 
+                            Edit User Details
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small mb-4">Modify account settings and employment information for the selected user.</p>
+                        
+                        <form id="editUserForm">
+                            <input type="hidden" id="editUserId">
+                            <div class="row g-4">
+                                <!-- Account Access Section -->
+                                <div class="col-md-6 border-end pe-md-4">
+                                    <h6 class="form-section-title"><i class="bi bi-person-badge"></i> Account Access</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">FULL NAME <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-premium-control" id="editUserName" required placeholder="e.g. Jane Doe">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">EMAIL ADDRESS (READ-ONLY)</label>
+                                        <input type="email" class="form-premium-control bg-light" id="editUserEmail" disabled>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">SYSTEM ROLE</label>
+                                        <select class="form-select form-premium-control" id="editUserRole" required>
+                                            <option value="ADMIN">Admin</option>
+                                            <option value="PROJECT_MANAGER">Project Manager</option>
+                                            <option value="SALES">Sales</option>
+                                            <option value="TELESALES">Telesales</option>
+                                            <option value="PROJECT_MANAGER_AND_SALES">PM &amp; Sales</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-0">
+                                        <label class="form-premium-label">ACCOUNT STATUS</label>
+                                        <select class="form-select form-premium-control" id="editUserStatus" required>
+                                            <option value="true">Active</option>
+                                            <option value="false">Inactive</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Employment Profile Section -->
+                                <div class="col-md-6 ps-md-4">
+                                    <h6 class="form-section-title"><i class="bi bi-card-checklist"></i> Employment Profile</h6>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">EMPLOYEE CODE</label>
+                                        <input type="text" class="form-premium-control" id="editUserEmpCode" placeholder="e.g. EMP-001">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">JOINING DATE</label>
+                                        <input type="date" class="form-premium-control" id="editUserJoiningDate">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-premium-label">DEPARTMENT</label>
+                                        <input type="text" class="form-premium-control" id="editUserDepartment" placeholder="e.g. Sales">
+                                    </div>
+                                    
+                                    <div class="mb-0">
+                                        <label class="form-premium-label">BASE SALARY</label>
+                                        <div class="input-group-premium">
+                                            <span class="input-group-text">Rs.</span>
+                                            <input type="number" class="form-premium-control" id="editUserBaseSalary" placeholder="e.g. 25000" min="0" step="0.01">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer pt-3 pb-4">
+                        <button type="button" class="btn btn-outline-secondary btn-lg px-4 me-2 fw-bold" data-bs-dismiss="modal" style="font-size: 0.95rem;">Cancel</button>
+                        <button type="submit" form="editUserForm" class="btn btn-primary btn-lg px-5 fw-bold shadow-sm" id="submitEditUserBtn" style="font-size: 0.95rem;">
+                            <i class="bi bi-check-circle me-2"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="../js/utils.js?v=20260326"></script>
+        <script src="../js/api.js?v=20260326"></script>
+        <script src="../js/auth.js?v=20260326"></script>
+        <script src="../js/ui_components.js?v=20260326"></script>
+        <script src="../js/app.js?v=20260326"></script>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            requireAuth();
+            const sb = document.getElementById('sidebar');
+            if (sb) sb.innerHTML = renderSidebar('admin');
+            injectTopHeader('Users & Roles');
+
+            // Listen for sidebar toggles to update modal centering natively
+            const _originalToggleSidebar = window.toggleSidebarState;
+            window.toggleSidebarState = function() {
+                if (_originalToggleSidebar) _originalToggleSidebar();
+                const container = document.getElementById('sidebar-container');
+                if (container && container.classList.contains('collapsed')) {
+                    document.body.classList.add('sidebar-collapsed');
+                } else {
+                    document.body.classList.remove('sidebar-collapsed');
+                }
+            };
+            
+            // Set initial state
+            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                document.body.classList.add('sidebar-collapsed');
+            }
+            const usersTableEl = document.getElementById('users-table');
+            const addUserButton = document.querySelector('.btn-add-user');
+
+            if (window.__accessDenied) {
+                if (usersTableEl) {
+                    usersTableEl.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">You do not have enough access to view user data.</td></tr>';
+                }
+                if (addUserButton) {
+                    addUserButton.disabled = true;
+                }
+            }
+
+            const roleMeta = {
+                'ADMIN': { cls: 'role-admin', label: 'ADMIN' },
+                'PROJECT_MANAGER': { cls: 'role-manager', label: 'PROJECT_MANAGER' },
+                'SALES': { cls: 'role-sales', label: 'SALES' },
+                'TELESALES': { cls: 'role-tele', label: 'TELESALES' },
+                'PROJECT_MANAGER_AND_SALES': { cls: 'role-manager', label: 'PM & SALES' }
+            };
+
+            let loadedUsers = [];
+
+            function renderUsers(users) {
+                const tableBody = document.getElementById('users-table');
+                const countEl = document.getElementById('user-count');
+                if (countEl) countEl.textContent = `${users.length} ${users.length === 1 ? 'user' : 'users'}`;
+                
+                if (!tableBody) return;
+                if (!users.length) {
+                    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">No users found matching your filters.</td></tr>';
+                    return;
+                }
+                tableBody.innerHTML = users.map(u => {
+                    const role = roleMeta[u.role] || { cls: '', label: u.role };
+                    const char = (u.name || u.email || 'U')[0].toUpperCase();
+                    const displayName = u.name || '—';
+                    const statusColor = u.is_active ? '#16a34a' : '#dc2626';
+                    const statusBg = u.is_active ? '#dcfce7' : '#fee2e2';
+                    return `
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle">${char}</div>
+                                <div>
+                                    <div class="fw-bold text-main" style="font-size:0.92rem;">${displayName}</div>
+                                    <div class="text-muted" style="font-size:0.78rem;">${u.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="fw-semibold" style="font-size:0.88rem;">${u.employee_code || '<span class="text-muted opacity-50">—</span>'}</span>
+                        </td>
+                        <td><span class="role-pill ${role.cls}">${role.label}</span></td>
+                        <td><span class="status-pill" style="background:${statusBg};color:${statusColor};">${u.is_active ? 'Active' : 'Inactive'}</span></td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button class="btn btn-sm action-btn-pill" onclick="editUser('${u.id}')" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-sm action-btn-pill delete" onclick="deleteUser('${u.id}')" title="Delete">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+
+            let currentFilters = {};
+
+            function initFilters() {
+                if (typeof renderFilterPanel !== 'function') return;
+                renderFilterPanel({
+                    containerId: 'filter-wrapper',
+                    filters: [
+                        { type: 'text', label: 'Search', id: 'filter-search', placeholder: 'Name, email or code...' },
+                        {
+                            type: 'select', label: 'Role', id: 'filter-role', options: [
+                                { value: 'ALL', label: 'All Roles' },
+                                { value: 'ADMIN', label: 'Admin' },
+                                { value: 'SALES', label: 'Sales' },
+                                { value: 'TELESALES', label: 'Telesales' },
+                                { value: 'PROJECT_MANAGER', label: 'Project Manager' },
+                                { value: 'PROJECT_MANAGER_AND_SALES', label: 'PM & Sales' }
+                            ]
+                        },
+                        {
+                            type: 'select', label: 'Status', id: 'filter-status', options: [
+                                { value: 'ALL', label: 'All Status' },
+                                { value: 'active', label: 'Active' },
+                                { value: 'inactive', label: 'Inactive' }
+                            ]
+                        }
+                    ],
+                    onApply: (data) => {
+                        currentFilters = data;
+                        applyAllFilters();
+                    },
+                    onReset: () => {
+                        currentFilters = {};
+                        applyAllFilters();
+                    }
+                });
+            }
+
+            function applyAllFilters() {
+                const query = (currentFilters['search'] || '').toLowerCase();
+                const role = currentFilters['role'] || 'ALL';
+                const status = currentFilters['status'] || 'ALL';
+                
+                const filtered = loadedUsers.filter(u => {
+                    const txt = `${u.name || ''} ${u.email} ${u.employee_code || ''}`.toLowerCase();
+                    const matchQ = txt.includes(query);
+                    const matchR = role === 'ALL' || u.role === role;
+                    const matchS = status === 'ALL' || (status === 'active' && u.is_active) || (status === 'inactive' && !u.is_active);
+                    return matchQ && matchR && matchS;
+                });
+                renderUsers(filtered);
+            }
+
+            // Legacy backward compatibility if needed by other components
+            function filterUsers() { applyAllFilters(); }
+
+            async function loadData() {
+                if (window.__accessDenied) return;
+                try {
+                    const users = await apiGet('/users/');
+                    // Active first, then newest
+                    users.sort((a, b) => {
+                        if (a.is_active !== b.is_active) return b.is_active - a.is_active;
+                        return b.id - a.id;
+                    });
+                    loadedUsers = users;
+                    
+                    if (!document.querySelector('#filter-wrapper .filter-panel')) {
+                        initFilters();
+                    }
+                    
+                    applyAllFilters();
+                } catch (err) {
+                    console.error(err);
+                    const tableBody = document.getElementById('users-table');
+                    if (tableBody) {
+                        tableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Error loading data: ${err.message}</td></tr>`;
+                    }
+                }
+            }
+
+
+            let addUserModalInstance = null;
+            // Scripts are at bottom of body; DOM is already ready. Use immediate execution.
+            (function initAddUserModal() {
+                const modalEl = document.getElementById('addUserModal');
+                if (modalEl) {
+                    addUserModalInstance = new bootstrap.Modal(modalEl);
+                }
+
+                const form = document.getElementById('addUserForm');
+                if (form) {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const btn = document.getElementById('submitUserBtn');
+
+                        const name = document.getElementById('userName').value.trim();
+                        const email = document.getElementById('userEmail').value.trim();
+                        const password = document.getElementById('userPassword').value;
+                        const role = document.getElementById('userRole').value;
+
+                        const rules = {
+                            'userName': 'Full name is required',
+                            'userEmail': 'Email is required',
+                            'userPassword': (val) => {
+                                if (!val) return 'Password is required';
+                                if (val.length < 8) return 'Password must be at least 8 characters';
+                                if (!/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])/.test(val)) return 'Must contain uppercase, lowercase and number';
+                                return true;
+                            },
+                            'userRole': 'System role is required'
+                        };
+
+                        if (!window.validateForm(form, rules)) {
+                            return;
+                        }
+
+                        try {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Creating...';
+
+                            const payload = {
+                                email,
+                                password,
+                                role,
+                                is_active: true
+                            };
+                            if (name) payload.name = name;
+
+                             const empCode = document.getElementById('userEmpCode').value.trim();
+                            const joiningDate = document.getElementById('userJoiningDate').value;
+                            const department = document.getElementById('userDepartment').value.trim();
+                            const baseSalaryVal = document.getElementById('userBaseSalary').value;
+                            
+                            if (empCode) payload.employee_code = empCode;
+                            if (joiningDate) payload.joining_date = joiningDate;
+                            if (department) payload.department = department;
+                            if (baseSalaryVal !== '') payload.base_salary = parseFloat(baseSalaryVal);
+
+                            await ApiClient.request('/auth/register', { method: 'POST', body: payload });
+
+                            showToast('User created successfully', 'success');
+                            form.reset();
+                            if (addUserModalInstance) addUserModalInstance.hide();
+
+                            loadData();
+                        } catch (err) {
+                            console.error(err);
+                            let errMsg = 'Failed to create user';
+                            if (err.data && err.data.detail) {
+                                if (typeof err.data.detail === 'string') {
+                                    errMsg = err.data.detail;
+                                } else if (Array.isArray(err.data.detail) && err.data.detail.length > 0) {
+                                    errMsg = err.data.detail[0].msg || errMsg;
+                                }
+                            }
+                            showToast(errMsg, 'error');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = 'Create User';
+                        }
+                    });
+                }
+
+                const empForm = document.getElementById('empSettingsForm');
+                if (empForm) {
+                    empForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const btn = document.getElementById('saveEmpSettingsBtn');
+                        const prefix = document.getElementById('empPrefix').value.trim();
+                        const nextSeq = parseInt(document.getElementById('empNextSeq').value);
+
+                        try {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Saving...';
+                            await ApiClient.request('/users/config/employee-code', {
+                                method: 'PUT',
+                                body: { prefix, next_seq: nextSeq, enabled: true }
+                            });
+                            showToast('Settings saved', 'success');
+                            if (empSettingsModalInstance) empSettingsModalInstance.hide();
+                        } catch (err) {
+                            console.error(err);
+                            showToast('Failed to save settings', 'error');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = 'Save Configuration';
+                        }
+                    });
+                }
+            })();
+
+            let empSettingsModalInstance = null;
+            window.openEmpSettings = async () => {
+                const modalEl = document.getElementById('empSettingsModal');
+                if (!empSettingsModalInstance && modalEl) {
+                    empSettingsModalInstance = new bootstrap.Modal(modalEl);
+                }
+                
+                try {
+                    const config = await apiGet('/users/config/employee-code');
+                    document.getElementById('empPrefix').value = config.prefix || 'EMP';
+                    document.getElementById('empNextSeq').value = config.next_seq || 1;
+                    empSettingsModalInstance.show();
+                } catch (err) {
+                    console.error(err);
+                    showToast('Failed to load settings', 'error');
+                }
+            };
+
+            let editUserModalInstance = null;
+            (function initEditUserModal() {
+                const editModalEl = document.getElementById('editUserModal');
+                if (editModalEl) {
+                    editUserModalInstance = new bootstrap.Modal(editModalEl);
+                }
+
+                const editForm = document.getElementById('editUserForm');
+                if (editForm) {
+                    editForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const rules = {
+                            'editUserName': 'Full name is required',
+                            'editUserRole': 'System role is required',
+                            'editUserStatus': 'Status is required'
+                        };
+
+                        if (!window.validateForm(editForm, rules)) {
+                            return;
+                        }
+
+                        const btn = document.getElementById('submitEditUserBtn');
+                        const id = document.getElementById('editUserId').value;
+                        const newName = document.getElementById('editUserName').value.trim();
+                        const newRole = document.getElementById('editUserRole').value;
+                        const newStatus = document.getElementById('editUserStatus').value === 'true';
+
+                        try {
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Saving...';
+
+                            // The user schema allows updating name via profile update, and role via role update
+                            // Since they are separate endpoints in this architecture, we run them concurrently if needed.
+                            const originalUser = loadedUsers.find(u => u.id == id);
+
+                            const promises = [];
+                            if (originalUser.name !== newName) {
+                                promises.push(ApiClient.request(`/users/${id}/profile`, { method: 'PATCH', body: { name: newName } }));
+                            }
+                            if (originalUser.role !== newRole) {
+                                promises.push(ApiClient.updateUserRole(id, newRole));
+                            }
+                            if (originalUser.is_active !== newStatus) {
+                                promises.push(ApiClient.updateUserStatus(id, newStatus));
+                            }
+
+                            const newEmpCode = document.getElementById('editUserEmpCode').value.trim();
+                            const newJoiningDate = document.getElementById('editUserJoiningDate').value;
+                            const newDepartment = document.getElementById('editUserDepartment').value.trim();
+                            const baseSalaryVal = document.getElementById('editUserBaseSalary').value;
+                            const newBaseSalary = baseSalaryVal !== '' ? parseFloat(baseSalaryVal) : null;
+
+                            const profileUpdate = {};
+                            if (originalUser.name !== newName) profileUpdate.name = newName;
+                            if ((originalUser.employee_code || '') !== newEmpCode) profileUpdate.employee_code = newEmpCode || null;
+                            if ((originalUser.joining_date || '') !== newJoiningDate) profileUpdate.joining_date = newJoiningDate || null;
+                            if ((originalUser.department || '') !== newDepartment) profileUpdate.department = newDepartment || null;
+                            if (originalUser.base_salary !== newBaseSalary && !(originalUser.base_salary == null && newBaseSalary === null)) profileUpdate.base_salary = newBaseSalary;
+
+                            const patchPromises = [];
+                            if (Object.keys(profileUpdate).length > 0) {
+                                patchPromises.push(ApiClient.request(`/users/${id}/profile`, { method: 'PATCH', body: profileUpdate }));
+                            }
+                            if (originalUser.role !== newRole) {
+                                patchPromises.push(ApiClient.updateUserRole(id, newRole));
+                            }
+                            if (originalUser.is_active !== newStatus) {
+                                patchPromises.push(ApiClient.updateUserStatus(id, newStatus));
+                            }
+
+                            if (patchPromises.length > 0) {
+                                await Promise.all(patchPromises);
+                                showToast('User updated successfully', 'success');
+                                if (editUserModalInstance) editUserModalInstance.hide();
+                                loadData();
+                            } else {
+                                if (editUserModalInstance) editUserModalInstance.hide();
+                            }
+
+                        } catch (err) {
+                            console.error(err);
+                            showToast(err.message || 'Failed to update user', 'error');
+                        } finally {
+                            btn.disabled = false;
+                            btn.innerHTML = 'Save Changes';
+                        }
+                    });
+                }
+            })();
+
+            window.addUser = async () => {
+                if (addUserModalInstance) {
+                    const form = document.getElementById('addUserForm');
+                    form.reset();
+                    // Clear validation state
+                    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+                    // Pre-fill next employee code as placeholder
+                    try {
+                        const config = await apiGet('/users/config/employee-code');
+                        const nextCode = `${config.prefix || 'EMP'}${String(config.next_seq || 1).padStart(3, '0')}`;
+                        const input = document.getElementById('userEmpCode');
+                        input.placeholder = `Auto (e.g. ${nextCode})`;
+                        input.value = ''; // Leave blank for auto
+                    } catch (e) {}
+
+                    addUserModalInstance.show();
+                } else {
+                    showToast('Modal not initialized', 'error');
+                }
+            };
+
+            window.editUser = (id) => {
+                const user = loadedUsers.find(u => u.id === id);
+                if (!user) {
+                    showToast('User data not found for editing', 'error');
+                    return;
+                }
+
+                document.getElementById('editUserId').value = user.id;
+                document.getElementById('editUserName').value = user.name || '';
+                document.getElementById('editUserEmail').value = user.email || '';
+                document.getElementById('editUserRole').value = user.role || '';
+                document.getElementById('editUserStatus').value = user.is_active ? 'true' : 'false';
+                document.getElementById('editUserEmpCode').value = user.employee_code || '';
+                document.getElementById('editUserJoiningDate').value = user.joining_date || '';
+                document.getElementById('editUserDepartment').value = user.department || '';
+                document.getElementById('editUserBaseSalary').value = user.base_salary != null ? user.base_salary : '';
+
+                if (editUserModalInstance) {
+                    const form = document.getElementById('editUserForm');
+                    // Clear validation state
+                    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+                    editUserModalInstance.show();
+                }
+            };
+
+            window.deleteUser = async (id) => {
+                if (window.__accessDenied) return;
+                if (!confirm(`Are you sure you want to delete user #${id}?`)) return;
+                try {
+                    await ApiClient.request(`/users/${id}`, { method: 'DELETE' });
+                    showToast('User deleted successfully', 'success');
+                    loadData();
+                } catch (e) {
+                    console.error(e);
+                    let errMsg = 'Failed to delete user';
+                    if (e.data && e.data.detail) {
+                        if (typeof e.data.detail === 'string') {
+                            errMsg = e.data.detail;
+                        } else if (Array.isArray(e.data.detail) && e.data.detail.length > 0) {
+                            errMsg = e.data.detail[0].msg || errMsg;
+                        }
+                    } else if (e.message) {
+                        errMsg = e.message;
+                    }
+                    showToast(errMsg, 'error');
+                }
+            };
+
+            window.toggleUserStatus = async (id, currentStatus) => {
+                if (window.__accessDenied) return;
+                const action = currentStatus ? 'deactivate' : 'reactivate';
+                if (!confirm(`Are you sure you want to ${action} user #${id}?`)) return;
+                try {
+                    await ApiClient.updateUserStatus(id, !currentStatus);
+                    showToast(`User ${action}d successfully`, 'success');
+                    loadData();
+                } catch (e) {
+                    console.error(e);
+                    showToast(e.message || `Failed to ${action} user`, 'error');
+                }
+            };
+
+            loadData();
+            if (window.checkUrlForQuickAdd) checkUrlForQuickAdd();
+        </script>
+</body>
+
+</html>
+
+

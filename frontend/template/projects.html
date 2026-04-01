@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Performance Hub | SRM AI SETU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css">
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-app);
+            margin: 0;
+            overflow: hidden;
+            color: var(--text-main);
+        }
+
+        /* Split Pane Layout */
+        .hub-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .queue-pane {
+            width: 380px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .queue-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-app);
+        }
+
+        .queue-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding: 1rem;
+        }
+
+        .lead-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .lead-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+
+        .lead-card.active {
+            border-color: #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .lead-card.active::before {
+            content: '';
+            position: absolute;
+            left: -1px;
+            top: 10%;
+            height: 80%;
+            width: 4px;
+            background: #10b981;
+            border-radius: 4px;
+        }
+
+        .detail-pane {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            background: var(--bg-app);
+        }
+
+        .detail-content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 2.5rem;
+        }
+
+        .progress-tracker::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--border);
+            z-index: 1;
+        }
+
+        .step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-surface);
+            border: 3px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            transition: all 0.3s;
+        }
+
+        .step.completed .step-circle {
+            background: #10b981;
+            border-color: #10b981;
+            color: #fff;
+        }
+
+        .step.active .step-circle {
+            border-color: #10b981;
+            color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .step-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .step.active .step-label {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .action-center {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+            margin-bottom: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            color: var(--text-main);
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .live-indicator {
+            height: 10px;
+            width: 10px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+
+        /* Modern Outcome Selection Cards */
+        .outcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .outcome-card {
+            background: var(--bg-surface);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .outcome-card:hover {
+            border-color: var(--border-subtle);
+            background: var(--bg-app);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .outcome-card i {
+            font-size: 1.8rem;
+            line-height: 1;
+        }
+
+        .outcome-card span {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .outcome-card.active-satisfied {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .outcome-card.active-satisfied span {
+            color: #1d4ed8;
+        }
+
+        .outcome-card.active-accept {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .outcome-card.active-accept span {
+            color: #047857;
+        }
+
+        .outcome-card.active-thinking {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .outcome-card.active-thinking span {
+            color: #b45309;
+        }
+
+        .outcome-card.active-decline {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .outcome-card.active-decline span {
+            color: #b91c1c;
+        }
+
+        .outcome-card.active-other {
+            border-color: #64748b;
+            background: #f8fafc;
+        }
+
+        .outcome-card.active-other span {
+            color: #334155;
+        }
+
+        .outcome-full-width {
+            grid-column: span 2;
+            padding: 12px;
+            flex-direction: row;
+            gap: 12px;
+        }
+
+        .outcome-full-width i {
+            font-size: 1.4rem;
+        }
+
+        /* ── Training Sessions UI ── */
+        .training-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .training-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background: #cbd5e1;
+        }
+
+        .training-card.completed::before {
+            background: #10b981;
+        }
+
+        .training-card.scheduled::before {
+            background: #eab308;
+        }
+
+        .training-card.cancelled::before {
+            background: #ef4444;
+        }
+
+        .training-card.pending {
+            border: 2px dashed var(--border);
+            background: var(--bg-app);
+        }
+
+        .training-card.pending::before {
+            display: none;
+        }
+
+        .session-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .completed .session-icon {
+            background: #ecfdf5;
+            color: #10b981;
+        }
+
+        .scheduled .session-icon {
+            background: #fefce8;
+            color: #eab308;
+        }
+
+        .cancelled .session-icon {
+            background: #fef2f2;
+            color: #ef4444;
+        }
+
+        .pending .session-icon {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hub-container">
+        <div id="sidebar"></div>
+
+        <!-- Main content column: header injects here at full width -->
+        <div class="flex-grow-1 d-flex flex-column" style="overflow:hidden; min-width:0;">
+
+            <!-- injectTopHeader() inserts .top-header here automatically -->
+
+            <!-- Responsive Split pane: queue on top/left, detail on bottom/right -->
+            <div class="d-flex flex-column flex-md-row flex-grow-1" style="overflow:hidden;" id="projectsSplitPane">
+                
+                <style>
+                    /* Mobile-first stacking Strategy */
+                    .queue-pane-responsive {
+                        flex: 1 1 40%; /* 40% height on mobile */
+                        border-bottom: 2px solid var(--border);
+                        overflow-y: auto;
+                        min-width: 0;
+                        background: var(--bg-surface);
+                    }
+                    .detail-pane-responsive {
+                        flex: 1 1 60%; /* 60% height on mobile */
+                        overflow-y: auto;
+                        width: 100%;
+                        background: var(--bg-app);
+                    }
+                    
+                    /* Desktop Side-by-Side */
+                    @media (min-width: 768px) {
+                        .queue-pane-responsive {
+                            flex: 0 0 380px !important;
+                            max-width: 380px;
+                            border-right: 1px solid var(--border);
+                            border-bottom: none;
+                        }
+                        .detail-pane-responsive {
+                            flex: 1 1 auto;
+                        }
+                    }
+                </style>
+
+                <div class="queue-pane queue-pane-responsive d-flex flex-column">
+            <div class="d-flex flex-column mb-4 border-bottom pb-3 px-3 pt-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0" style="color: var(--text-main);">Performance Queue</h5>
+
+                    <!-- View Options Dropdown (Sort + PM Filter) — preserved from original -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm d-flex align-items-center gap-2 rounded-pill fw-medium border-0 bg-light" type="button"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <i class="bi bi-sliders2 text-primary"></i> View Options
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-3"
+                            style="width: 320px; border-radius: 16px; margin-top: 10px; background: var(--bg-surface); backdrop-filter: blur(10px);">
+
+                            <fieldset class="mb-3">
+                                <legend class="fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #94a3b8; padding:0; margin:0; border:none;">Order by Stage</legend>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="radio" name="sortStage" id="sortStageAsc" value="asc" onchange="applySort()" checked>
+                                    <label class="form-check-label" for="sortStageAsc" style="font-size: 0.85rem; color: #475569; font-weight: 500;">
+                                        Standard (Lead ➔ Maintenance)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="radio" name="sortStage" id="sortStageDesc" value="desc" onchange="applySort()">
+                                    <label class="form-check-label" for="sortStageDesc" style="font-size: 0.85rem; color: #475569; font-weight: 500;">
+                                        Reverse (Maintenance ➔ Lead)
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="mb-3">
+                                <legend class="fw-bold text-uppercase mb-2" style="font-size: 0.65rem; letter-spacing: 1px; color: #94a3b8; padding:0; margin:0; border:none;">Sort by Creation</legend>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="radio" name="sortDate" id="sortDateNewest" value="newest" onchange="applySort()" checked>
+                                    <label class="form-check-label" for="sortDateNewest" style="font-size: 0.85rem; color: #475569; font-weight: 500;">
+                                        Newest First (Highest ID)
+                                    </label>
+                                </div>
+                                <div class="form-check mb-1">
+                                    <input class="form-check-input" type="radio" name="sortDate" id="sortDateOldest" value="oldest" onchange="applySort()">
+                                    <label class="form-check-label" for="sortDateOldest" style="font-size: 0.85rem; color: #475569; font-weight: 500;">
+                                        Oldest First (Lowest ID)
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <hr class="border-light my-3">
+
+                            <h6 class="fw-bold text-uppercase mb-2"
+                                style="font-size: 0.65rem; letter-spacing: 1px; color: var(--text-muted);">Filter By PM</h6>
+                            <select id="pm-filter-select" class="form-select form-select-sm shadow-sm"
+                                onchange="applyPmFilter(this.value)"
+                                style="border-radius: 8px; font-weight: 500; color: var(--text-main); border-color: var(--border); cursor: pointer; background-color: var(--bg-app);">
+                                <option value="ALL">All Project Managers</option>
+                                <option value="Unassigned">Unassigned Leads</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search input -->
+                <div class="input-group mb-3 shadow-sm" style="border-radius: 50px; overflow: hidden;">
+                    <span class="input-group-text bg-white border-0 ps-3 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="hub-search" class="form-control border-0 bg-white"
+                        placeholder="Search leads..." oninput="handleSearch(event)"
+                        style="box-shadow: none;">
+                </div>
+
+                <!-- Filter pills -->
+                <div class="d-flex gap-2 overflow-auto pb-1" style="scrollbar-width: none; -ms-overflow-style: none;">
+                    <button class="btn btn-sm btn-dark rounded-pill px-3 fw-medium filter-pill"
+                        onclick="setFilter('ALL', this)">All Active</button>
+                    <button class="btn btn-sm btn-light border text-muted rounded-pill px-3 text-nowrap fw-medium bg-white filter-pill"
+                        onclick="setFilter('IN_PROGRESS', this)">In Progress</button>
+                    <button class="btn btn-sm btn-light border text-muted rounded-pill px-3 text-nowrap fw-medium bg-white filter-pill"
+                        onclick="setFilter('DEMO_SET', this)">Demo Set</button>
+                </div>
+                <style>.overflow-auto::-webkit-scrollbar { display: none; }</style>
+            </div>
+            <div class="queue-list" id="queue-list"></div>
+        </div>
+
+        <div class="detail-pane detail-pane-responsive">
+            <div class="detail-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="fw-bold mb-1" id="detail-title">Select a Lead</h2>
+                        <div class="text-muted fw-semibold" id="detail-contact">Contact: — • —</div>
+                    </div>
+                </div>
+
+                <div class="progress-tracker">
+                    <div class="step active">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Lead</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Pitching</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Negotiation</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Delivery</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-circle">5</div>
+                        <div class="step-label">Maintenance</div>
+                    </div>
+                </div>
+
+                <div class="action-center text-center">
+                    <h4 class="text-muted py-5">Please select a lead from the queue.</h4>
+                </div>
+                <div id="visit-history-section" class="mt-4">
+                </div>
+            </div><!-- /.detail-content -->
+        </div><!-- /.detail-pane -->
+            </div><!-- /.d-flex split row -->
+        </div><!-- /.flex-grow-1 main column -->
+    </div><!-- /.hub-container -->
+    <!-- Schedule DEMO MOdel -->
+    <div class="modal fade" id="smartScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0"
+                style="border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden;">
+                <div class="modal-header border-0 pb-0 position-relative"
+                    style="background: var(--bg-app); padding: 32px 32px 16px;">
+                    <div class="position-absolute top-0 start-0 w-100"
+                        style="height: 4px; background: linear-gradient(90deg, #4f46e5, #ec4899, #4f46e5);"></div>
+                    <div class="d-flex align-items-center gap-3 w-100">
+                        <div class="bg-surface p-3 rounded-circle shadow-sm" style="color: #4f46e5;">
+                            <i class="bi bi-cpu fs-3"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h4 class="fw-bold mb-1" style="color: var(--text-main); letter-spacing: -0.5px;">Schedule
+                                Demo &
+                                Assign PM</h4>
+                            <p class="mb-0 text-muted small fw-medium">Smart workload distribution & availability</p>
+                        </div>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                            style="margin-top: -20px;"></button>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4 p-md-5 pt-4 bg-surface">
+                    <input type="hidden" id="smart-sched-shop-id">
+
+                    <div class="mb-4 p-4 rounded-4"
+                        style="background: var(--bg-app); border: 1px solid var(--border); position: relative;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <label class="form-label fw-bold text-dark mb-0"><i
+                                    class="bi bi-person-badge me-2 text-primary"></i>Project Manager</label>
+
+                            <button class="btn btn-sm text-white fw-bold d-flex align-items-center gap-2"
+                                onclick="smartAutoSuggestPM()" id="smart-auto-suggest-btn"
+                                style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 10px; padding: 8px 16px; box-shadow: 0 4px 15px rgba(99,102,241,0.3); transition: all 0.2s; border: none;">
+                                <i class="bi bi-stars"></i> AI Auto Assign
+                            </button>
+                        </div>
+                        <select class="form-select form-select-lg border-0 shadow-sm fw-medium" id="smart-pm-select"
+                            onchange="smartFetchTimeSlots()"
+                            style="border-radius: 12px; font-size: 0.95rem; background-color: var(--bg-surface); color: var(--text-main);">
+                            <option value="" disabled selected>— Select PM manually —</option>
+                        </select>
+                        <div id="smart-pm-suggest-msg" class="text-success mt-2 d-none fw-bold"
+                            style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+                            <i class="bi bi-check-circle-fill"></i> <span id="smart-pm-suggest-text">Optimal PM
+                                Selected</span>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold text-dark mb-2"><i
+                                    class="bi bi-calendar3 me-2 text-primary"></i>Demo Date</label>
+                            <input type="date" class="form-control form-control-lg border-0 shadow-sm fw-medium"
+                                id="smart-demo-date" onchange="smartFetchTimeSlots()"
+                                style="border-radius: 12px; font-size: 0.95rem; background-color: var(--bg-app); color: var(--text-main);">
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold text-dark mb-2"><i
+                                    class="bi bi-clock-history me-2 text-primary"></i>Available Slots</label>
+                            <div id="smart-time-slots-container" class="d-flex flex-wrap gap-2">
+                                <div class="text-muted small w-100 text-center py-4 fw-medium"
+                                    style="background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
+                                    <i class="bi bi-calendar-x opacity-50 d-block fs-3 mb-1"></i>
+                                    Select PM and Date to unlock calendar
+                                </div>
+                            </div>
+                            <input type="hidden" id="smart-selected-time">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4 p-md-5 pt-0 bg-surface justify-content-between">
+                    <button type="button" class="btn btn-light fw-bold px-4 py-2 text-muted" data-bs-dismiss="modal"
+                        style="border-radius: 12px;">Cancel</button>
+                    <button type="button" class="btn fw-bold px-5 py-2 shadow-sm text-white" id="smart-submit-btn"
+                        onclick="smartSubmitSchedule()"
+                        style="border-radius: 12px; background: var(--bg-app); color: var(--text-main); transition: all 0.2s;"
+                        disabled>
+                        <i class="bi bi-send-fill me-2 text-warning"></i> Confirm & Transfer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 3 step training model -->
+    <div class="modal fade" id="trainingScheduleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+                <div class="modal-header border-0 pb-0" style="background: var(--bg-app); padding: 24px;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-circle text-primary">
+                            <i class="bi bi-calendar-plus fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1 text-dark" id="train-modal-title">Schedule Training</h5>
+                            <p class="text-muted small mb-0 fw-medium" id="training-pm-name">Fetching PM availability...
+                            </p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                        style="margin-top: -20px;"></button>
+                </div>
+                <div class="modal-body p-4 bg-white">
+                    <input type="hidden" id="reschedule-meeting-id" value="">
+                    <input type="hidden" id="train-shop-id">
+                    <input type="hidden" id="train-client-id">
+                    <input type="hidden" id="train-pm-id">
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark"><i
+                                class="bi bi-calendar3 text-primary me-2"></i>Select Date</label>
+                        <input type="date" class="form-control form-control-lg border-2 shadow-sm" id="train-date"
+                            onchange="fetchTrainingSlots()" style="border-radius: 12px; font-size: 1rem;">
+                    </div>
+
+                    <label class="form-label fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>Available
+                        Slots</label>
+                    <div id="train-slots-container" class="d-flex flex-wrap gap-2 mb-2">
+                        <div class="text-muted small w-100 text-center py-4 border rounded"
+                            style="background: var(--bg-app); border-style: dashed !important;">Select a date to view
+                            slots
+                        </div>
+                    </div>
+                    <input type="hidden" id="train-selected-time">
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0 bg-surface d-flex justify-content-between">
+                    <button class="btn btn-light fw-bold px-4 rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary fw-bold px-4 rounded-pill shadow-sm" id="train-submit-btn"
+                        onclick="submitTrainingSchedule()" disabled>
+                        <i class="bi bi-check2-circle me-2"></i>Book Session
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- --------------- -->
+
+    <script src="../js/api.js"></script>
+    <script src="../js/utils.js?v=20260326"></script>
+    <script src="../js/ui_components.js?v=20260312"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/projects.js?v=3"></script>
+    <script>
+        // ========================================================
+        // 🚀 SMART SCHEDULING ENGINE (Performance Hub Edition)
+        // ========================================================
+
+        window.openSmartScheduleModal = async (shopId) => {
+            document.getElementById('smart-sched-shop-id').value = shopId;
+
+            // Reset UI
+            const pmSelect = document.getElementById('smart-pm-select');
+            pmSelect.innerHTML = '<option value="">— Loading PMs... —</option>';
+            document.getElementById('smart-pm-suggest-msg').classList.add('d-none');
+            document.getElementById('smart-selected-time').value = '';
+            document.getElementById('smart-submit-btn').disabled = true;
+
+            // Clear validation state
+            const smartModalBody = document.querySelector('#smartScheduleModal .modal-body');
+            if (smartModalBody) {
+                smartModalBody.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                smartModalBody.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+
+            // Set date bounds
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('smart-demo-date');
+            dateInput.value = today;
+            dateInput.min = today;
+
+            document.getElementById('smart-time-slots-container').innerHTML = `
+                <div class="text-muted small w-100 text-center py-4 fw-medium" style="background: var(--bg-app); border-radius: 12px; border: 1px dashed var(--border);">
+                    <i class="bi bi-calendar-x opacity-50 d-block fs-3 mb-1"></i>
+                    Select PM and Date to unlock calendar
+                </div>`;
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('smartScheduleModal')).show();
+
+            try {
+                const usersRes = await window.ApiClient.request('/users/project-managers', { method: 'GET' });
+                const pms = Array.isArray(usersRes) ? usersRes : (usersRes.items || []);
+                pmSelect.innerHTML = '<option value="" disabled selected>— Select PM manually —</option>' +
+                    pms.map(u => `<option value="${u.id}">${u.name || u.email} (${u.role.replace(/_/g, ' ')})</option>`).join('');
+            } catch (e) {
+                pmSelect.innerHTML = '<option value="">— Failed to load —</option>';
+            }
+        };
+
+        window.smartAutoSuggestPM = async () => {
+            const btn = document.getElementById('smart-auto-suggest-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Analyzing...';
+            btn.disabled = true;
+
+            try {
+                const response = await window.ApiClient.request('/users/suggest-pm', { method: 'GET' });
+                if (response && response.user_id) {
+                    document.getElementById('smart-pm-select').value = response.user_id;
+
+                    const msgEl = document.getElementById('smart-pm-suggest-msg');
+                    msgEl.classList.remove('d-none');
+                    document.getElementById('smart-pm-suggest-text').innerText = `${response.name} (Lowest Workload)`;
+
+                    smartFetchTimeSlots();
+                }
+            } catch (e) {
+                console.error("Auto suggest failed", e);
+                alert('Failed to suggest PM. Please select manually.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        window.smartFetchTimeSlots = async () => {
+            const pmId = document.getElementById('smart-pm-select').value;
+            const date = document.getElementById('smart-demo-date').value;
+            const container = document.getElementById('smart-time-slots-container');
+
+            document.getElementById('smart-selected-time').value = '';
+            document.getElementById('smart-submit-btn').disabled = true;
+
+            if (!pmId || !date) return;
+
+            container.innerHTML = '<div class="w-100 text-center py-4"><div class="spinner-border text-primary"></div></div>';
+
+            try {
+                const response = await window.ApiClient.request(`/users/${pmId}/availability?date=${date}`, { method: 'GET' });
+                const slots = response.slots || [];
+
+                if (!slots || slots.length === 0) {
+                    container.innerHTML = '<div class="text-muted small w-100 text-center py-3">No working hours configured for this day.</div>';
+                    return;
+                }
+
+                const formatRange = (hour24) => {
+                    if (hour24 === 10) return "10 to 11 AM";
+                    if (hour24 === 11) return "11 to 12 PM";
+                    if (hour24 === 12) return "12 to 01 PM";
+                    if (hour24 === 13) return "01 to 02 PM (Lunch)";
+                    if (hour24 === 14) return "02 to 03 PM";
+                    if (hour24 === 15) return "03 to 04 PM";
+                    if (hour24 === 16) return "04 to 05 PM";
+                    if (hour24 === 17) return "05 to 06 PM";
+                    return `${hour24}:00`;
+                };
+
+                const today = new Date().toISOString().split('T')[0];
+                const isToday = (date === today);
+                const currentHour = new Date().getHours();
+
+                let html = '';
+                slots.forEach(slot => {
+                    if (slot.hour24 >= 18) return; // Prevent Overtime
+                    if (slot.hour24 === 13) slot.is_available = false; // Block Lunch
+
+                    // Block past slots when viewing today
+                    const isPast = isToday && slot.hour24 <= currentHour;
+
+                    const displayLabel = formatRange(slot.hour24);
+                    const timeValue24 = String(slot.hour24).padStart(2, '0') + ':00';
+
+                    // Futuristic pill styles
+                    if (slot.is_available && !isPast) {
+                        html += `<button class="btn btn-outline-primary slot-btn fw-bold px-3 py-2" style="border-radius: 10px; font-size: 0.85rem; border-width: 2px; transition: all 0.2s;" onclick="smartSelectTimeSlot(this, '${timeValue24}')">${displayLabel}</button>`;
+                    } else {
+                        const label = isPast && slot.is_available ? `${displayLabel} <span style="font-size:0.7em;opacity:0.7">(past)</span>` : displayLabel;
+                        html += `<button class="btn btn-light text-muted fw-bold px-3 py-2" style="border-radius: 10px; font-size: 0.85rem; text-decoration: line-through; opacity: 0.5; border: 1px dashed #cbd5e1;" disabled>${label}</button>`;
+                    }
+                });
+                container.innerHTML = html;
+
+            } catch (err) {
+                container.innerHTML = '<div class="text-danger small w-100 text-center py-3">Failed to load calendar.</div>';
+            }
+        };
+
+        window.smartSelectTimeSlot = (btnEl, timeValue) => {
+            document.querySelectorAll('.slot-btn').forEach(b => {
+                b.classList.remove('btn-primary', 'text-white', 'shadow');
+                b.classList.add('btn-outline-primary');
+            });
+            btnEl.classList.remove('btn-outline-primary');
+            btnEl.classList.add('btn-primary', 'text-white', 'shadow');
+
+            document.getElementById('smart-selected-time').value = timeValue;
+            document.getElementById('smart-submit-btn').disabled = false;
+        };
+
+        window.smartSubmitSchedule = async () => {
+            // 🚀 CRITICAL FIX: Convert the string from the input into an actual Integer!
+            const shopId = parseInt(document.getElementById('smart-sched-shop-id').value, 10);
+            const pmId = document.getElementById('smart-pm-select').value;
+            const date = document.getElementById('smart-demo-date').value;
+            const time = document.getElementById('smart-selected-time').value;
+            const btn = document.getElementById('smart-submit-btn');
+
+            const rules = {
+                'smart-pm-select': 'Please select a Project Manager',
+                'smart-demo-date': 'Please select a date',
+                'smart-time-slots-container': () => time || 'Please select a time slot'
+            };
+
+            if (!window.validateForm(document.querySelector('#smartScheduleModal .modal-body'), rules)) {
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processing...';
+
+            try {
+                const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+
+                await window.ApiClient.request(`/shops/${shopId}/assign-pm`, {
+                    method: 'POST',
+                    body: { pm_id: parseInt(pmId), demo_scheduled_at: scheduledAt }
+                });
+
+                const modalEl = document.getElementById('smartScheduleModal');
+                const modalInst = bootstrap.Modal.getInstance(modalEl) || bootstrap.Modal.getOrCreateInstance(modalEl);
+                modalInst.hide();
+
+                if (typeof loadHubData === 'function') {
+                    await loadHubData();
+                    if (typeof selectLead === 'function') {
+                        selectLead(shopId); // This will now perfectly match the integer!
+                    }
+                } else {
+                    window.location.reload();
+                }
+
+            } catch (e) {
+                console.error("CRITICAL ERROR during scheduling:", e);
+                alert('Backend Error: ' + (e?.data?.detail || e?.message || JSON.stringify(e)));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-send-fill me-2 text-warning"></i> Confirm & Transfer';
+            }
+        };
+
+        // ========================================================
+        // 🚀 POST-SALES TRAINING SCHEDULING ENGINE
+        // ========================================================
+
+        window.openTrainingScheduleModal = (shopId, clientId) => {
+            const project = allProjects.find(p => p.id === shopId);
+            if (!project) return;
+
+            // Failsafe: require a linked Client ID for the meeting API
+            const resolvedClientId = clientId || project.client_id;
+            if (!resolvedClientId) {
+                alert('Error: No linked client found for this project. Please ensure this shop has been converted to a client.');
+                return;
+            }
+
+            // Prefer the Onboarding PM (from Client record) over the Demo PM (from Shop)
+            const pmId = project.onboarding_pm_id    // ← Client's post-sale PM (primary)
+                || project.project_manager_id   // ← Demo PM (fallback for legacy)
+                || project.pm_id
+                || project.owner_id;
+            const pmName = project.onboarding_pm_name                                       // ← Onboarding PM name
+                || project.project_manager_name                                     // ← Demo PM name (fallback)
+                || project.pm_name
+                || (project.project_manager && project.project_manager.name)
+                || 'Assigned Manager';
+
+            if (!pmId) {
+                alert("No Project Manager assigned! Please assign one in the Clients tab first.");
+                return;
+            }
+
+            document.getElementById('train-shop-id').value = shopId;
+            document.getElementById('train-client-id').value = resolvedClientId;
+            document.getElementById('train-pm-id').value = pmId;
+            document.getElementById('reschedule-meeting-id').value = ""; // Clear for NEW meeting
+            document.getElementById('train-modal-title').innerText = "Schedule Training";
+            document.getElementById('train-submit-btn').innerHTML = '<i class="bi bi-check2-circle me-2"></i>Book Session';
+            document.getElementById('training-pm-name').innerHTML = `Checking <strong>${pmName}'s</strong> Calendar`;
+
+            document.getElementById('train-selected-time').value = '';
+            document.getElementById('train-submit-btn').disabled = true;
+
+            // Clear validation state
+            const trainModalBody = document.querySelector('#trainingScheduleModal .modal-body');
+            if (trainModalBody) {
+                trainModalBody.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                trainModalBody.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('train-date');
+            dateInput.value = today;
+            dateInput.min = today;
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('trainingScheduleModal')).show();
+            fetchTrainingSlots(); // Auto-fetch for today
+        };
+
+        window.fetchTrainingSlots = async () => {
+            const pmId = document.getElementById('train-pm-id').value;
+            const date = document.getElementById('train-date').value;
+            const container = document.getElementById('train-slots-container');
+
+            document.getElementById('train-selected-time').value = '';
+            document.getElementById('train-submit-btn').disabled = true;
+
+            if (!pmId || !date) return;
+
+            container.innerHTML = '<div class="w-100 text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></div>';
+
+            try {
+                const response = await window.ApiClient.request(`/users/${pmId}/availability?date=${date}`, { method: 'GET' });
+                const slots = response.slots || [];
+
+                if (!slots.length) {
+                    container.innerHTML = '<div class="text-muted small w-100 text-center py-3 border rounded" style="background: #fef2f2; border-color: #fecaca !important; color: #ef4444 !important;">No working hours configured.</div>';
+                    return;
+                }
+                const today = new Date().toISOString().split('T')[0];
+                const isToday = (date === today);
+                const currentHour = new Date().getHours();
+
+                let html = '';
+                slots.forEach(slot => {
+                    if (slot.hour24 >= 18) return;  // Prevent overtime
+                    if (slot.hour24 === 13) slot.is_available = false; // Block lunch
+
+                    // Block past slots when viewing today
+                    const isPast = isToday && slot.hour24 <= currentHour;
+
+                    const h = slot.hour24;
+                    // Format identical to Demo modal for visual consistency
+                    let displayLabel;
+                    if (h === 10) displayLabel = "10 to 11 AM";
+                    else if (h === 11) displayLabel = "11 to 12 PM";
+                    else if (h === 12) displayLabel = "12 to 01 PM";
+                    else if (h === 13) displayLabel = "01 to 02 PM (Lunch)";
+                    else if (h === 14) displayLabel = "02 to 03 PM";
+                    else if (h === 15) displayLabel = "03 to 04 PM";
+                    else if (h === 16) displayLabel = "04 to 05 PM";
+                    else if (h === 17) displayLabel = "05 to 06 PM";
+                    else displayLabel = `${h}:00`;
+
+                    const timeValue24 = String(h).padStart(2, '0') + ':00';
+
+                    if (slot.is_available && !isPast) {
+                        html += `<button class="btn btn-outline-primary train-slot-btn fw-bold px-3 py-2" style="border-radius: 10px;" onclick="selectTrainingSlot(this, '${timeValue24}')">${displayLabel}</button>`;
+                    } else {
+                        const label = isPast && slot.is_available ? `${displayLabel} <span style="font-size:0.7em;opacity:0.7">(past)</span>` : displayLabel;
+                        html += `<button class="btn btn-light text-muted fw-bold px-3 py-2" style="border-radius: 10px; text-decoration: line-through; opacity: 0.5;" disabled>${label}</button>`;
+                    }
+                });
+                container.innerHTML = html || '<div class="text-muted small w-100 text-center py-3">No suitable working hours found.</div>';
+            } catch (err) {
+                container.innerHTML = '<div class="text-danger small w-100 text-center py-3">Failed to load calendar.</div>';
+            }
+        };
+
+        window.selectTrainingSlot = (btnEl, timeValue) => {
+            document.querySelectorAll('.train-slot-btn').forEach(b => {
+                b.classList.remove('btn-primary', 'text-white', 'shadow-sm');
+                b.classList.add('btn-outline-primary');
+            });
+            btnEl.classList.remove('btn-outline-primary');
+            btnEl.classList.add('btn-primary', 'text-white', 'shadow-sm');
+
+            document.getElementById('train-selected-time').value = timeValue;
+            document.getElementById('train-submit-btn').disabled = false;
+        };
+
+        window.submitTrainingSchedule = async () => {
+            const rescheduleMeetingId = document.getElementById('reschedule-meeting-id').value;
+            const shopId = document.getElementById('train-shop-id').value;
+            const clientId = document.getElementById('train-client-id').value;
+            const date = document.getElementById('train-date').value;
+            const time = document.getElementById('train-selected-time').value;
+            const btn = document.getElementById('train-submit-btn');
+
+            const rules = {
+                'train-date': 'Please select a date',
+                'train-slots-container': () => time || 'Please select a time slot'
+            };
+
+            if (!window.validateForm(document.querySelector('#trainingScheduleModal .modal-body'), rules)) {
+                return;
+            }
+
+            // Hard failsafe: cannot proceed without a valid client_id for NEW meetings
+            if (!rescheduleMeetingId && !clientId) {
+                alert('Error: No linked client found. Cannot book session.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Booking...';
+
+            try {
+                const rescheduleMeetingId = document.getElementById('reschedule-meeting-id').value;
+                const new_date = `${date}T${time}:00`;
+
+                if (rescheduleMeetingId) {
+                    await window.ApiClient.request(`/meetings/${rescheduleMeetingId}/reschedule`, {
+                        method: 'POST',
+                        body: { new_date: new_date }
+                    });
+                } else {
+                    // Calculate which session number this is
+                    const existingMeetings = (typeof currentProject !== 'undefined' && currentProject.meetings) ? currentProject.meetings : [];
+                    const sessionNum = existingMeetings.length + 1;
+                    const meetingTitle = `Session ${sessionNum}: Client Onboarding & Training`;
+
+                    await window.ApiClient.request(`/clients/${clientId}/meetings`, {
+                        method: 'POST',
+                        body: {
+                            shop_id: shopId,
+                            title: meetingTitle,
+                            content: "Automated onboarding session scheduled from Performance Hub.",
+                            date: new_date,
+                            meeting_type: "Virtual"
+                        }
+                    });
+                }
+
+                console.log("Reschedule Success Pipeline start...");
+
+                // Force close by finding the element directly
+                console.log("Attempting to hide modal...");
+                const modalEl = document.getElementById('trainingScheduleModal');
+                const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                modalInstance.hide();
+
+                // Remove any leftover backdrops that cause the screen to stay grey
+                document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = '';
+
+                console.log("Attempting to show toast...");
+                const msg = rescheduleMeetingId ? 'Session successfully rescheduled!' : 'Session successfully booked!';
+                if (window.showToast) {
+                    window.showToast(msg, 'success');
+                } else {
+                    console.error("CRITICAL: window.showToast is STILL missing!");
+                    alert(msg); // Absolute last resort
+                }
+
+                console.log("Refreshing UI...");
+                // 3. Refresh the UI with a hard-refresh failsafe
+                try {
+                    if (typeof currentProject !== 'undefined' && currentProject && currentProject.id) {
+                        selectLead(currentProject.id);
+                    } else {
+                        window.location.reload();
+                    }
+                } catch (e) {
+                    console.error("Refresh failed, reloading page...", e);
+                    window.location.reload();
+                }
+
+            } catch (err) {
+                console.error("Full Error Object:", err);
+                if (err.data && err.data.detail) {
+                    if (Array.isArray(err.data.detail)) {
+                        console.table(err.data.detail); // Shows the exact missing field in a nice table
+                        const firstError = err.data.detail[0];
+                        const field = firstError.loc ? firstError.loc[firstError.loc.length - 1] : 'Unknown Field';
+                        const message = firstError.msg || 'Invalid Input';
+                        showToast(`Missing/Invalid: ${field} (${message})`, 'error');
+                    } else {
+                        // Handle string detail (like 500 error "Internal Server Error")
+                        showToast(`Server Error: ${err.data.detail}`, 'error');
+                    }
+                } else {
+                    showToast(err.message || 'An unexpected error occurred', 'error');
+                }
+            } finally {
+                btn.disabled = false;
+                const isReschedule = document.getElementById('reschedule-meeting-id').value;
+                btn.innerHTML = isReschedule
+                    ? '<i class="bi bi-check2-circle me-2"></i>Confirm Reschedule'
+                    : '<i class="bi bi-check2-circle me-2"></i>Book Session';
+            }
+        };
+        if (window.checkUrlForQuickAdd) checkUrlForQuickAdd();
+    </script>
+</body>
+
+</html>
+

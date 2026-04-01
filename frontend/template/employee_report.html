@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Employee Report — SRM AI SETU</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=1772780187">
+    <link rel="stylesheet" href="../css/components.css?v=1772780187">
+    <!-- PDF Generation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .clickable-name {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clickable-name:hover .employee-main-name {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .currency-value {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .employee-main-name {
+            font-weight: 700;
+            color: var(--text-main);
+            display: block;
+        }
+
+        .employee-email {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="bg-app">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1">
+            <div class="page-content-standard">
+                <!-- Header Actions -->
+                <div class="page-header-glass d-flex align-items-center justify-content-between flex-wrap gap-3">
+                    <div>
+                        <h2 class="page-section-title fw-bold mb-1">Employee Performance</h2>
+                        <p class="text-muted mb-0 small">Analyze team productivity and performance analytics.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn-premium-action text-white shadow-sm" style="background: #10b981;"
+                            onclick="exportReport('csv')">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV
+                        </button>
+                        <button class="btn-premium-action text-white shadow-sm" style="background: #ef4444;"
+                            onclick="exportReport('pdf')">
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Overview -->
+                <div class="row g-4 mb-4">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper icon-blue">
+                                <i class="bi bi-person-check"></i>
+                            </div>
+                            <div class="kpi-title">Total Visits</div>
+                            <div class="kpi-value" id="total-visits">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper icon-teal">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                            <div class="kpi-title">Leads Generated</div>
+                            <div class="kpi-value" id="total-leads">0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper icon-purple">
+                                <i class="bi bi-currency-rupee"></i>
+                            </div>
+                            <div class="kpi-title">Target Achieved</div>
+                            <div class="kpi-value" id="total-sales">₹0</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon-wrapper icon-yellow">
+                                <i class="bi bi-gift"></i>
+                            </div>
+                            <div class="kpi-title">Total Incentives</div>
+                            <div class="kpi-value" id="total-incentives">₹0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standardized Filters -->
+                <div id="report-filter-container"></div>
+
+                <!-- Main Table Card -->
+                <div class="table-container">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-main">Employee Performance Metrics</h6>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle"
+                            id="record-count">0 Records</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-premium align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 120px;">ID</th>
+                                    <th>Employee Name</th>
+                                    <th class="text-center">Role</th>
+                                    <th class="text-center">Visits</th>
+                                    <th class="text-center">Leads</th>
+                                    <th class="text-center">Success Rate</th>
+                                    <th class="text-center">Target Achieved</th>
+                                    <th class="text-center">Incentive</th>
+                                </tr>
+                            </thead>
+                            <tbody id="report-tbody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-5">
+                                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                                        <span class="text-muted fw-medium">Synthesizing performance analytics...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Drill-down Modal -->
+    <div class="modal fade" id="drillDownModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px;">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="fw-bold text-main mb-0">Employee Activity Log</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <!-- Employee Brief -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-app rounded-4">
+                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold me-3"
+                            style="width: 50px; height: 50px; font-size: 1.2rem;" id="modal-emp-initials">
+                            JD
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0" id="modal-emp-name">John Doe</h5>
+                            <div class="text-muted small">
+                                <span class="me-2"><i class="bi bi-hash small"></i><span
+                                        id="modal-emp-id">#EMP-01</span></span>
+                                <span><i class="bi bi-briefcase small me-1"></i><span id="modal-emp-role">Sales
+                                        Manager</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Summary -->
+                    <div class="row g-3 mb-4 text-center">
+                        <div class="col-4">
+                            <div class="p-2 border rounded-3">
+                                <div class="text-muted x-small fw-bold text-uppercase">Conversion</div>
+                                <div class="fw-bold text-primary" id="modal-conversion">0%</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded-3">
+                                <div class="text-muted x-small fw-bold text-uppercase">Target</div>
+                                <div class="fw-bold text-main">₹2.5L</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded-3">
+                                <div class="text-muted x-small fw-bold text-uppercase">Rank</div>
+                                <div class="fw-bold text-warning">Top 5</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Table -->
+                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                        <i class="bi bi-clock-history me-2 text-primary"></i> Monthly Activity Details
+                    </h6>
+                    <div class="table-responsive mb-4" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table modal-activity-table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>Activity Type</th>
+                                    <th class="text-end">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-activity-tbody">
+                                <!-- Populated via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Admin Notes -->
+                    <div class="p-3 border rounded-4 bg-app bg-opacity-50">
+                        <label class="form-label fw-bold small mb-2">Admin Performance Notes</label>
+                        <textarea id="admin-note" class="form-control border-0 bg-surface" rows="3"
+                            placeholder="Add a private note regarding this employee's performance..."></textarea>
+                        <div class="text-end mt-2">
+                            <button class="btn btn-primary btn-sm px-4" onclick="saveAdminNote()">
+                                <i class="bi bi-save me-1"></i>Save Note
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../js/api.js?v=2.6"></script>
+    <script src="../js/utils.js"></script>
+    <script src="../js/ui_components.js?v=1772780187"></script>
+    <script src="../js/auth.js?v=2.7"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script>
+        requireAuth();
+        document.getElementById('sidebar').innerHTML = renderSidebar('employee_report');
+        injectTopHeader('Employee Performance');
+
+        // Initialize Filter Panel
+        const initReportFilters = () => {
+            renderFilterPanel({
+                containerId: 'report-filter-container',
+                title: 'Report Filters',
+                headerContent: `
+                    <div class="filter-header-search">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control" placeholder="Search employee..." id="emp-search">
+                    </div>
+                `,
+                filters: [
+                    { id: 'employee-dropdown', label: 'Employee', type: 'select', options: [{ value: 'all', label: 'All Employees' }] },
+                    { id: 'date-from', label: 'From', type: 'date' },
+                    { id: 'date-to', label: 'To', type: 'date' }
+                ],
+                onApply: (data) => {
+                    loadEmployeeReport();
+                },
+                onReset: () => {
+                    const searchInput = document.getElementById('emp-search');
+                    if (searchInput) searchInput.value = '';
+
+                    document.getElementById('date-from').value = '';
+                    document.getElementById('date-to').value = '';
+
+                    loadEmployeeReport();
+                }
+            });
+
+            // Search listener
+            const searchInput = document.getElementById('emp-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => renderReportTable(currentReportMetrics));
+            }
+        };
+
+        initReportFilters();
+
+        const currentUser = getUser();
+        let employeesList = [];
+        let currentReportMetrics = []; // Store current filtered data for export
+
+        function formatRole(role) {
+            if (!role) return '';
+            // Remove 'UserRole.' prefix if it exists and replace underscores
+            return role.replace('UserRole.', '').replace(/_/g, ' ');
+        }
+
+        async function initFilters() {
+            const user = getUser();
+            const isAdmin = user && user.role === 'ADMIN';
+            const dropdown = document.getElementById('employee-dropdown');
+
+            try {
+                if (isAdmin) {
+                    employeesList = await ApiClient.getEmployees();
+                    const dropdown = document.getElementById('employee-dropdown');
+                    if (dropdown) {
+                        employeesList.forEach(emp => {
+                            const opt = document.createElement('option');
+                            opt.value = emp.id;
+                            opt.textContent = emp.name || emp.email.split('@')[0];
+                            dropdown.appendChild(opt);
+                        });
+                    }
+                } else {
+                    const dropdown = document.getElementById('employee-dropdown');
+                    if (dropdown) {
+                        dropdown.innerHTML = `<option value="${user.id}">${user.name || 'My Report'}</option>`;
+                        dropdown.disabled = true;
+                        dropdown.classList.add('bg-light');
+                    }
+                }
+
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+
+                loadEmployeeReport();
+            } catch (err) {
+                console.error("Failed to init filters", err);
+            }
+        }
+
+        async function loadEmployeeReport() {
+            const tbody = document.getElementById('report-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Loading metrics...</td></tr>';
+
+            try {
+                const empId = document.getElementById('employee-dropdown').value;
+                const dateFrom = document.getElementById('date-from').value;
+                const dateTo = document.getElementById('date-to').value;
+
+                let url = `/reports/employees?start_date=${dateFrom}&end_date=${dateTo}`;
+                if (empId !== 'all') url += `&user_id=${empId}`;
+
+                const data = await apiGet(url);
+
+                const metrics = data.map(emp => ({
+                    id: emp.id,
+                    name: emp.name || 'Unknown',
+                    email: emp.email,
+                    role: emp.role,
+                    visits: emp.total_visits,
+                    leads: emp.total_leads,
+                    success_rate: emp.success_rate || 0,
+                    sales: emp.total_revenue,
+                    incentive: emp.total_incentive,
+                    target: emp.target || 0
+                }));
+
+                currentReportMetrics = metrics; // Save for export
+                renderReportTable(metrics);
+                updateKPICards(metrics);
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-danger">Failed to load report: ${err.message}</td></tr>`;
+            }
+        }
+
+        function renderReportTable(data) {
+            const tbody = document.getElementById('report-tbody');
+            const searchInput = document.getElementById('emp-search');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            // Apply search filtering on top of data
+            const filteredData = data.filter(item =>
+                item.name.toLowerCase().includes(searchTerm) ||
+                item.email.toLowerCase().includes(searchTerm) ||
+                formatRole(item.role).toLowerCase().includes(searchTerm)
+            );
+
+            document.getElementById('record-count').textContent = `${filteredData.length} Records`;
+
+            tbody.innerHTML = filteredData.map(item => `
+                <tr class="employee-row">
+                    <td class="text-center">
+                        <div class="pill-badge pill-neutral">${item.id.toString().padStart(2, '0')}</div>
+                    </td>
+                    <td>
+                        <div class="employee-name-container clickable-name" onclick="openDrillDown('${item.id}', '${item.name}', '${item.role}', '${item.leads}', '${item.sales}')">
+                            <span class="employee-main-name">${item.name}</span>
+                            <span class="employee-email">${item.email}</span>
+                        </div>
+                    </td>
+                    <td class="text-center"><span class="pill-badge pill-info">${formatRole(item.role)}</span></td>
+                    <td class="text-center"><span class="fw-bold">${item.visits}</span></td>
+                    <td class="text-center"><span class="text-success fw-bold"><i class="bi bi-lightning-fill me-1 small"></i>${item.leads}</span></td>
+                    <td class="text-center">
+                        <div class="status-pill ${item.success_rate >= 50 ? 'pill-success' : 'pill-warning'} mx-auto" style="width: 70px; justify-content: center;">
+                            ${item.success_rate}%
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="currency-value">₹${item.sales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                        <span class="text-muted small ms-1">(${item.target > 0 ? Math.round((item.sales / item.target) * 100) : 0}%)</span>
+                    </td>
+                    <td class="text-center">
+                        <span class="text-primary fw-bold" style="font-family: 'Outfit';">₹${item.incentive.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateKPICards(data) {
+            const totalVisits = data.reduce((sum, item) => sum + item.visits, 0);
+            const totalLeads = data.reduce((sum, item) => sum + item.leads, 0);
+            const totalSalesValue = data.reduce((sum, item) => sum + item.sales, 0);
+            const totalIncentiveValue = data.reduce((sum, item) => sum + item.incentive, 0);
+
+            document.getElementById('total-visits').textContent = totalVisits.toLocaleString();
+            document.getElementById('total-leads').textContent = totalLeads.toLocaleString();
+            document.getElementById('total-sales').textContent = '₹' + totalSalesValue.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+            document.getElementById('total-incentives').textContent = '₹' + totalIncentiveValue.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+        }
+
+        function exportReport(format) {
+            if (currentReportMetrics.length === 0) {
+                showToast("No data available to export.", "warning");
+                return;
+            }
+
+            const dateFrom = document.getElementById('date-from').value;
+            const dateTo = document.getElementById('date-to').value;
+            const empId = document.getElementById('employee-dropdown').value;
+            const empName = document.getElementById('employee-dropdown').options[document.getElementById('employee-dropdown').selectedIndex].text;
+            const dateRange = (dateFrom && dateTo) ? `${dateFrom} to ${dateTo}` : "All Time";
+
+            if (format === 'csv') {
+                exportCSV();
+            } else {
+                exportPDF();
+            }
+
+            function exportCSV() {
+                const empId = document.getElementById('employee-dropdown').value;
+                const dateFrom = document.getElementById('date-from').value;
+                const dateTo = document.getElementById('date-to').value;
+
+                let exportUrl = `/reports/export?type=employees&start_date=${dateFrom}&end_date=${dateTo}`;
+                if (empId !== 'all') exportUrl += `&user_id=${empId}`;
+
+                const filename = `Employee_Performance_Report_${new Date().toISOString().split('T')[0]}.csv`;
+
+                ApiClient.download(exportUrl, filename)
+                    .then(() => showToast("Export downloaded successfully", "success"))
+                    .catch(() => showToast("Failed to download CSV", "danger"));
+            }
+
+            function exportPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // --- Premium Double-Shaded Dark Palette ---
+                const primaryDark = [30, 41, 59];    // Slate 800
+                const secondaryDark = [71, 85, 105]; // Slate 600
+                const primaryLight = [241, 245, 249]; // Slate 100
+
+                // --- Background & Borders ---
+                doc.setDrawColor(...primaryDark);
+                doc.setLineWidth(0.5);
+                doc.line(10, 10, 200, 10); // Top line
+
+                // --- Company Branding (Logo) ---
+                const logo = document.getElementById('pdf-logo');
+                if (logo && logo.complete && logo.naturalWidth !== 0) {
+                    doc.addImage(logo, 'PNG', 15, 15, 40, 15);
+                } else {
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(16);
+                    doc.setTextColor(...primaryDark);
+                    doc.text("SRM AI SETU", 15, 25);
+                }
+
+                // --- Meta Information ---
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(100);
+                doc.setFontSize(8);
+                doc.text(`Generated: ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`, 15, 38);
+                doc.text(`Employee: ${empName}`, 15, 43);
+                doc.text(`Period: ${dateRange}`, 15, 48);
+
+                // Support line (right after meta info, no extra space)
+                doc.setDrawColor(220);
+                doc.setLineWidth(0.1);
+                doc.line(15, 51, 195, 51);
+
+                const tableData = currentReportMetrics.map(row => [
+                    row.name,
+                    formatRole(row.role),
+                    row.visits,
+                    row.leads,
+                    `${row.success_rate}%`,
+                    `INR ${row.sales.toLocaleString('en-IN')} (${row.target > 0 ? Math.round((row.sales / row.target) * 100) : 0}%)`,
+                    `INR ${row.incentive.toLocaleString('en-IN')}`
+                ]);
+
+                // Calculate Totals
+                const totalSales = currentReportMetrics.reduce((s, r) => s + r.sales, 0);
+                const totalIncentive = currentReportMetrics.reduce((s, r) => s + r.incentive, 0);
+
+                doc.autoTable({
+                    startY: 55,
+                    head: [["Name", "Role", "Visits", "Leads", "Success Rate", "Target Achieved", "Incentive"]],
+                    body: tableData,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: primaryDark,
+                        textColor: 255,
+                        fontSize: 9,
+                        fontStyle: 'bold'
+                    },
+                    alternateRowStyles: { fillColor: primaryLight },
+                    styles: {
+                        halign: 'left',
+                        fontSize: 8,
+                        cellPadding: 4,
+                        font: "helvetica",
+                        lineColor: [230, 230, 230]
+                    },
+                    didDrawPage: function (data) {
+                        // Footer
+                        doc.setFontSize(7);
+                        doc.setTextColor(150);
+                        doc.text("SRM AI SETU - Confidential Performance Analytics Report", 15, 285);
+                        doc.text(`Page ${doc.internal.getNumberOfPages()}`, 190, 285);
+                    }
+                });
+
+                // Summary / Totals Section below table
+                const finalY = doc.lastAutoTable.finalY + 10;
+                doc.setFillColor(...primaryLight);
+                doc.rect(120, finalY, 75, 25, 'F');
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9);
+                doc.setTextColor(...primaryDark);
+                doc.text("GRAND TOTALS", 125, finalY + 8);
+
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(50);
+                doc.text(`Total Target Achieved:`, 125, finalY + 15);
+                doc.text(`INR ${totalSales.toLocaleString('en-IN')}`, 190, finalY + 15, { align: 'right' });
+
+                doc.text(`Total Incentive:`, 125, finalY + 20);
+                doc.text(`INR ${totalIncentive.toLocaleString('en-IN')}`, 190, finalY + 20, { align: 'right' });
+
+                doc.save(`Employee_Performance_${new Date().toISOString().split('T')[0]}.pdf`);
+                showToast("Premium PDF Exported successfully", "success");
+            }
+        }
+
+
+
+        async function openDrillDown(id, name, role, leads, sales) {
+            const modal = new bootstrap.Modal(document.getElementById('drillDownModal'));
+
+            // Set details
+            document.getElementById('modal-emp-name').textContent = name;
+            document.getElementById('modal-emp-id').textContent = `#EMP-0${id}`;
+            document.getElementById('modal-emp-role').textContent = formatRole(role);
+            document.getElementById('modal-emp-initials').textContent = name.split(' ').map(n => n[0]).join('').toUpperCase();
+
+            // Conversion logic
+            const visits = parseInt(leads) * 2.5; // Back-simulating visits for conversion view
+            const conversion = visits > 0 ? ((parseInt(leads) / visits) * 100).toFixed(1) : "0";
+            document.getElementById('modal-conversion').textContent = `${conversion}%`;
+
+            // Populate actual activity data
+            const activityTbody = document.getElementById('modal-activity-tbody');
+            activityTbody.innerHTML = '<tr><td colspan="4" class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>';
+
+            try {
+                const dateFrom = document.getElementById('date-from').value;
+                const dateTo = document.getElementById('date-to').value;
+                const activities = await apiGet(`/reports/employees/${id}/activities?start_date=${dateFrom}&end_date=${dateTo}`);
+
+                if (activities.length === 0) {
+                    activityTbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-muted">No activities found for this period.</td></tr>';
+                } else {
+                    activityTbody.innerHTML = activities.map(a => `
+                        <tr>
+                            <td class="text-muted small">${new Date(a.date).toLocaleDateString()}</td>
+                            <td class="fw-bold small">${a.client}</td>
+                            <td><span class="badge bg-light text-dark x-small border">${a.type}</span></td>
+                            <td class="text-end">
+                                <span class="text-${a.status === 'Won' || a.status === 'SATISFIED' ? 'success' : 'primary'} fw-bold small">${a.status}</span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                activityTbody.innerHTML = '<tr><td colspan="4" class="text-center py-3 text-danger">Failed to load activity log.</td></tr>';
+            }
+
+            // Load saved note if any (simulated)
+            const savedNote = localStorage.getItem(`emp_note_${id}`) || "";
+            document.getElementById('admin-note').value = savedNote;
+            document.getElementById('admin-note').setAttribute('data-current-emp', id);
+
+            modal.show();
+        }
+
+        function saveAdminNote() {
+            const noteArea = document.getElementById('admin-note');
+            const empId = noteArea.getAttribute('data-current-emp');
+            const noteText = noteArea.value;
+
+            if (!empId) return;
+
+            localStorage.setItem(`emp_note_${empId}`, noteText);
+            showToast("Performance note saved successfully!", "success");
+        }
+
+        document.addEventListener('DOMContentLoaded', initFilters);
+    </script>
+    <img id="pdf-logo" src="/frontend/images/logo.png" style="display:none;">
+</body>
+
+</html>

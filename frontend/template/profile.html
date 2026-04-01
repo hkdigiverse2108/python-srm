@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<!-- frontend/template/profile.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profile — SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+    <link rel="stylesheet" href="../css/profile.css?v=20260321">
+</head>
+
+<body class="bg-app">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper">
+            <!-- Top header injected by auth.js -->
+
+            <div class="page-content-standard">
+
+                <!-- Profile Hero -->
+                <div class="profile-hero">
+                    <div class="profile-avatar-lg position-relative" id="hero-avatar">
+                        <img id="profile-img" src="" alt="Profile image of user" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;top:0;left:0;" />
+                        <span id="profile-initials">--</span>
+                        <label for="avatar-upload" class="position-absolute bottom-0 end-0 bg-surface rounded-circle p-1" style="cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,0.2); border: 2px solid var(--bg-surface);" aria-label="Upload avatar" title="Upload avatar">
+                            <i class="bi bi-camera-fill" style="font-size:0.9rem;color:var(--primary);" aria-hidden="true"></i>
+                            <input type="file" id="avatar-upload" accept="image/*" style="display:none;" aria-label="Choose profile image" />
+                        </label>
+                        <img id="avatar-preview" src="" alt="Avatar preview" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;top:0;left:0;z-index:2; border: 4px solid #6366f1;" />
+                    </div>
+                    <div class="flex-grow-1">
+                        <h2 class="mb-1" id="hero-name" style="font-size:1.75rem; font-weight: 800; color: var(--text-main);">Loading...</h2>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <div class="role-badge" id="hero-role"><i class="bi bi-shield-check"></i> —</div>
+                            <div class="text-muted" id="hero-email" style="font-size:0.9rem; font-weight: 500;">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="profile-content" style="display: none;">
+                    <div class="row g-4">
+                        <!-- Left Column -->
+                        <div class="col-md-5">
+                            <!-- Quick Actions -->
+                            <div id="quick-actions-container" style="display: none;">
+                                <div class="info-card mb-4">
+                                    <div class="info-card-title"><i class="bi bi-lightning-charge text-warning"></i> Quick Actions</div>
+                                    <div id="quick-links-list" class="quick-actions-list">
+                                        <!-- Links loaded via JS -->
+                                    </div>
+                                </div>
+                            </div>
+
+                        <!-- Account Info -->
+                        <div class="info-card mb-4">
+                            <div class="info-card-title"><i class="bi bi-person-badge text-primary"></i> Account Details</div>
+                            <div id="account-info-rows">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-md-7">
+                        <!-- Edit Profile -->
+                        <div class="info-card mb-4">
+                            <div class="info-card-title text-primary"><i class="bi bi-pencil-square"></i> Edit Profile</div>
+                            <form id="edit-profile-form">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label-sm" for="edit-name">Full Name</label>
+                                        <input type="text" id="edit-name" class="form-control form-control-clean" placeholder="Your full name" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-sm" for="edit-phone">Phone Number</label>
+                                        <input type="tel" id="edit-phone" class="form-control form-control-clean" placeholder="+91 98765 43210">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-sm" for="edit-email">Email Address</label>
+                                        <input type="email" id="edit-email" class="form-control form-control-clean" disabled style="background:var(--bg-app); color:var(--text-muted); border-style: dashed;">
+                                        <div class="text-muted mt-1" style="font-size:0.75rem;"><i class="bi bi-info-circle me-1"></i>Email is managed by administrator.</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-sm" for="edit-dept">Department / Designation</label>
+                                        <input type="text" id="edit-dept" class="form-control form-control-clean" disabled style="background:var(--bg-app); color:var(--text-muted); border-style: dashed;">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-sm" for="edit-summary">Professional Summary</label>
+                                        <textarea id="edit-summary" class="form-control form-control-clean" placeholder="Tell us about yourself..." style="height: 100px;" maxlength="300"></textarea>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <label class="form-label-sm">Social Profiles</label>
+                                        <div class="social-links-grid">
+                                            <div class="social-input-group">
+                                                <i class="bi bi-linkedin"></i>
+                                                <input type="url" id="edit-linkedin" class="form-control form-control-clean" placeholder="LinkedIn URL">
+                                            </div>
+                                            <div class="social-input-group">
+                                                <i class="bi bi-twitter-x"></i>
+                                                <input type="url" id="edit-twitter" class="form-control form-control-clean" placeholder="Twitter URL">
+                                            </div>
+                                            <div class="social-input-group">
+                                                <i class="bi bi-github"></i>
+                                                <input type="url" id="edit-github" class="form-control form-control-clean" placeholder="GitHub URL">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary d-flex align-items-center gap-2 px-4 fw-semibold" style="border-radius: 10px;" id="btn-save-profile">
+                                        <span class="spinner-border spinner-border-sm d-none" id="spinner-save-profile"></span>
+                                        <i class="bi bi-check2-circle" id="icon-save-profile"></i>
+                                        <span>Save Profile</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Change Password -->
+                        <div class="info-card">
+                            <div class="info-card-title text-danger"><i class="bi bi-shield-lock"></i> Security</div>
+                            <form id="change-password-form">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label-sm">Current Password</label>
+                                        <div class="position-relative">
+                                            <input type="password" id="old-password" class="form-control form-control-clean w-100" placeholder="Enter current password" style="padding-right: 40px;">
+                                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('old-password', 'old-pwd-icon')">
+                                                <i class="bi bi-eye" id="old-pwd-icon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-sm">New Password</label>
+                                        <div class="position-relative">
+                                            <input type="password" id="new-password" class="form-control form-control-clean w-100" placeholder="Min 8 characters" oninput="checkStrength(this.value)" style="padding-right: 40px;">
+                                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('new-password', 'new-pwd-icon')">
+                                                <i class="bi bi-eye" id="new-pwd-icon"></i>
+                                            </button>
+                                        </div>
+                                        <div class="password-strength">
+                                            <div class="password-strength-bar" id="pwd-strength-bar"></div>
+                                        </div>
+                                        <div class="text-muted mt-1" id="pwd-strength-text" style="font-size:0.75rem;"></div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label-sm">Confirm Password</label>
+                                        <div class="position-relative">
+                                            <input type="password" id="confirm-password" class="form-control form-control-clean w-100" placeholder="Confirm new password" style="padding-right: 40px;">
+                                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirm-password', 'confirm-pwd-icon')">
+                                                <i class="bi bi-eye" id="confirm-pwd-icon"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-2 px-4 fw-semibold" style="border-radius: 10px;" id="btn-update-pwd">
+                                        <span class="spinner-border spinner-border-sm d-none" id="spinner-update-pwd"></span>
+                                        <i class="bi bi-key" id="icon-update-pwd"></i>
+                                        <span>Update Password</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/utils.js?v=20260321"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/app.js?v=20260321"></script>
+    <script src="../js/profile.js?v=1.0"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+

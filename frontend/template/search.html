@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!-- frontend/template/search.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Search Results | SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+</head>
+
+<body class="bg-app">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper">
+
+            <div class="page-content-standard">
+                    <div id="search-status" class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="mb-3 mb-sm-0">
+                            <h2 id="search-title" class="page-section-title fw-bold mb-1">Search Results</h2>
+                            <p id="search-subtitle" class="text-muted mb-0" style="font-size:0.93rem;">Searching for...</p>
+                        </div>
+                    </div>
+
+                    <div id="results-container" class="row g-4">
+                        <!-- Categorized results will be injected here -->
+                        <div class="col-12 text-center py-5" id="loading-spinner">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Searching the entire SRM...</p>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </div>
+
+    <script src="../js/utils.js?v=20260321"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/app.js?v=20260321"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Guard
+            requireAuth();
+
+            // Render Sidebar
+            const sb = document.getElementById('sidebar');
+            if (sb) sb.innerHTML = renderSidebar('dashboard');
+
+            // Render Header
+            injectTopHeader('Search Results');
+
+
+            const params = new URLSearchParams(window.location.search);
+            const query = params.get('q') || params.get('query');
+
+            if (!query) {
+                document.getElementById('search-subtitle').textContent = 'Please enter a search term.';
+                document.getElementById('loading-spinner').remove();
+                return;
+            }
+
+            document.getElementById('search-subtitle').textContent = `Showing results for "${query}"`;
+            document.getElementById('global-search-input').value = query;
+
+            try {
+                const res = await apiGet(`/search/?q=${encodeURIComponent(query)}`);
+                renderResults(res);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('results-container').innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-exclamation-triangle text-danger fs-1"></i>
+                        <p class="mt-2">Search failed. Please try again later.</p>
+                    </div>`;
+            }
+        });
+
+        function renderResults(data) {
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+
+            const sections = [
+                { key: 'clients', label: 'Clients', icon: 'bi-people', href: 'clients.html?id=' },
+                { key: 'issues', label: 'Issues', icon: 'bi-exclamation-triangle', href: 'issues.html?id=' },
+                { key: 'projects', label: 'Projects', icon: 'bi-briefcase', href: 'projects.html?id=' },
+                { key: 'employees', label: 'Employees', icon: 'bi-person-badge', href: 'employees.html?id=' },
+                { key: 'leads', label: 'Leads (Shops)', icon: 'bi-bullseye', href: 'visits.html?id=' }
+            ];
+
+            let hasAnyResults = false;
+
+            sections.forEach(sec => {
+                const items = data[sec.key] || [];
+                if (items.length > 0) {
+                    hasAnyResults = true;
+                    const sectionHtml = `
+                        <div class="col-12 mb-4">
+                            <h4 class="fw-bold d-flex align-items-center gap-2 mb-3">
+                                <i class="${sec.icon} text-primary"></i>
+                                ${sec.label}
+                                <span class="badge bg-primary-subtle text-primary rounded-pill fs-6">${items.length}</span>
+                            </h4>
+                            <div class="row g-3">
+                                ${items.map(item => `
+                                    <div class="col-md-6 col-lg-4">
+                                        <a href="${sec.href}${item.id}" class="text-decoration-none text-main">
+                                            <div class="card h-100 border-0 shadow-sm hover-shadow transition-all bg-surface" style="border-radius:12px;">
+                                                <div class="card-body p-3 d-flex align-items-center gap-3">
+                                                    <div class="bg-app rounded-circle d-flex align-items-center justify-content-center" style="width:48px; height:48px; flex-shrink:0;">
+                                                        <i class="${sec.icon} text-muted"></i>
+                                                    </div>
+                                                    <div class="overflow-hidden">
+                                                        <div class="fw-bold text-truncate">${item.name}</div>
+                                                        <div class="text-muted small text-truncate">${item.subtext || ''}</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                    container.insertAdjacentHTML('beforeend', sectionHtml);
+                }
+            });
+
+            if (!hasAnyResults) {
+                container.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <i class="bi bi-search text-muted fs-1"></i>
+                        <p class="mt-2">No matches found for "${document.getElementById('global-search-input').value}"</p>
+                    </div>`;
+            }
+        }
+    </script>
+    <style>
+        .hover-shadow:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .1) !important;
+        }
+
+        .transition-all {
+            transition: all 0.2s ease;
+        }
+
+        .bg-primary-subtle {
+            background-color: #e0e7ff;
+        }
+    </style>
+</body>
+
+</html>
+
+

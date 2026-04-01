@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Settings | SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/settings-access-control.css">
+    <link rel="stylesheet" href="../css/settings.css?v=20260321">
+</head>
+
+<body class="bg-light">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="main-wrapper flex-grow-1">
+            <!-- Top header injected -->
+
+            <div class="page-content-standard">
+
+                <div class="row g-4">
+
+                    <!-- Sidebar Nav -->
+                    <div class="col-md-3">
+                        <nav class="settings-nav" id="settings-nav">
+                            <a href="#appearance" class="active" onclick="scrollTo('appearance',this)"><i
+                                    class="bi bi-palette"></i> Appearance</a>
+                            <a href="#notifications" onclick="scrollTo('notifications',this)"><i class="bi bi-bell"></i>
+                                Notifications</a>
+                            <a href="#account" onclick="scrollTo('account',this)"><i class="bi bi-person-gear"></i>
+                                Account</a>
+                            <a href="#incentives-config" onclick="scrollTo('incentives-config',this)" id="incentives-nav-link" style="display:none;"><i class="bi bi-trophy"></i> Incentives</a>
+                            <a href="#payslip-contact" onclick="scrollTo('payslip-contact',this)" id="payslip-nav-link" style="display:none;"><i class="bi bi-building"></i> Company / Payslip</a>
+                            <a href="#invoice-settings" onclick="scrollTo('invoice-settings',this)" id="invoice-nav-link" style="display:none;"><i class="bi bi-receipt-cutoff"></i> Invoice &amp; Payment</a>
+                            <a href="#access-control" onclick="scrollTo('access-control',this)" id="access-control-nav-link" style="display:none;"><i class="bi bi-shield-lock"></i> Access Control</a>
+                            <a href="#data-management-settings" onclick="scrollTo('data-management-settings',this)" id="data-management-nav-link" style="display:none;"><i class="bi bi-database-check"></i> Data Management</a>
+                            <a href="#attendance-settings" onclick="scrollTo('attendance-settings',this)" id="attendance-nav-link" style="display:none;"><i class="bi bi-clock-history"></i> Attendance</a>
+                            <a href="#employee-code-settings" onclick="scrollTo('employee-code-settings',this)" id="emp-code-nav-link" style="display:none;"><i class="bi bi-hash"></i> Employee Codes</a>
+                            <a href="#system" onclick="scrollTo('system',this)" id="system-nav-link"><i
+                                    class="bi bi-cpu"></i> System</a>
+                        </nav>
+                    </div>
+
+                    <!-- Settings Content -->
+                    <div class="col-md-9">
+
+                        <!-- ── Appearance ───── -->
+                        <div class="settings-section" id="appearance">
+                            <div class="settings-section-title"><i class="bi bi-palette text-primary"></i> Appearance
+                            </div>
+
+                            <div class="setting-row" style="border-bottom:none; margin-bottom:-10px;">
+                                <div>
+                                    <div class="setting-label">Theme</div>
+                                    <div class="setting-desc">Choose your preferred colour scheme</div>
+                                </div>
+                            </div>
+                            
+                            <div class="theme-grid mb-4">
+                                <div class="theme-card theme-light" data-theme="light">
+                                    <div class="theme-preview">
+                                        <div class="theme-preview-sidebar"></div>
+                                        <div class="theme-preview-content">
+                                            <div class="theme-preview-block" style="width: 80%"></div>
+                                            <div class="theme-preview-block" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="theme-label">Light</div>
+                                </div>
+                                <div class="theme-card theme-dark" data-theme="dark">
+                                    <div class="theme-preview">
+                                        <div class="theme-preview-sidebar"></div>
+                                        <div class="theme-preview-content">
+                                            <div class="theme-preview-block" style="width: 80%"></div>
+                                            <div class="theme-preview-block" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="theme-label">Dark</div>
+                                </div>
+                                <div class="theme-card theme-system" data-theme="system">
+                                    <div class="theme-preview">
+                                        <div class="theme-preview-sidebar"></div>
+                                        <div class="theme-preview-content">
+                                            <div class="theme-preview-block" style="width: 80%"></div>
+                                            <div class="theme-preview-block" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="theme-label">System</div>
+                                </div>
+                            </div>
+
+                            <div class="group-title">Layout & Performance</div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Sidebar Style</div>
+                                    <div class="setting-desc">Compact view for more horizontal space</div>
+                                </div>
+                                <label class="toggle-switch" style="opacity: 0.6; cursor: not-allowed;" title="Currently unavailable">
+                                    <input type="checkbox" id="compact-sidebar" disabled
+                                        onchange="saveSetting('compact_sidebar', this.checked); document.body.classList.toggle('sidebar-compact', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Sidebar Position</div>
+                                    <div class="setting-desc">Fixed left (default)</div>
+                                </div>
+                                <span class="badge badge-blue-light">
+                                    <i class="bi bi-layout-sidebar"></i> Left
+                                </span>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Compact Tables</div>
+                                    <div class="setting-desc">Reduce table row height for more data density</div>
+                                </div>
+                                <label class="toggle-switch" style="opacity: 0.6; cursor: not-allowed;" title="Currently unavailable">
+                                    <input type="checkbox" id="compact-tables" disabled
+                                        onchange="saveSetting('compact_tables', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Animate Cards</div>
+                                    <div class="setting-desc">Card hover lift animations</div>
+                                </div>
+                                <label class="toggle-switch" style="opacity: 0.6; cursor: not-allowed;" title="Currently unavailable">
+                                    <input type="checkbox" id="animate-cards" checked disabled
+                                        onchange="saveSetting('animate_cards', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- ── Notifications ───── -->
+                        <div class="settings-section" id="notifications">
+                            <div class="settings-section-title"><i class="bi bi-bell text-warning"></i> Notifications
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">In-App Alerts</div>
+                                    <div class="setting-desc">Bell notifications inside the SRM</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notif-inapp" checked
+                                        onchange="saveSetting('notif_inapp', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Meeting Reminders</div>
+                                    <div class="setting-desc">Get reminded 30 min before meetings</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notif-meetings" checked
+                                        onchange="saveSetting('notif_meetings', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Issue Alerts</div>
+                                    <div class="setting-desc">Notifications when new issues are raised</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notif-issues" checked
+                                        onchange="saveSetting('notif_issues', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Lead Assignment Alerts</div>
+                                    <div class="setting-desc">Notify when a lead is assigned to you</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notif-leads"
+                                        onchange="saveSetting('notif_leads', this.checked)">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Notification Poll Rate</div>
+                                    <div class="setting-desc">How often to check for new alerts</div>
+                                </div>
+                                <select class="select-clean" id="poll-rate"
+                                    onchange="saveSetting('poll_rate', this.value)">
+                                    <option value="15">Every 15s</option>
+                                    <option value="30" selected>Every 30s</option>
+                                    <option value="60">Every 1 min</option>
+                                    <option value="300">Every 5 min</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ── Account ───── -->
+                        <div class="settings-section" id="account">
+                            <div class="settings-section-title"><i class="bi bi-person-gear text-primary"></i> Account
+                            </div>
+
+
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Session Timeout</div>
+                                    <div class="setting-desc">Auto-logout after inactivity</div>
+                                </div>
+                                <select class="select-clean" id="session-timeout"
+                                    onchange="saveSetting('session_timeout', this.value)">
+                                    <option value="30">30 minutes</option>
+                                    <option value="60" selected>1 hour</option>
+                                    <option value="240">4 hours</option>
+                                    <option value="0">Never</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Dashboard Default View</div>
+                                    <div class="setting-desc">Page shown after login</div>
+                                </div>
+                                <select class="select-clean" id="default-view"
+                                    onchange="saveSetting('default_view', this.value)">
+                                    <option value="dashboard" selected>Dashboard Overview</option>
+                                    <option value="leads">Project Leads</option>
+                                    <option value="clients">Clients</option>
+                                    <option value="timetable">Timetable</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Timezone</div>
+                                    <div class="setting-desc">Display times in your local zone</div>
+                                </div>
+                                <select class="select-clean" id="timezone-select"
+                                    onchange="saveSetting('timezone', this.value)">
+                                    <option value="UTC">UTC (GMT+0)</option>
+                                    <option value="IST" selected>India (GMT+5:30)</option>
+                                    <option value="EST">Eastern Time (GMT-5)</option>
+                                    <option value="PST">Pacific Time (GMT-8)</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Display Language</div>
+                                    <div class="setting-desc">Select your preferred language</div>
+                                </div>
+                                <select class="select-clean" id="language-select"
+                                    onchange="saveSetting('language', this.value)">
+                                    <option value="en" selected>English (UK)</option>
+                                    <option value="hi">Hindi (Coming Soon)</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- ── Incentives Configuration ───── -->
+                        <div class="settings-section" id="incentives-config" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-trophy text-warning"></i> Incentive Strategy <span class="ms-auto"><a href="incentives.html" class="text-muted" style="font-size:0.75rem; text-decoration:none;"><i class="bi bi-arrow-up-right-square"></i> View Incentives</a></span></div>
+
+                            <div class="settings-section-title"><i class="bi bi-shield-check text-primary"></i> Incentive Eligibility</div>
+                            <p class="text-muted mb-3" style="font-size:0.8rem;">Role action applies to all current users in the selected role. Use user selection only when you want an individual override.</p>
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-5">
+                                    <label class="form-label text-muted fw-semibold small">By Role</label>
+                                    <select id="elig-role" class="form-select form-select-sm">
+                                        <option value="SALES">Sales</option>
+                                        <option value="TELESALES">Telesales</option>
+                                        <option value="PROJECT_MANAGER">Project Manager</option>
+                                        <option value="PROJECT_MANAGER_AND_SALES">PM + Sales</option>
+                                        <option value="ADMIN">Admin</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted fw-semibold small">Action</label>
+                                    <select id="elig-role-enabled" class="form-select form-select-sm">
+                                        <option value="true">Enable Incentive</option>
+                                        <option value="false">Disable Incentive</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn-save-sm w-100" id="btn-apply-role-elig" onclick="applyRoleEligibility()">
+                                        <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-apply-role-elig"></span>
+                                        <i class="bi bi-gear me-1" id="icon-apply-role-elig"></i> Apply to All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row g-3 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted fw-semibold small">By User</label>
+                                    <select id="elig-user" class="form-select form-select-sm">
+                                        <option value="">Loading users...</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted fw-semibold small">Eligibility</label>
+                                    <select id="elig-user-enabled" class="form-select form-select-sm">
+                                        <option value="true">Eligible</option>
+                                        <option value="false">Not Eligible</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn-save-sm w-100" id="btn-save-user-elig" onclick="saveUserEligibility()">
+                                        <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-user-elig"></span>
+                                        <i class="bi bi-check2 me-1" id="icon-save-user-elig"></i> Save User
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div id="eligibility-msg" class="small text-muted mb-3"></div>
+
+                            <div id="slabs-settings-list">
+                                <div class="text-center py-3"><div class="spinner-border spinner-border-sm text-muted"></div></div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="settings-section-title"><i class="bi bi-plus-circle text-success"></i> Add New Slab</div>
+                            <div class="row g-2 mt-1">
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label text-muted fw-semibold small">Min Units</label>
+                                    <input type="number" id="slab-min" class="form-control form-control-sm" placeholder="e.g. 0" min="0">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label text-muted fw-semibold small">Max Units</label>
+                                    <input type="number" id="slab-max" class="form-control form-control-sm" placeholder="e.g. 10" min="1">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label text-muted fw-semibold small">Per Unit (₹)</label>
+                                    <input type="number" id="slab-per-unit" class="form-control form-control-sm" placeholder="e.g. 500" min="0">
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <label class="form-label text-muted fw-semibold small">Slab Bonus (₹)</label>
+                                    <input type="number" id="slab-bonus" class="form-control form-control-sm" placeholder="e.g. 1000" min="0">
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <button class="btn-save-sm" id="btn-add-slab" onclick="addSlabSetting()">
+                                        <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-add-slab"></span>
+                                        <i class="bi bi-plus me-1" id="icon-add-slab"></i> Add Slab
+                                    </button>
+                                    <span id="slab-save-msg" class="ms-3 small text-success d-none"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── Employee Code Configuration (admin-only) ───── -->
+                        <div class="settings-section" id="employee-code-settings" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-hash text-primary"></i> Employee Code Configuration</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">Configure how automatic employee codes (e.g., EMP001) are generated for new staff.</p>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Auto-generate Employee Code</div>
+                                    <div class="setting-desc">Enable sequential employee code generation for new staff</div>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="emp-code-enabled" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Code Prefix</div>
+                                    <div class="setting-desc">The start of every auto-generated employee code</div>
+                                </div>
+                                <input type="text" id="emp-code-prefix" class="form-control form-control-sm" style="max-width:120px;" placeholder="e.g. EMP" maxlength="10">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Next Sequence Number</div>
+                                    <div class="setting-desc">The number to be used for the next employee</div>
+                                </div>
+                                <input type="number" id="emp-code-next-seq" class="form-control form-control-sm" style="max-width:120px;" placeholder="e.g. 1" min="1">
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn-save-sm" id="btn-save-emp-code" onclick="saveEmployeeCodeSettings()">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-emp-code"></span>
+                                    <i class="bi bi-save me-1" id="icon-save-emp-code"></i> Save Configuration
+                                </button>
+                                <span id="emp-code-save-msg" class="ms-3 small text-success d-none">Saved!</span>
+                            </div>
+                        </div>
+
+                        <!-- ── Attendance Rules (admin-only) ───── -->
+                        <div class="settings-section" id="attendance-settings" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-clock-history text-primary"></i> Attendance Rules</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">Configure auto leave rules and weekly off days.</p>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Absent Hours Threshold</div>
+                                    <div class="setting-desc">Hours at or below this value count as full-day absence</div>
+                                </div>
+                                <input type="number" id="att-absent-threshold" class="form-control form-control-sm" style="max-width:140px;" step="0.1" min="0">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Half Day Hours Threshold</div>
+                                    <div class="setting-desc">Below this hours value counts as half-day leave</div>
+                                </div>
+                                <input type="number" id="att-halfday-threshold" class="form-control form-control-sm" style="max-width:140px;" step="0.1" min="0">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Saturday Policy</div>
+                                    <div class="setting-desc">Mark Saturday as full/half off or working day</div>
+                                </div>
+                                <select id="att-saturday" class="select-clean">
+                                    <option value="FULL">Full Day Off</option>
+                                    <option value="HALF">Half Day Off</option>
+                                    <option value="NONE">Working Day</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Sunday Policy</div>
+                                    <div class="setting-desc">Mark Sunday as full/half off or working day</div>
+                                </div>
+                                <select id="att-sunday" class="select-clean">
+                                    <option value="FULL">Full Day Off</option>
+                                    <option value="HALF">Half Day Off</option>
+                                    <option value="NONE">Working Day</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row" style="align-items:flex-start;">
+                                <div>
+                                    <div class="setting-label">Official Holidays (YYYY-MM-DD)</div>
+                                    <div class="setting-desc">Comma-separated dates that should not trigger auto leave</div>
+                                </div>
+                                <textarea id="att-holidays" class="form-control form-control-sm" style="max-width:320px;" rows="3" placeholder="2026-03-15, 2026-03-25"></textarea>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn-save-sm" id="btn-save-att" onclick="saveAttendanceSettings()">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-att"></span>
+                                    <i class="bi bi-save me-1" id="icon-save-att"></i> Save Attendance Rules
+                                </button>
+                                <span id="att-save-msg" class="ms-3 small text-success d-none">Saved!</span>
+                            </div>
+                        </div>
+
+                        <!-- ── Company / Payslip Contact ───── -->
+                        <div class="settings-section" id="payslip-contact" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-building text-primary"></i> Company / Payslip Contact</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">These details appear on employee salary slips in the banner header.</p>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">HR Email</div>
+                                    <div class="setting-desc">Shown on salary slip header</div>
+                                </div>
+                                <input type="email" id="payslip-email" class="form-control form-control-sm" style="max-width:280px;" placeholder="e.g. hr@company.com">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Contact Phone</div>
+                                    <div class="setting-desc">Shown on salary slip header</div>
+                                </div>
+                                <input type="tel" id="payslip-phone" class="form-control form-control-sm" style="max-width:200px;" placeholder="e.g. 9876543210">
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn-save-sm" id="btn-save-payslip" onclick="savePayslipContact()">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-payslip"></span>
+                                    <i class="bi bi-save me-1" id="icon-save-payslip"></i> Save Contact Info
+                                </button>
+                                <span id="payslip-save-msg" class="ms-3 small text-success d-none">Saved!</span>
+                            </div>
+                        </div>
+
+                        <!-- ── Data Management (admin-only) ───── -->
+                        <div class="settings-section" id="data-management-settings" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-database-check text-danger"></i> Data Retention & Deletion Policy</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">Configure how records are handled when deleted. <strong>Soft Delete</strong> marks them as hidden, while <strong>Hard Delete</strong> permanently removes them.</p>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Global Delete Policy</div>
+                                    <div class="setting-desc">Soft: Recursive hiding (Recommended) | Hard: Permanent destruction</div>
+                                </div>
+                                <select id="global-delete-policy" class="form-select form-select-sm fw-bold border-danger text-danger bg-danger-subtle" disabled>
+                                    <option value="SOFT">SOFT DELETE (Hidden)</option>
+                                </select>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-danger" id="btn-save-del-policy" style="border-radius:8px; font-weight:600;" onclick="saveDeletePolicy()" disabled>
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-del-policy"></span>
+                                    <i class="bi bi-shield-lock me-1" id="icon-save-del-policy"></i> Update Policy
+                                </button>
+                                <span id="delete-policy-save-msg" class="ms-3 small text-success d-none">Policy Updated!</span>
+                            </div>
+                        </div>
+
+                        <!-- ── Invoice & Payment Settings (admin-only) ───── -->
+                        <div class="settings-section" id="invoice-settings" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-receipt-cutoff text-primary"></i> Invoice &amp; Payment Settings</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:16px;">These settings control invoice defaults and the payment QR shown on all invoices.</p>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Default Invoice Amount (₹)</div>
+                                    <div class="setting-desc">Pre-filled amount when creating a new invoice</div>
+                                </div>
+                                <input type="number" id="inv-default-amount" class="form-control form-control-sm" style="max-width:160px;" placeholder="12000" min="1">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Personal Account (Without GST) Default Amount (₹)</div>
+                                    <div class="setting-desc">Used automatically for personal account invoices without GST</div>
+                                </div>
+                                <input type="number" id="inv-personal-no-gst-amount" class="form-control form-control-sm" style="max-width:190px;" placeholder="12000" min="1">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Next Invoice Sequence (With GST)</div>
+                                    <div class="setting-desc">Controls Inv/YYYY/### numbering. Set to 1 to reset.</div>
+                                </div>
+                                <input type="number" id="inv-seq-with-gst" class="form-control form-control-sm" style="max-width:160px;" placeholder="1" min="1">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Next Invoice Sequence (Without GST)</div>
+                                    <div class="setting-desc">Controls PInv/YYYY/### numbering. Set to 1 to reset.</div>
+                                </div>
+                                <input type="number" id="inv-seq-without-gst" class="form-control form-control-sm" style="max-width:160px;" placeholder="1" min="1">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Company Name</div>
+                                    <div class="setting-desc">Shown on invoice header</div>
+                                </div>
+                                <input type="text" id="inv-company-name" class="form-control form-control-sm" style="max-width:240px;" placeholder="SRM AI SETU">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Company Address</div>
+                                    <div class="setting-desc">Printed on invoice</div>
+                                </div>
+                                <input type="text" id="inv-company-address" class="form-control form-control-sm" style="max-width:300px;" placeholder="City, State, PIN">
+                            </div>
+
+                            <div class="setting-row" style="align-items:flex-start;">
+                                <div>
+                                    <div class="setting-label">Header Image Details</div>
+                                    <div class="setting-desc">Printed just after company address in invoice header (exact text)</div>
+                                </div>
+                                <textarea id="inv-header-image-details" class="form-control form-control-sm" style="max-width:360px;min-height:64px;" placeholder="e.g. Gujarat-395004\nGSTIN: XXXXX\nPAN: XXXXX"></textarea>
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Company Phone</div>
+                                    <div class="setting-desc">Support contact on invoice footer</div>
+                                </div>
+                                <input type="tel" id="inv-company-phone" class="form-control form-control-sm" style="max-width:200px;" placeholder="9876543210">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Company Email</div>
+                                    <div class="setting-desc">Shown in invoice header</div>
+                                </div>
+                                <input type="email" id="inv-company-email" class="form-control form-control-sm" style="max-width:260px;" placeholder="accounts@company.com">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">GSTIN</div>
+                                    <div class="setting-desc">Optional GST number on invoice</div>
+                                </div>
+                                <input type="text" id="inv-company-gstin" class="form-control form-control-sm" style="max-width:220px;" placeholder="e.g. 29ABCDE1234F1Z5">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">PAN</div>
+                                    <div class="setting-desc">Permanent Account Number for invoice header</div>
+                                </div>
+                                <input type="text" id="inv-company-pan" class="form-control form-control-sm" style="max-width:220px;" placeholder="e.g. ABCDE1234F">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">CIN / LLPIN</div>
+                                    <div class="setting-desc">Company Identification Number or LLPIN</div>
+                                </div>
+                                <input type="text" id="inv-company-cin" class="form-control form-control-sm" style="max-width:260px;" placeholder="e.g. U12345GJ2024PTC123456">
+                            </div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">CST Code</div>
+                                    <div class="setting-desc">Optional CST/TIN code for invoice header</div>
+                                </div>
+                                <input type="text" id="inv-company-cst-code" class="form-control form-control-sm" style="max-width:220px;" placeholder="Optional">
+                            </div>
+
+                            <div class="settings-section-title mt-4" style="border-top:1px solid #f1f5f9;padding-top:16px;"><i class="bi bi-briefcase text-primary"></i> Business Account Payment Details</div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">UPI ID</div>
+                                    <div class="setting-desc">e.g. company@upi &mdash; shown on invoice QR section</div>
+                                </div>
+                                <input type="text" id="inv-business-upi-id" class="form-control form-control-sm" style="max-width:240px;" placeholder="business@upi">
+                            </div>
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">UPI Account Name</div>
+                                </div>
+                                <input type="text" id="inv-business-upi-name" class="form-control form-control-sm" style="max-width:240px;" placeholder="Business Name">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Name</div></div>
+                                <input type="text" id="inv-business-bank-name" class="form-control form-control-sm" style="max-width:240px;" placeholder="Bank Name">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Account Number</div></div>
+                                <input type="text" id="inv-business-bank-account-number" class="form-control form-control-sm" style="max-width:240px;" placeholder="Account Number">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">IFSC Code</div></div>
+                                <input type="text" id="inv-business-bank-ifsc" class="form-control form-control-sm" style="max-width:180px;" placeholder="IFSC">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Branch</div></div>
+                                <input type="text" id="inv-business-bank-branch" class="form-control form-control-sm" style="max-width:220px;" placeholder="Branch">
+                            </div>
+
+                            <div class="setting-row" style="align-items:start;">
+                                <div>
+                                    <div class="setting-label">QR Code Image</div>
+                                    <div class="setting-desc">Directly upload a QR image or provide a URL (at least one is required if using QR)</div>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="display:flex; gap:8px;">
+                                        <input type="text" id="inv-business-qr-url" class="form-control form-control-sm" style="max-width:300px;" placeholder="Image URL (Or click upload button)">
+                                        <input type="file" id="business-qr-file" accept="image/*" style="display:none;" onchange="uploadPaymentQR(this, 'inv-business-qr-url', 'inv-business-qr-preview')">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('business-qr-file').click()"><i class="bi bi-upload"></i> Upload</button>
+                                    </div>
+                                    <img id="inv-business-qr-preview" src="" alt="QR Preview" style="max-width:150px; max-height:150px; display:none; border:1px solid #ccc; padding:4px;">
+                                </div>
+                            </div>
+
+                            <div class="settings-section-title mt-4" style="border-top:1px solid #f1f5f9;padding-top:16px;"><i class="bi bi-person text-primary"></i> Personal Account Payment Details</div>
+
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">UPI ID</div>
+                                </div>
+                                <input type="text" id="inv-personal-upi-id" class="form-control form-control-sm" style="max-width:240px;" placeholder="personal@upi">
+                            </div>
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">UPI Account Name</div>
+                                </div>
+                                <input type="text" id="inv-personal-upi-name" class="form-control form-control-sm" style="max-width:240px;" placeholder="Personal Name">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Name</div></div>
+                                <input type="text" id="inv-personal-bank-name" class="form-control form-control-sm" style="max-width:240px;" placeholder="Bank Name">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Account Number</div></div>
+                                <input type="text" id="inv-personal-bank-account-number" class="form-control form-control-sm" style="max-width:240px;" placeholder="Account Number">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">IFSC Code</div></div>
+                                <input type="text" id="inv-personal-bank-ifsc" class="form-control form-control-sm" style="max-width:180px;" placeholder="IFSC">
+                            </div>
+                            <div class="setting-row">
+                                <div><div class="setting-label">Bank Branch</div></div>
+                                <input type="text" id="inv-personal-bank-branch" class="form-control form-control-sm" style="max-width:220px;" placeholder="Branch">
+                            </div>
+
+                            <div class="setting-row" style="align-items:start;">
+                                <div>
+                                    <div class="setting-label">QR Code Image</div>
+                                    <div class="setting-desc">Directly upload a QR image or provide a URL (at least one is required if using QR)</div>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <div style="display:flex; gap:8px;">
+                                        <input type="text" id="inv-personal-qr-url" class="form-control form-control-sm" style="max-width:300px;" placeholder="Image URL (Or click upload button)">
+                                        <input type="file" id="personal-qr-file" accept="image/*" style="display:none;" onchange="uploadPaymentQR(this, 'inv-personal-qr-url', 'inv-personal-qr-preview')">
+                                        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('personal-qr-file').click()"><i class="bi bi-upload"></i> Upload</button>
+                                    </div>
+                                    <img id="inv-personal-qr-preview" src="" alt="QR Preview" style="max-width:150px; max-height:150px; display:none; border:1px solid #ccc; padding:4px;">
+                                </div>
+                            </div>
+
+                            <div class="settings-section-title mt-4" style="border-top:1px solid #f1f5f9;padding-top:16px;"><i class="bi bi-shield-check text-primary"></i> Verification Permissions</div>
+                            <div class="setting-row" style="align-items:flex-start;">
+                                <div>
+                                    <div class="setting-label">Who can verify/send invoice</div>
+                                    <div class="setting-desc">Admin can allow additional roles to verify and send invoices.</div>
+                                </div>
+                                <div id="inv-verifier-roles" style="display:flex;gap:14px;flex-wrap:wrap;max-width:420px;">
+                                    <label style="font-size:0.82rem;"><input type="checkbox" value="ADMIN" checked> ADMIN</label>
+                                    <label style="font-size:0.82rem;"><input type="checkbox" value="SALES"> SALES</label>
+                                    <label style="font-size:0.82rem;"><input type="checkbox" value="TELESALES"> TELESALES</label>
+                                    <label style="font-size:0.82rem;"><input type="checkbox" value="PROJECT_MANAGER"> PROJECT_MANAGER</label>
+                                    <label style="font-size:0.82rem;"><input type="checkbox" value="PROJECT_MANAGER_AND_SALES"> PROJECT_MANAGER_AND_SALES</label>
+                                </div>
+                            </div>
+
+                            <div class="settings-section-title mt-4" style="border-top:1px solid #f1f5f9;padding-top:16px;"><i class="bi bi-card-text text-primary"></i> Invoice Terms</div>
+                            <div class="setting-row" style="align-items:flex-start;">
+                                <div>
+                                    <div class="setting-label">Terms &amp; Conditions</div>
+                                    <div class="setting-desc">Admin can edit terms printed in invoice footer. Use new line for multiple terms.</div>
+                                </div>
+                                <textarea id="inv-terms-conditions" class="form-control form-control-sm" style="max-width:420px;min-height:88px;" placeholder="• Subject to Surat Jurisdiction"></textarea>
+                            </div>
+
+                            <div class="mt-3">
+                                <button class="btn-save-sm" id="btn-save-inv" onclick="saveInvoiceSettings()">
+                                    <span class="spinner-border spinner-border-sm me-2 d-none" id="spn-save-inv"></span>
+                                    <i class="bi bi-save me-1" id="icon-save-inv"></i> Save Invoice Settings
+                                </button>
+                                <span id="inv-save-msg" class="ms-3 small text-success d-none">Saved!</span>
+                            </div>
+                        </div>
+
+                        <!-- ── Access Control (admin-only) ── -->
+                        <div class="settings-section" id="access-control" style="display:none;">
+                            <!-- Header -->
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="settings-section-title mb-0">
+                                    <i class="bi bi-shield-halved text-primary"></i> Access Control
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;font-size:0.78rem;font-weight:600;" onclick="resetAccessPolicy()">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset to Defaults
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" style="border-radius:8px;font-size:0.78rem;font-weight:600;" id="btn-save-access" onclick="saveAccessPolicy()">
+                                        <span class="spinner-border spinner-border-sm d-none me-1" id="spn-save-access"></span>
+                                        <i class="bi bi-save me-1" id="icon-save-access"></i>Save Policy
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-4" style="font-size:0.82rem;">Configure which pages and features each role can access. Changes take effect on next login.</p>
+
+                            <!-- Role Switcher -->
+                            <div class="ac-role-bar mb-4" id="ac-role-bar">
+                                <!-- roles injected by JS -->
+                            </div>
+
+                            <div class="settings-section-title mt-4"><i class="bi bi-sliders text-primary"></i> Action Permission Matrix</div>
+                            <p class="text-muted" style="font-size:0.82rem; margin-bottom:12px;">Choose which roles can perform each action. ADMIN is always enforced.</p>                                                      
+                            <!-- Field Operations -->
+                            <!-- Two-column layout: Pages + Features -->
+                            <div class="row g-3">
+                                <!-- Page Access -->
+                                <div class="col-md-6">
+                                    <div class="ac-card">
+                                        <div class="ac-card-header">
+                                            <i class="bi bi-files text-primary"></i>
+                                            <span>Page Access</span>
+                                            <span class="ms-auto" id="ac-page-count" style="font-size:0.75rem;color:#64748b;font-weight:500;"></span>
+                                        </div>
+                                        <div class="ac-card-body" id="ac-pages-list">
+                                            <!-- page toggles injected by JS -->
+                                        </div>
+                                        <div class="ac-card-footer">
+                                            <div class="d-flex gap-2 align-items-center">
+                                                <select class="form-select form-select-sm" id="ac-add-page-select" style="border-radius:8px;">
+                                                    <option value="">Add a page…</option>
+                                                    <option value="admin.html">admin.html</option>
+                                                    <option value="areas.html">areas.html</option>
+                                                    <option value="billing.html">billing.html</option>
+                                                    <option value="clients.html">clients.html</option>
+                                                    <option value="dashboard.html">dashboard.html</option>
+                                                    <option value="employees.html">employees.html</option>
+                                                    <option value="feedback.html">feedback.html</option>
+                                                    <option value="incentives.html">incentives.html</option>
+                                                    <option value="issues.html">issues.html</option>
+                                                    <option value="leads.html">leads.html</option>
+                                                    <option value="leaves.html">leaves.html</option>
+                                                    <option value="meetings.html">meetings.html</option>
+                                                    <option value="notifications.html">notifications.html</option>
+                                                    <option value="profile.html">profile.html</option>
+                                                    <option value="projects.html">projects.html</option>
+                                                    <option value="projects_demo.html">projects_demo.html</option>
+                                                    <option value="employee_report.html">employee_report.html</option>
+                                                    <option value="client_report.html">client_report.html</option>
+                                                    <option value="salary.html">salary.html</option>
+                                                    <option value="salary_slip_view.html">salary_slip_view.html</option>
+                                                    <option value="search.html">search.html</option>
+                                                    <option value="settings.html">settings.html</option>
+                                                    <option value="timetable.html">timetable.html</option>
+                                                    <option value="todo.html">todo.html</option>
+                                                    <option value="visits.html">visits.html</option>
+                                                </select>
+                                                <button class="btn btn-sm" style="background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;white-space:nowrap;" onclick="acAddPage()">
+                                                    <i class="bi bi-plus"></i> Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Feature Permissions -->
+                                <div class="col-md-6">
+                                    <div class="ac-card">
+                                        <div class="ac-card-header">
+                                            <i class="bi bi-toggles text-warning"></i>
+                                            <span>Feature Permissions</span>
+                                        </div>
+                                        <div class="ac-card-body" id="ac-features-list">
+                                            <!-- feature toggles injected by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Save status -->
+                            <div class="mt-3 d-flex align-items-center gap-3">
+                                <span id="ac-save-msg" class="small text-success d-none"><i class="bi bi-check-circle me-1"></i>Policy saved successfully</span>
+                                <span id="ac-error-msg" class="small text-danger d-none"></span>
+                            </div>
+                        </div>
+
+                        <!-- ── System ───── -->
+                        <div class="settings-section" id="system" style="display:none;">
+                            <div class="settings-section-title"><i class="bi bi-cpu text-secondary"></i> System
+                                Information</div>
+
+                            <div class="setting-row">
+                                <div class="setting-label">Backend API URL</div>
+                                <span class="text-muted" id="api-url-display"
+                                    style="font-size:0.8rem; font-family: monospace;"></span>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-label">Frontend Version</div>
+                                <span class="version-chip"><i class="bi bi-check-circle-fill"></i> v1.0</span>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-label">API Status</div>
+                                <span class="version-chip" id="api-status-chip"><i class="bi bi-arrow-repeat"></i>
+                                    Checking...</span>
+                            </div>
+                            <div class="setting-row">
+                                <div class="setting-label">Logged-in User ID</div>
+                                <span class="text-muted" id="sys-user-id" style="font-size:0.85rem;"></span>
+                            </div>
+                        </div>
+
+                        <!-- ── Danger Zone ───── -->
+                        <div class="danger-zone" id="danger-zone" style="display:none;">
+                            <div class="danger-zone-title"><i class="bi bi-exclamation-triangle-fill"></i> Danger Zone
+                            </div>
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Clear All Local Settings</div>
+                                    <div class="setting-desc">Reset all SRM preferences to defaults</div>
+                                </div>
+                                <button class="btn btn-sm"
+                                    style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;border-radius:8px;font-size:0.82rem;font-weight:600;"
+                                    onclick="clearAllSettings()">
+                                    <i class="bi bi-trash me-1"></i> Clear
+                                </button>
+                            </div>
+                            <div class="setting-row">
+                                <div>
+                                    <div class="setting-label">Force Logout</div>
+                                    <div class="setting-desc">Clear session and return to login</div>
+                                </div>
+                                <button class="btn btn-sm"
+                                    style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5;border-radius:8px;font-size:0.82rem;font-weight:600;"
+                                    onclick="logout()">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-msg" id="toast-msg">
+        <i class="bi bi-check-circle-fill text-success"></i>
+        <span id="toast-text">Saved!</span>
+    </div>
+
+    <script src="../js/utils.js?v=20260321"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/app.js?v=20260321"></script>
+    <script src="../js/settings.js?v=1.0"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
+
+

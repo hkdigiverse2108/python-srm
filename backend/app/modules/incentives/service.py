@@ -1,0 +1,260 @@
+# backend/app/modules/incentives/service.py
+from beanie import PydanticObjectId
+from beanie.operators import In, Or, And
+from fastapi import HTTPException
+from datetime import datetime, UTC, timedelta
+from typing import List, Optional, Dict, Any
+
+from app.modules.incentives.models import IncentiveSlab, IncentiveSlip
+from app.modules.incentives.schemas import IncentiveCalculationRequest, IncentiveSlipRead
+from app.modules.users.models import User, UserRole
+from app.modules.clients.models import Client
+
+class IncentiveService:
+    def __init__(self):
+        # No db session needed in Beanie!
+        pass
+
+    @staticmethod
+    def _user_display_name(user: Optional[User], user_id: PydanticObjectId) -> str:
+        if not user:
+            return f"Employee #{user_id}"
+        return user.name or f"Employee #{user_id}"
+
+    @staticmethod
+    def _get_period_bounds(period: str) -> tuple[datetime, datetime]:
+        year, month = map(int, period.split('-'))
+        period_start = datetime(year, month, 1, tzinfo=UTC)
+        if month == 12:
+            next_month_start = datetime(year + 1, 1, 1, tzinfo=UTC)
+        else:
+            next_month_start = datetime(year, month + 1, 1, tzinfo=UTC)
+        return period_start, next_month_start
+
+    def _apply_role_scope_query(self, user: User):
+        """Returns a Beanie query for clients based on user role permission profiling."""
+        q = Client.find(Client.is_active == True, Client.is_deleted == False)
+        if user.role == UserRole.TELESALES or user.role == UserRole.SALES:
+            return q.find(Client.owner_id == user.id)
+        if user.role == UserRole.PROJECT_MANAGER:
+            return q.find(Client.pm_id == user.id)
+        if user.role == UserRole.PROJECT_MANAGER_AND_SALES:
+            return q.find(Or(Client.owner_id == user.id, Client.pm_id == user.id))
+        # Default: restricted view (e.g. for purely administrative users without client handling)
+        return q.find(Client.id == PydanticObjectId("000000000000000000000000"))
+
+    async def _calculate_stepped_incentive(self, batch_count: int, offset: int = 0) -> dict:
+        """Logic to distribute unit count across progressive incentive slabs and calculate total reward."""
+        if batch_count <= 0:
+            return {
+                "incentive_per_unit": 0.0,
+                "slab_bonus": 0.0,
+                "total_incentive": 0.0,
+                "applied_slab_label": f"Offset: {offset}" if offset > 0 else None,
+                "offset": offset
+            }
+
+        all_slabs = await IncentiveSlab.find_all().sort("min_units").to_list()
+        
+        total_incentive = 0.0
+        total_bonus = 0.0
+        total_units_end = offset + batch_count
+        
+        for slab in all_slabs:
+            # Units falling into this slab's range
+            units_before = max(0, min(offset, slab.max_units) - slab.min_units + 1)
+            units_total = max(0, min(total_units_end, slab.max_units) - slab.min_units + 1)
+            units_to_pay = units_total - units_before
+            
+            if units_to_pay > 0:
+                total_incentive += (units_to_pay * slab.incentive_per_unit)
+                # Apply bonus if milestone reached in this current calculation batch
+                if total_units_end >= slab.max_units and offset < slab.max_units:
+                    total_bonus += slab.slab_bonus
+                    total_incentive += slab.slab_bonus
+
+        applied_slab_label = f"Continuous ({offset + 1}nd–{total_units_end}th)" if offset > 0 else f"Incremental (1–{batch_count})"
+        avg_rate = (total_incentive - total_bonus) / batch_count if batch_count > 0 else 0.0
+
+        return {
+            "incentive_per_unit": round(avg_rate, 2),
+            "slab_bonus": round(total_bonus, 2),
+            "total_incentive": round(total_incentive, 2),
+            "applied_slab_label": applied_slab_label,
+            "offset": offset
+        }
+
+    async def calculate_incentive(self, calc_in: IncentiveCalculationRequest) -> IncentiveSlipRead:
+        user = await User.get(calc_in.user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not getattr(user, "incentive_enabled", True):
+            raise HTTPException(status_code=400, detail="Incentive is disabled for this user")
+
+        force_recalculate = bool(getattr(calc_in, "force_recalculate", False))
+
+        existing_slip = await IncentiveSlip.find_one(
+            IncentiveSlip.user_id == calc_in.user_id,
+            IncentiveSlip.period == calc_in.period
+        )
+
+        if existing_slip and not force_recalculate:
+            raise HTTPException(status_code=400, detail="Incentive slip for this period already exists")
+
+        achieved = 0
+        if calc_in.closed_units is not None:
+            achieved = calc_in.closed_units
+        else:
+            period_start, _ = self._get_period_bounds(calc_in.period)
+            
+            last_slip = await IncentiveSlip.find(
+                IncentiveSlip.user_id == user.id,
+                IncentiveSlip.period < calc_in.period
+            ).sort("-generated_at").first_or_none()
+
+            eligibility_start = (last_slip.generated_at - timedelta(days=10)) if last_slip and last_slip.generated_at else (period_start - timedelta(days=10))
+            eligibility_end = datetime.now(UTC) - timedelta(days=10)
+
+            query = self._apply_role_scope_query(user).find(
+                Client.created_at >= eligibility_start,
+                Client.created_at < eligibility_end
+            )
+            achieved = await query.count()
+
+        calc_result = await self._calculate_stepped_incentive(achieved, offset=0)
+
+        if existing_slip and force_recalculate:
+            db_slip = existing_slip
+            db_slip.achieved = achieved
+            db_slip.applied_slab = calc_result["applied_slab_label"]
+            db_slip.amount_per_unit = calc_result["incentive_per_unit"]
+            db_slip.slab_bonus_amount = calc_result["slab_bonus"]
+            db_slip.total_incentive = calc_result["total_incentive"]
+            db_slip.generated_at = datetime.now(UTC)
+            await db_slip.save()
+        else:
+            db_slip = IncentiveSlip(
+                user_id=calc_in.user_id,
+                period=calc_in.period,
+                target=0,
+                achieved=achieved,
+                percentage=0.0,
+                applied_slab=calc_result["applied_slab_label"],
+                amount_per_unit=calc_result["incentive_per_unit"],
+                slab_bonus_amount=calc_result["slab_bonus"],
+                is_visible_to_employee=True,
+                total_incentive=calc_result["total_incentive"],
+                generated_at=datetime.now(UTC)
+            )
+            await db_slip.insert()
+
+        res = IncentiveSlipRead.model_validate(db_slip)
+        res.user_name = user.name or f"Employee #{user.id}"
+        return res
+
+    async def calculate_incentive_bulk(self, period: str) -> dict:
+        """Sequential bulk calculation across users with incentive profiles."""
+        users = await User.find(
+            User.is_active == True,
+            User.is_deleted == False,
+            User.role != UserRole.ADMIN,
+            User.role != UserRole.CLIENT
+        ).to_list()
+
+        created_slips = 0
+        skipped_existing = 0
+        skipped_disabled = 0
+        failures = []
+
+        for user in users:
+            if not getattr(user, "incentive_enabled", True):
+                skipped_disabled += 1
+                continue
+
+            exists = await IncentiveSlip.find_one(IncentiveSlip.user_id == user.id, IncentiveSlip.period == period)
+            if exists:
+                skipped_existing += 1
+                continue
+
+            try:
+                await self.calculate_incentive(IncentiveCalculationRequest(user_id=user.id, period=period))
+                created_slips += 1
+            except Exception as e:
+                failures.append({"user_id": str(user.id), "user_name": user.name, "error": str(e)})
+
+        return {
+            "period": period,
+            "processed_users": len(users),
+            "created_slips": created_slips,
+            "skipped_existing": skipped_existing,
+            "skipped_disabled": skipped_disabled,
+            "failed_users": len(failures),
+            "failures": failures,
+        }
+
+    async def get_user_incentive_slips(self, user_id: PydanticObjectId, visible_only: bool = False):
+        q = IncentiveSlip.find(IncentiveSlip.user_id == user_id)
+        if visible_only:
+            q = q.find(IncentiveSlip.is_visible_to_employee == True)
+        
+        slips = await q.sort("-period", "-generated_at").to_list()
+        user = await User.get(user_id)
+        u_name = user.name if user else f"Employee #{user_id}"
+        
+        results = []
+        for s in slips:
+            r = IncentiveSlipRead.model_validate(s)
+            r.user_name = u_name
+            results.append(r)
+        return results
+
+    async def get_visible_user_incentive_slips(self, user_id: PydanticObjectId):
+        return await self.get_user_incentive_slips(user_id, visible_only=True)
+
+    async def get_all_incentive_slips(self):
+        slips = await IncentiveSlip.find_all().sort("-period", "-generated_at").to_list()
+        results = []
+        for s in slips:
+            user = await User.get(s.user_id)
+            r = IncentiveSlipRead.model_validate(s)
+            r.user_name = user.name if user else f"Employee #{s.user_id}"
+            results.append(r)
+        return results
+
+    async def preview_incentive(self, user_id: PydanticObjectId, period: str, closed_units: Optional[int] = None) -> dict:
+        user = await User.get(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        achieved = 0
+        if closed_units is not None:
+            achieved = closed_units
+        else:
+            period_start, _ = self._get_period_bounds(period)
+            
+            last_slip = await IncentiveSlip.find(
+                IncentiveSlip.user_id == user.id,
+                IncentiveSlip.period < period
+            ).sort("-generated_at").first_or_none()
+
+            eligibility_start = (last_slip.generated_at - timedelta(days=10)) if last_slip and last_slip.generated_at else (period_start - timedelta(days=10))
+            eligibility_end = datetime.now(UTC) - timedelta(days=10)
+
+            query = self._apply_role_scope_query(user).find(
+                Client.created_at >= eligibility_start,
+                Client.created_at < eligibility_end
+            )
+            achieved = await query.count()
+
+        calc_result = await self._calculate_stepped_incentive(achieved, offset=0)
+        
+        return {
+            "user_id": str(user_id),
+            "user_name": user.name or f"User #{user_id}",
+            "period": period,
+            "confirmed_tasks": achieved,
+            "slab_range": calc_result["applied_slab_label"],
+            "incentive_per_task": calc_result["incentive_per_unit"],
+            "total_incentive": calc_result["total_incentive"],
+            "slab_bonus": calc_result["slab_bonus"]
+        }

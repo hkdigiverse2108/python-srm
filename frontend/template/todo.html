@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<!-- frontend/template/todo.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>To-Do List | SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+    <style>
+        body {
+            background-color: var(--bg-app);
+        }
+
+        .filter-bar {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            padding: 20px 24px;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Global layout classes now handle padding consistently */
+
+        .search-input-group {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input-group i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        .search-input-group .form-control {
+            padding-left: 40px;
+            border-radius: 12px;
+            height: 45px;
+            border: 1px solid var(--border-subtle);
+            font-size: 0.9rem;
+            background-color: var(--bg-app);
+            color: var(--text-main);
+        }
+
+        .search-input-group .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .filter-select {
+            min-width: 140px;
+            border-radius: 10px;
+            height: 45px;
+            flex: 1;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            border: 1px solid var(--border-subtle);
+            background-color: var(--bg-app);
+        }
+
+        .todo-table-container {
+            background: var(--bg-surface);
+            border-radius: 16px;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (min-width: 768px) {
+            .todo-table-container .table-responsive {
+                overflow: visible !important;
+            }
+        }
+
+        .table-premium {
+            border-collapse: separate;
+            border-spacing: 0 12px;
+        }
+
+        .table-premium thead th {
+            border: none;
+            padding: 0 16px;
+            color: var(--text-muted, #64748b);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 575.98px) {
+            .btn-premium-action {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .d-flex.gap-3 {
+                flex-direction: column;
+                width: 100%;
+            }
+        }
+
+        /* ── Table Section Header ── */
+        .table-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(to right, rgba(248, 250, 252, 0.8), rgba(255, 255, 255, 0.9));
+            border-radius: 14px 14px 0 0;
+        }
+
+        .table-section-title {
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Premium To-Do Rows */
+        .todo-row {
+            background: var(--bg-surface);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .table-premium tbody tr.todo-row td {
+            vertical-align: middle;
+            padding: 16px;
+            border-top: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+            border-left: none;
+            border-right: none;
+            background: inherit;
+        }
+
+        .table-premium tbody tr.todo-row td:first-child {
+            border-left: 1px solid var(--border-subtle);
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .table-premium tbody tr.todo-row td:last-child {
+            border-right: 1px solid var(--border-subtle);
+            border-top-right-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+
+        .table-premium tbody tr.todo-row td:first-child::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--primary);
+            opacity: 0.8;
+            border-top-left-radius: 12px;
+            border-bottom-left-radius: 12px;
+            z-index: 10;
+        }
+
+        .todo-row:hover,
+        .todo-row:has(.dropdown-menu.show) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background-color: var(--bg-app);
+            position: relative;
+            z-index: 1050;
+        }
+
+        .todo-row.done-row,
+        .todo-row.completed {
+            opacity: 0.7;
+            background-color: var(--bg-app);
+            box-shadow: none;
+        }
+
+        .priority-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .priority-high {
+            background-color: #ef4444;
+        }
+
+        .priority-medium {
+            background-color: #f59e0b;
+        }
+
+        .priority-low {
+            background-color: #10b981;
+        }
+
+        .avatar-circle-sm {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--bg-surface);
+            box-shadow: 0 0 0 1px var(--border-subtle);
+        }
+
+        /* PREMIUM MY TASKS BUTTON */
+        .btn-premium-action {
+            height: 45px;
+            border-radius: 12px;
+            padding: 0 24px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            border: none;
+        }
+
+        .btn-my-tasks-new {
+            background: var(--bg-surface);
+            color: var(--primary);
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-my-tasks-new.active {
+            background: var(--primary) !important;
+            color: white !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3) !important;
+        }
+
+        .btn-my-tasks-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.1);
+        }
+
+        @media (max-width: 767.98px) {
+            .btn-premium-action {
+                padding: 0 16px;
+                font-size: 0.85rem;
+                height: 40px;
+            }
+        }
+
+        .btn-my-tasks-new i {
+            font-size: 1.1rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-my-tasks-new:hover i {
+            transform: scale(1.1);
+        }
+
+        /* ── Modal centering ── */
+        .premium-card-modal .modal-dialog {
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .premium-card-modal .modal-body {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--border-subtle) transparent;
+        }
+
+        .premium-card-modal .modal-content {
+            border-radius: 20px;
+            box-shadow: 0 24px 64px -8px rgba(0, 0, 0, .35) !important;
+            border: none;
+            overflow: hidden;
+        }
+
+        /* ── Modal header gradient strip ── */
+        .modal-header-strip {
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #4f46e5 100%);
+            padding: 1.4rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+        }
+
+        .modal-header-title {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .modal-header-sub {
+            color: rgba(255, 255, 255, .7);
+            font-size: 0.78rem;
+            margin: 2px 0 0;
+        }
+
+        /* ── Type toggle redesign ── */
+        .form-label {
+            font-size: .78rem;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 10px;
+        }
+
+        .modal-header-icon-tt {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+
+
+
+        .type-toggle-premium {
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 14px;
+            display: flex;
+            gap: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .type-toggle-premium .btn-check+.btn {
+            flex: 1;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            background: transparent;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .type-toggle-premium .btn-check:checked+.btn {
+            background: #fff;
+            color: #2563eb;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .type-toggle-premium .btn:hover:not(.active) {
+            color: #1e293b;
+        }
+
+
+
+        /* ── Priority pill buttons ── */
+        .priority-btn-group {
+            display: flex;
+            gap: 6px;
+        }
+
+        .priority-btn {
+            flex: 1;
+            padding: 7px 10px;
+            border-radius: 8px;
+            border: 2px solid var(--border-subtle);
+            background: var(--bg-app);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+            transition: all .2s;
+            color: var(--text-muted);
+        }
+
+        .priority-btn.high {
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+
+        .priority-btn.medium {
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .priority-btn.low {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .priority-btn.high.active {
+            background: #fef2f2;
+        }
+
+        .priority-btn.medium.active {
+            background: #fffbeb;
+        }
+
+        .priority-btn.low.active {
+            background: #f0fdf4;
+        }
+
+        /* Keep the form floating style clean */
+        #taskModal .form-control,
+        #taskModal .form-select {
+            background: var(--bg-app);
+            border-color: var(--border-subtle);
+            color: var(--text-main);
+            border-radius: 10px;
+        }
+
+        #taskModal .form-control:focus,
+        #taskModal .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, .15);
+        }
+
+        .modal-icon-badge {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 12px;
+            font-size: 1.4rem;
+        }
+
+        /* ── Centering in content area ── */
+        @media (min-width: 992px) {
+            .premium-card-modal {
+                padding-left: var(--sb-width, 260px) !important;
+            }
+
+            .premium-card-modal .modal-dialog {
+                margin-left: auto;
+                margin-right: auto;
+                transform: translateX(-20px);
+                /* "Bit left side" nudge */
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-app">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="main-wrapper flex-grow-1">
+            <div class="page-content-standard">
+                <div id="main-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Premium Unified Modal ──────────────────────── -->
+    <!-- [START] - Unified Premium Task/Activity Modal -->
+    <div class="modal fade premium-card-modal p-0" id="taskModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+            <div class="modal-content shadow-lg border-0"
+                style="border-radius: 20px; overflow: hidden; background: #fff;">
+
+                <!-- Modal Head Section with Gradient -->
+                <div class="modal-header-strip px-3 py-3"
+                    style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-header-icon-tt shadow-sm"
+                            style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.1); width: 38px; height: 38px; font-size: 1.2rem;">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-header-title mb-0" id="modal-title-text"
+                                style="color:#fff; font-weight:700; font-size: 1rem;">Schedule Activity</h5>
+                            <p class="modal-header-sub mb-0 text-white-50" style="font-size: 0.75rem;">Plan meetings or
+                                assign tasks</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white opacity-50 shadow-none"
+                        data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-3" style="max-height: 65vh; overflow-y: auto;">
+                    <div class="row g-2">
+                        <!-- Mode Switcher (Task vs Event) -->
+                        <!-- Premium Type Toggle -->
+                        <div class="col-12 mb-2" id="mode-switcher-container">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">Activity
+                                Classification</label>
+                            <div class="type-toggle-premium">
+                                <input type="radio" class="btn-check" name="actType" id="typeEvent" value="EVENT"
+                                    checked onchange="toggleModalType()">
+                                <label class="btn" for="typeEvent">
+                                    <i class="bi bi-camera-video"></i> Event / Meeting
+                                </label>
+
+                                <input type="radio" class="btn-check" name="actType" id="typeTask" value="TASK"
+                                    onchange="toggleModalType()">
+                                <label class="btn" for="typeTask">
+                                    <i class="bi bi-check2-square"></i> Workspace Task
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Objective Title -->
+                        <div class="col-12 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-type me-1"></i>Activity Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="ev-title" class="form-control border-light-subtle shadow-none"
+                                placeholder="Activity Name" style="border-radius:10px; font-weight: 500;">
+                        </div>
+
+                        <!-- Due Date / Event Date -->
+                        <div class="col-md-6 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1" id="date-label">
+                                <i class="bi bi-calendar-check me-1"></i>Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" id="td-due" class="form-control border-light-subtle shadow-none"
+                                style="border-radius:10px;">
+                        </div>
+
+                        <!-- Priority Selection (Shared) -->
+                        <div class="col-md-6 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-flag me-1"></i>Priority
+                            </label>
+                            <select id="td-priority" class="form-select border-light-subtle shadow-none"
+                                style="border-radius:10px; font-weight: 500;">
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM" selected>Medium</option>
+                                <option value="HIGH">High</option>
+                            </select>
+                        </div>
+
+                        <!-- Time Selection -->
+                        <div class="col-md-6 mb-2 event-fields" style="display:none;">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-premium-label small text-uppercase fw-bold text-secondary"
+                                        id="ev-start-label">Start Time</label>
+                                    <input type="time" id="ev-start"
+                                        class="form-control border-light-subtle shadow-none"
+                                        style="border-radius:10px;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-premium-label small text-uppercase fw-bold text-secondary"
+                                        id="ev-end-label">End Time</label>
+                                    <input type="time" id="ev-end" class="form-control border-light-subtle shadow-none"
+                                        style="border-radius:10px;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Assignee Selection -->
+                        <div class="col-12 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-person me-1"></i>Assign To
+                            </label>
+                            <select id="ev-user" class="form-select border-light-subtle shadow-none" multiple
+                                style="border-radius:10px; min-height: 70px;">
+                                <option value="">— Loading... —</option>
+                            </select>
+                            <div class="form-text mt-0 mb-1" style="font-size: 0.70rem; color: #94a3b8;">Hold Ctrl (Cmd)
+                                to select multiple</div>
+                        </div>
+
+                        <!-- Context / Entity -->
+                        <div class="col-md-6 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-link-45deg me-1"></i>Strategic Project/Lead
+                            </label>
+                            <input type="text" id="td-related" class="form-control border-light-subtle shadow-none"
+                                placeholder="Target campaign or lead" style="border-radius:10px;">
+                        </div>
+                        <div class="col-md-6 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-person-bounding-box me-1"></i>Client Reference
+                            </label>
+                            <select id="td-client" class="form-select border-light-subtle shadow-none"
+                                style="border-radius:10px;">
+                                <option value="">— General / Internal —</option>
+                            </select>
+                        </div>
+
+                        <!-- Detailed Description -->
+                        <div class="col-12 mb-1">
+                            <label class="form-label fw-bold text-secondary small text-uppercase mb-1">
+                                <i class="bi bi-text-left me-1"></i>Contextual Notes / Description
+                            </label>
+                            <textarea id="td-desc" class="form-control border-light-subtle shadow-none" rows="2"
+                                placeholder="Additional details or instructions..."
+                                style="border-radius:10px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer px-3 pb-3 pt-2 gap-2 border-0">
+                    <button type="button" id="btn-delete-event" class="btn btn-outline-danger btn-sm me-auto px-3"
+                        style="border-radius:10px; font-weight: 600; display: none;"
+                        onclick="deleteTask(editingTaskId)">
+                        <i class="bi bi-trash3 me-1"></i>Purge
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm px-3" data-bs-dismiss="modal"
+                        style="border-radius:10px; font-weight: 600;">Cancel</button>
+                    <button type="button" id="save-task-btn" class="btn btn-primary btn-sm px-4"
+                        onclick="saveActivity()"
+                        style="border-radius:10px; font-weight: 600; background: #2563eb; border: none; box-shadow: 0 4px 12px rgba(37,99,235,0.2);">
+                        <i class="bi bi-send-check me-1"></i>Publish Schedule
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+    </div>
+
+    <!-- ─── Scripts ───────────────────────────────────────── -->
+    <script src="../js/utils.js?v=20260326"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/app.js?v=20260321"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        requireAuth();
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.innerHTML = renderSidebar('todo');
+        injectTopHeader('To-Do List');
+        const todoUser = getUser();
+        const isAdmin = todoUser?.role === 'ADMIN';
+        const selfAssigneeValue = todoUser?.name || todoUser?.email || '';
+        let tasks = [];
+        let filteredTasks = [];
+        let currentMode = 'TASK';
+        let editingTaskId = null;
+        let bsModal = null;
+
+        let filters = {
+            search: '',
+            status: 'ALL',
+            priority: 'ALL',
+            assignee: 'ALL'
+        };
+
+        const todayStr = new Date().toISOString().split('T')[0];
+
+        const STATUS_DETAILS = {
+            'PENDING': { label: 'Pending', cls: 'badge-purple-light', icon: 'bi-hourglass' },
+            'IN_PROGRESS': { label: 'In Progress', cls: 'badge-blue-light', icon: 'bi-gear-fill' },
+            'COMPLETED': { label: 'Completed', cls: 'badge-green-light', icon: 'bi-check-circle-fill' },
+            'CANCELLED': { label: 'Cancelled', cls: 'badge-red-light', icon: 'bi-x-circle' }
+        };
+
+        async function loadTasks() {
+            try {
+                // Fetch from unified timetable to see meetings, demos, etc.
+                const response = await ApiClient.getTimetable();
+                const allEvents = response.events || [];
+
+                // [START] - Standardize priority mapping to uppercase for reliable filtering
+                tasks = allEvents.map(e => {
+                    let p = e.priority || 'MEDIUM';
+                    if (p && String(p).includes('.')) p = String(p).split('.')[1];
+                    p = String(p).toUpperCase();
+                    return {
+                        id: `${e.event_type}_${e.id}`, // Unique ID across modules
+                        original_id: e.id,
+                        title: e.title,
+                        priority: p,
+                        status: (e.status || 'PENDING').toUpperCase(),
+                        assigned_to: e.user,
+                        due_date: e.date,
+                        start_time: (e.sh !== undefined) ? `${String(e.sh).padStart(2, '0')}:${String(e.sm).padStart(2, '0')}:00` : null,
+                        end_time: (e.eh !== undefined) ? `${String(e.eh).padStart(2, '0')}:${String(e.em).padStart(2, '0')}:00` : null,
+                        related_entity: e.loc || e.event_type,
+                        description: e.description,
+                        event_type: e.event_type,
+                        reference_id: e.reference_id
+                    };
+                });
+                // [END]
+
+                applyFilters();
+            } catch (error) {
+                console.error("Failed to load aggregated tasks", error);
+            }
+        }
+
+        function statBadge(s) {
+            const data = STATUS_DETAILS[s] || { label: s || 'Active', cls: 'bg-secondary text-white', icon: 'bi-info-circle' };
+            return `<span class="status-pill ${data.cls} px-3"><i class="bi ${data.icon} me-1"></i>${data.label}</span>`;
+        }
+
+        function priorityBadge(p) {
+            const label = p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : 'None';
+            const cls = p === 'HIGH' ? 'badge-red-light' : (p === 'MEDIUM' ? 'badge-yellow-light' : 'badge-green-light');
+            const dot = p === 'HIGH' ? 'priority-high' : (p === 'MEDIUM' ? 'priority-medium' : 'priority-low');
+            return `<span class="status-pill ${cls}"><span class="priority-dot ${dot}"></span>${label}</span>`;
+        }
+
+        function applyFilters() {
+            filteredTasks = tasks.filter(t => {
+                const matchesSearch = t.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+                    (t.related_entity && t.related_entity.toLowerCase().includes(filters.search.toLowerCase())) ||
+                    (t.assigned_to && t.assigned_to.toLowerCase().includes(filters.search.toLowerCase()));
+
+                // [START] - Case-insensitive filter matching
+                const matchesStatus = filters.status === 'ALL' || t.status.toUpperCase() === filters.status.toUpperCase();
+                const matchesPriority = filters.priority === 'ALL' || t.priority.toUpperCase() === filters.priority.toUpperCase();
+                const matchesAssignee = !isAdmin || filters.assignee === 'ALL' || t.assigned_to === filters.assignee;
+                // [END]
+
+                return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
+            });
+
+            filteredTasks.sort((a, b) => {
+                if (a.status === 'COMPLETED' && b.status !== 'COMPLETED') return 1;
+                if (a.status !== 'COMPLETED' && b.status === 'COMPLETED') return -1;
+                // Among non-completed: HIGH priority first
+                const priorityOrder = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+                const pa = priorityOrder[a.priority] ?? 1;
+                const pb = priorityOrder[b.priority] ?? 1;
+                if (pa !== pb) return pa - pb;
+                return new Date(b.due_date || b.created_at || 0) - new Date(a.due_date || a.created_at || 0);
+            });
+
+            renderTodo();
+        }
+
+        function handleFilterChange(key, value) {
+            filters[key] = value;
+            applyFilters();
+        }
+
+        function toggleTodoFilters() {
+            const panel = document.getElementById('todo-filter-panel-body');
+            const btn = document.getElementById('todo-filter-toggle-btn');
+            const label = document.getElementById('todo-filter-toggle-label');
+            if (!panel || !btn || !label) return;
+            const isOpen = panel.classList.toggle('open');
+            btn.classList.toggle('open', isOpen);
+            label.textContent = isOpen ? 'Hide' : 'Show';
+        }
+
+        function updateTodoFilterPills() {
+            const pills = document.getElementById('todo-filter-pills');
+            const summary = document.getElementById('todo-filter-summary');
+            if (!pills || !summary) return;
+
+            const status = document.getElementById('filter-status');
+            const priority = document.getElementById('filter-priority');
+            const assignee = document.getElementById('filter-assignee');
+            const items = [];
+
+            if (filters.search) items.push({ label: 'Search: ' + filters.search, key: 'search' });
+            if (filters.status !== 'ALL' && status) items.push({ label: status.options[status.selectedIndex].text, key: 'status' });
+            if (filters.priority !== 'ALL' && priority) items.push({ label: priority.options[priority.selectedIndex].text, key: 'priority' });
+            if (filters.assignee !== 'ALL' && assignee) items.push({ label: assignee.options[assignee.selectedIndex].text, key: 'assignee' });
+
+            pills.innerHTML = items.map(item => '<span class="filter-pill">' + item.label +
+                '<button class="filter-pill-remove" type="button" data-key="' + item.key + '" title="Remove">&times;</button></span>'
+            ).join('');
+
+            pills.querySelectorAll('.filter-pill-remove').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const key = btn.dataset.key;
+                    filters[key] = key === 'search' ? '' : 'ALL';
+                    syncTodoFilterInputs();
+                    applyFilters();
+                });
+            });
+
+            summary.textContent = filteredTasks.length + ' result' + (filteredTasks.length === 1 ? '' : 's');
+        }
+
+        function syncTodoFilterInputs() {
+            const search = document.getElementById('filter-search');
+            const status = document.getElementById('filter-status');
+            const priority = document.getElementById('filter-priority');
+            const assignee = document.getElementById('filter-assignee');
+            if (search) search.value = filters.search;
+            if (status) status.value = filters.status;
+            if (priority) priority.value = filters.priority;
+            if (assignee) assignee.value = filters.assignee;
+        }
+
+        function clearTodoFilters() {
+            filters = {
+                search: '',
+                status: 'ALL',
+                priority: 'ALL',
+                assignee: 'ALL'
+            };
+            syncTodoFilterInputs();
+            applyFilters();
+        }
+
+        function filterMyTasks() {
+            const btn = document.querySelector('.btn-my-tasks-new');
+            const u = getUser();
+            if (!u || !btn) return;
+
+            const myId = u.name || u.email;
+
+            if (btn.classList.contains('active')) {
+                btn.classList.remove('active');
+                handleFilterChange('assignee', 'ALL');
+                const sel = document.getElementById('filter-assignee');
+                if (sel) sel.value = 'ALL';
+            } else {
+                btn.classList.add('active');
+                handleFilterChange('assignee', myId);
+                const sel = document.getElementById('filter-assignee');
+                if (sel) sel.value = myId;
+            }
+        }
+
+        let employeesList = []; // [START] - Store full user objects for ID mapping
+
+        async function configureTodoAssignmentUi() {
+            const assigneeSelect = document.getElementById('ev-user');
+            if (!assigneeSelect) return;
+
+            /* [START] - Added "All Employees" and role-based staff loading for Admins */
+            if (!isAdmin) {
+                assigneeSelect.innerHTML = selfAssigneeValue
+                    ? `<option value="${selfAssigneeValue}">${selfAssigneeValue}</option>`
+                    : '<option value="">My Task</option>';
+                assigneeSelect.value = selfAssigneeValue;
+                assigneeSelect.disabled = true;
+            } else {
+                try {
+                    employeesList = await ApiClient.getUsers(); // [START] - Store list
+                    assigneeSelect.innerHTML = `
+                        <option value="">— Unassigned —</option>
+                        <option value="All Employees" style="font-weight:bold; color:var(--primary);">👥 All Employees (Bulk)</option>
+                        <hr>
+                        ${employeesList.map(u => `<option value="${u.name || u.email}">${u.name || u.email} (${u.role})</option>`).join('')}
+                    `;
+                    assigneeSelect.disabled = false;
+
+                    // Also populate the filter sidebar if present
+                    const filterAssignee = document.getElementById('filter-assignee');
+                    if (filterAssignee) {
+                        filterAssignee.innerHTML = '<option value="ALL">All Operators</option>' +
+                            employeesList.map(u => `<option value="${u.name || u.email}">${u.name || u.email}</option>`).join('');
+                    }
+                } catch (e) {
+                    console.error("Failed to load employees for assignment", e);
+                }
+            }
+            /* [END] */
+        }
+
+        function renderTableBody() {
+            const tbody = document.getElementById('todo-tbody');
+            if (!tbody) return;
+
+            if (filteredTasks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="bi bi-search fs-1 opacity-25"></i><br>No matching objectives found</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filteredTasks.map(t => {
+                const assignee = t.assigned_to || 'Unassigned';
+                const initials = (assignee.split(' ').map(n => n[0]).join('') || '?').toUpperCase().slice(0, 2);
+                let timeStr = t.start_time ? `${t.start_time.slice(0, 5)}` : '';
+                if (t.end_time) timeStr += ` - ${t.end_time.slice(0, 5)}`;
+                const displayDate = t.due_date ? new Date(t.due_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date';
+                const isCompleted = t.status === 'COMPLETED';
+
+                return `
+                <tr class="todo-row ${isCompleted ? 'completed' : ''}">
+                    <td class="ps-4">
+                        <div class="fw-bold text-slate-900" style="font-size:0.95rem;">${t.title}</div>
+                        <div class="text-muted smaller mt-1 d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill bg-light text-dark border p-1 px-2" style="font-size:10px; font-weight:700;">${(t.event_type || 'TASK').toUpperCase()}</span>
+                            <i class="bi bi-link-45deg me-1"></i>${t.related_entity || 'General'}
+                        </div>
+                    </td>
+                    <td>${priorityBadge(t.priority)}</td>
+                    <td>${statBadge(t.status)}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle-sm">${initials}</div>
+                            <span class="small fw-medium">${assignee}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="small fw-bold">${displayDate}</div>
+                        <div class="smaller text-muted mt-1"><i class="bi bi-clock me-1"></i>${timeStr || 'Anytime'}</div>
+                    </td>
+                    <td class="text-end pe-4">
+                        <div class="dropdown">
+                            <button class="btn btn-ghost btn-sm rounded-3 px-2" data-bs-toggle="dropdown" data-bs-display="static"><i class="bi bi-three-dots-vertical"></i></button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-2" style="border-radius:14px; min-width: 170px; margin-top: 5px;">
+                                <li><a class="dropdown-item rounded-3 py-2 small fw-bold" href="javascript:void(0)" onclick="openEditModal('${t.id}')"><i class="bi bi-pencil-square me-2 text-primary"></i> Edit Details</a></li>
+                                ${!isCompleted ? `<li><a class="dropdown-item rounded-3 py-2 small fw-bold" href="javascript:void(0)" onclick="changeStatus('${t.id}', 'IN_PROGRESS')"><i class="bi bi-hourglass-split me-2 text-info"></i> Mark In Progress</a></li>` : ''}
+                                ${!isCompleted ? `<li><a class="dropdown-item rounded-3 py-2 small fw-bold" href="javascript:void(0)" onclick="changeStatus('${t.id}', 'COMPLETED')"><i class="bi bi-check2-all me-2 text-success"></i> Mark Done</a></li>` : ''}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item rounded-3 py-2 small fw-bold text-danger" href="javascript:void(0)" onclick="deleteTask('${t.id}')"><i class="bi bi-trash3 me-2"></i> Delete Objective</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderTodo() {
+            const total = tasks.length;
+            const highPri = tasks.filter(t => t.priority === 'HIGH').length;
+            const completed = tasks.filter(t => t.status === 'COMPLETED').length;
+            const pending = tasks.filter(t => t.status === 'PENDING').length;
+
+            const container = document.getElementById('main-content');
+            if (container.innerHTML === '') {
+                container.innerHTML = `
+                <div>
+                    <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="mb-2 mb-sm-0">
+                            <h4 class="page-section-title fw-bold mb-1">${isAdmin ? 'Tasks & Activities' : 'My Task Board'}</h4>
+                            <p class="text-muted mb-0" style="font-size:0.85rem;">${isAdmin ? 'Assign and track workspace objectives' : 'Your personal tasks in one view.'}</p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <button class="btn-premium-action btn-primary text-white" onclick="openModal()" style="background: linear-gradient(135deg,#1e3a8a,#2563eb); border-radius:12px; box-shadow:0 4px 12px rgba(37,99,235,.3);">
+                                <i class="bi bi-plus-lg"></i> ${isAdmin ? 'New Task / Activity' : 'Add Personal Task'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="stats-row" class="row g-4 mb-4"></div>
+
+                    <div class="filter-panel">
+                        <div class="filter-panel-head" onclick="toggleTodoFilters()">
+                            <div class="filter-panel-head-main">
+                                <div class="filter-panel-head-left">
+                                    <i class="bi bi-sliders2"></i>
+                                    Filters
+                                </div>
+                                <div class="filter-active-pills" id="todo-filter-pills"></div>
+                            </div>
+                            <div class="filter-panel-head-meta">
+                                <span class="filter-summary-text" id="todo-filter-summary">0 results</span>
+                                <button class="filter-toggle-btn" id="todo-filter-toggle-btn" type="button" onclick="toggleTodoFilters(); event.stopPropagation();">
+                                    <span id="todo-filter-toggle-label">Show</span>
+                                    <i class="bi bi-chevron-down"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="filter-panel-body" id="todo-filter-panel-body">
+                            <div class="filter-grid">
+                                <div class="filter-field">
+                                    <label>Search</label>
+                                    <div class="search-input-group">
+                                        <i class="bi bi-search"></i>
+                                        <input type="text" id="filter-search" class="form-control shadow-none border-light-subtle" placeholder="Search objectives, projects, or operators..." oninput="handleFilterChange('search', this.value)">
+                                    </div>
+                                </div>
+                                <div class="filter-field">
+                                    <label>Status</label>
+                                    <select id="filter-status" class="form-select filter-select shadow-none border-light-subtle" onchange="handleFilterChange('status', this.value)">
+                                        <option value="ALL">All Status</option>
+                                        <option value="PENDING">Pending</option>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="COMPLETED">Completed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div class="filter-field">
+                                    <label>Priority</label>
+                                    <select id="filter-priority" class="form-select filter-select shadow-none border-light-subtle" onchange="handleFilterChange('priority', this.value)">
+                                        <option value="ALL">All Priority</option>
+                                        <option value="HIGH">High</option>
+                                        <option value="MEDIUM">Medium</option>
+                                        <option value="LOW">Low</option>
+                                    </select>
+                                </div>
+                                ${isAdmin ? `<div class="filter-field">
+                                    <label>Operator</label>
+                                    <select id="filter-assignee" class="form-select filter-select shadow-none border-light-subtle" style="min-width: 200px;" onchange="handleFilterChange('assignee', this.value)">
+                                        <option value="ALL">All Operators</option>
+                                    </select>
+                                </div>` : ''}
+                            </div>
+                            <div class="filter-actions">
+                                <button class="btn-filter-reset" type="button" onclick="clearTodoFilters()">
+                                    <i class="bi bi-x-circle"></i>Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="todo-table-container border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+                        <div class="table-section-header">
+                            <div class="table-section-title">
+                                <i class="bi bi-list-task"></i>
+                                Tasks & Activities
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge" style="background: var(--primary-light); color: var(--primary); font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 700;">
+                                    <i class="bi bi-check2-circle me-1" style="font-size: 0.55rem;"></i>Active Board
+                                </span>
+                            </div>
+                        </div>
+                        <div class="table-responsive p-3 pt-2">
+                            <table class="table table-premium mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th class="ps-4">Task</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Operator</th>
+                                        <th>Time</th>
+                                        <th class="text-end pe-4">Control</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="todo-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+
+                configureTodoAssignmentUi();
+
+                if (isAdmin) {
+                    ApiClient.getEmployees().then(emps => {
+                        // Only show active employees in assignee dropdowns
+                        const activeEmps = emps.filter(e => e.is_active !== false);
+                        const sel = document.getElementById('filter-assignee');
+                        if (sel) {
+                            activeEmps.forEach(e => {
+                                const opt = document.createElement('option');
+                                const uniqueVal = e.name || e.email;
+                                const role = (e.role || '').replace(/_/g, ' ');
+                                opt.value = uniqueVal;
+                                opt.textContent = `${e.name || e.email} (${role})`;
+                                sel.appendChild(opt);
+                            });
+                            syncTodoFilterInputs();
+                            updateTodoFilterPills();
+                        }
+                        // Also populate the modal assignee dropdown with active employees only
+                        const assigneeSel = document.getElementById('ev-user');
+                        if (assigneeSel && isAdmin) {
+                            assigneeSel.innerHTML =
+                                '<option value="All Employees" style="font-weight:700;color:var(--primary);">👥 Assign All Staff</option>';
+                            activeEmps.forEach(e => {
+                                const opt = document.createElement('option');
+                                opt.value = e.name || e.email;
+                                opt.textContent = `${e.name || e.email} (${(e.role || '').replace(/_/g, ' ')})`;
+                                assigneeSel.appendChild(opt);
+                            });
+                        }
+                    });
+                }
+            }
+
+            const statsRow = document.getElementById('stats-row');
+            if (statsRow) {
+                statsRow.innerHTML = `
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-content-left">
+                            <div class="stat-label">All Tasks</div>
+                            <div class="stat-value">${total}</div>
+                        </div>
+                        <div class="stat-icon-wrapper icon-purple shadow-sm"><i class="bi bi-layers-fill"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-content-left">
+                            <div class="stat-label">High Priority</div>
+                            <div class="stat-value text-danger">${highPri}</div>
+                        </div>
+                        <div class="stat-icon-wrapper icon-red shadow-sm"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-content-left">
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value text-primary">${pending}</div>
+                        </div>
+                        <div class="stat-icon-wrapper icon-blue shadow-sm"><i class="bi bi-hourglass-split"></i></div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="stat-card">
+                        <div class="stat-content-left">
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" style="color:var(--success) !important;">${completed}</div>
+                        </div>
+                        <div class="stat-icon-wrapper shadow-sm" style="background:#ecfdf5; color:var(--success);"><i class="bi bi-check-circle-fill"></i></div>
+                    </div>
+                </div>`;
+            }
+
+            syncTodoFilterInputs();
+            updateTodoFilterPills();
+            renderTableBody();
+        }
+
+        // ── Modal Logic ──────────────────────────────────────────
+        function openModal() {
+            editingTaskId = null;
+            if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById('taskModal'));
+
+            // Reset fields
+            ['ev-title', 'td-related', 'td-desc', 'ev-loc', 'ev-start', 'ev-end'].forEach(id => {
+                const el = document.getElementById(id); if (el) el.value = '';
+            });
+            const userSel = document.getElementById('ev-user');
+            if (userSel) {
+                userSel.selectedIndex = -1;
+                // Default to current user if not admin
+                if (!isAdmin) {
+                    for (let i = 0; i < userSel.options.length; i++) {
+                        if (userSel.options[i].value === getCurrentUserLabel()) {
+                            userSel.options[i].selected = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            document.getElementById('td-priority').value = 'MEDIUM';
+            document.getElementById('td-due').value = todayStr;
+
+            document.getElementById('modal-title-text').textContent = 'New Workspace Task';
+            document.getElementById('btn-delete-event').style.display = 'none';
+            document.getElementById('save-task-btn').innerHTML = '<i class="bi bi-send-check me-1"></i>Publish Task';
+            document.getElementById('mode-switcher-container').style.display = 'flex';
+            switchModalMode('TASK');
+            configureTodoAssignmentUi();
+
+            // Clear validation state
+            const modalBody = document.querySelector('#taskModal .modal-body');
+            if (modalBody) {
+                modalBody.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                modalBody.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+
+            bsModal.show();
+        }
+
+        function openEditModal(taskId) {
+            console.log("CRITICAL: openEditModal triggered with taskId:", taskId);
+            const task = tasks.find(t => String(t.id) === String(taskId));
+            if (!task) {
+                console.error("DEBUG: Task not found in the current list", taskId);
+                return;
+            }
+
+            editingTaskId = taskId;
+            if (!bsModal) bsModal = new bootstrap.Modal(document.getElementById('taskModal'));
+
+            document.getElementById('ev-title').value = task.title || '';
+            const userSel = document.getElementById('ev-user');
+            if (userSel) {
+                userSel.selectedIndex = -1;
+                for (let i = 0; i < userSel.options.length; i++) {
+                    if (userSel.options[i].value === task.assigned_to) {
+                        userSel.options[i].selected = true;
+                        break;
+                    }
+                }
+            }
+            document.getElementById('td-priority').value = task.priority || 'MEDIUM';
+            document.getElementById('td-due').value = task.due_date ? task.due_date.split('T')[0] : '';
+            document.getElementById('ev-start').value = task.start_time ? task.start_time.slice(0, 5) : '';
+            document.getElementById('ev-end').value = task.end_time ? task.end_time.slice(0, 5) : '';
+            document.getElementById('td-related').value = task.related_entity || '';
+            document.getElementById('td-desc').value = task.description || '';
+
+            document.getElementById('modal-title-text').textContent = 'Edit Task Details';
+            document.getElementById('btn-delete-event').style.display = 'inline-block';
+            document.getElementById('save-task-btn').innerHTML = '<i class="bi bi-floppy me-1"></i>Save Changes';
+            document.getElementById('mode-switcher-container').style.display = 'none';
+
+            switchModalMode('TASK');
+            configureTodoAssignmentUi();
+
+            // Clear validation state
+            const modalBody = document.querySelector('#taskModal .modal-body');
+            if (modalBody) {
+                modalBody.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                modalBody.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+
+            bsModal.show();
+        }
+
+        window.toggleModalType = () => {
+            const val = document.querySelector('input[name="actType"]:checked').value;
+            switchModalMode(val);
+        };
+
+        window.switchModalMode = (mode) => {
+            currentMode = mode;
+            const isTask = mode === 'TASK';
+            document.getElementById('typeTask').checked = isTask;
+            document.getElementById('typeEvent').checked = !isTask;
+
+            document.querySelectorAll('.task-fields').forEach(el => el.style.display = isTask ? 'block' : 'none');
+            document.querySelectorAll('.event-fields').forEach(el => el.style.display = isTask ? 'none' : 'block');
+            document.getElementById('date-label').innerHTML = isTask ? '<i class="bi bi-calendar-check me-2"></i>Due Date <span class="text-danger">*</span>' : '<i class="bi bi-calendar-event me-2"></i>Event Date <span class="text-danger">*</span>';
+        };
+
+        window.saveActivity = async () => {
+            const title = document.getElementById('ev-title').value.trim();
+            const date = document.getElementById('td-due').value;
+            const selectedOptions = Array.from(document.getElementById('ev-user').selectedOptions).map(o => o.value).filter(v => v !== '');
+            const clientIdAttr = document.getElementById('td-client')?.value || null;
+
+            let assignees = [];
+            if (selectedOptions.includes('All Employees')) {
+                assignees = employeesList.map(e => e.name || e.email);
+            } else if (selectedOptions.length > 0) {
+                assignees = selectedOptions;
+            } else {
+                assignees = [getCurrentUserLabel()];
+            }
+
+            const priority = document.getElementById('td-priority').value;
+            const description = document.getElementById('td-desc').value;
+            const related = document.getElementById('td-related').value;
+            const startTime = document.getElementById('ev-start').value || null;
+            const endTime = document.getElementById('ev-end').value || null;
+
+            if (!title || !date) {
+                showToast('Title and Date are required', 'error');
+                return;
+            }
+
+            // [START] Prevent scheduling in the past
+            if (!editingTaskId) {
+                const now = new Date();
+                const [year, month, day] = date.split('-').map(Number);
+                const selectedDateOnly = new Date(year, month - 1, day);
+                const todayOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                if (selectedDateOnly < todayOnly) {
+                    showToast('Cannot schedule an activity for a past date.', 'error');
+                    return;
+                } else if (selectedDateOnly.getTime() === todayOnly.getTime() && startTime) {
+                    const [sh, sm] = startTime.split(':').map(Number);
+                    if (now.getHours() > sh || (now.getHours() === sh && now.getMinutes() > sm)) {
+                        showToast('Cannot schedule an activity for a past time today.', 'error');
+                        return;
+                    }
+                }
+            }
+            // [END]
+
+            // [START] - Unified meeting creation: EVENT mode routes through /meetings/ API
+            const clientId = document.getElementById('td-client')?.value || null;
+            try {
+                if (currentMode === 'EVENT' && !editingTaskId) {
+                    const user = getUser();
+                    // Resolve attendee user IDs from names
+                    const attendeeIds = selectedOptions.map(name => {
+                        const found = employeesList.find(u => (u.name || u.email) === name);
+                        return found ? found.id : null;
+                    }).filter(id => id !== null);
+
+                    const meetingPayload = {
+                        title: title,
+                        date: `${date}T${startTime || '10:00'}:00`,
+                        meeting_type: related.toLowerCase().includes('office') || related.toLowerCase().includes('visit') ? 'In-Person' : 'Google Meet',
+                        content: description,
+                        host_id: user.id,
+                        attendee_ids: attendeeIds,
+                        priority: priority,
+                        client_id: clientId ? parseInt(clientId) : null,
+                        target_type: attendeeIds.length > 0 ? 'MANUAL' : (clientId ? 'CLIENT' : 'ROLE_BASED')
+                    };
+                    await ApiClient.createUnifiedMeeting(meetingPayload);
+                } else {
+                    const promises = assignees.map(async (assignedTo) => {
+                        if (currentMode === 'TASK') {
+                            const payload = {
+                                title, due_date: date, assigned_to: assignedTo,
+                                description, priority, related_entity: related,
+                                start_time: startTime, end_time: endTime,
+                                client_id: clientId ? parseInt(clientId) : null
+                            };
+                            if (editingTaskId) {
+                                const originalId = editingTaskId.split('_')[1];
+                                return ApiClient.updateTodo(originalId, payload);
+                            } else {
+                                return ApiClient.createTodo(payload);
+                            }
+                        } else {
+                            // Edit of existing timetable event
+                            const ttPayload = {
+                                title, date,
+                                start_time: startTime || "10:00",
+                                end_time: endTime || "11:00",
+                                assignee_name: assignedTo,
+                                location: related
+                            };
+                            const originalId = editingTaskId.split('_')[1];
+                            return ApiClient.updateTimetableEvent(originalId, ttPayload);
+                        }
+                    });
+                    await Promise.all(promises);
+                }
+                // [END]
+
+                showToast(editingTaskId ? 'Activity updated' : 'Unified Activity Published');
+                bsModal.hide();
+                loadTasks();
+            } catch (e) {
+                showToast('Failed to save activity: ' + e.message, 'error');
+            }
+        };
+
+        async function changeStatus(id, newStatus) {
+            try {
+                const t = tasks.find(item => item.id === id);
+                if (!t) return;
+                const originalId = t.original_id;
+                const type = t.event_type;
+
+                if (type === 'TODO') {
+                    await ApiClient.updateTodo(originalId, { status: newStatus });
+                } else if (type === 'MEETING') {
+                    await ApiClient.updateMeeting(originalId, { status: newStatus });
+                } else if (type === 'VISIT') {
+                    await ApiClient.updateVisit(originalId, { status: newStatus });
+                }
+                showToast("Status updated");
+                loadTasks();
+            } catch (e) {
+                showToast("Failed to update status", "error");
+            }
+        }
+
+        async function deleteTask(id) {
+            if (!confirm('Are you sure you want to delete this activity?')) return;
+            try {
+                const t = tasks.find(item => item.id === id);
+                if (!t) return;
+                const originalId = t.original_id;
+                const type = t.event_type;
+
+                if (type === 'TODO') {
+                    await ApiClient.deleteTodo(originalId);
+                } else if (type === 'MEETING') {
+                    await ApiClient.deleteMeeting(originalId);
+                } else if (type === 'TIMETABLE') {
+                    await ApiClient.deleteTimetableEvent(originalId);
+                } else if (type === 'VISIT') {
+                    showToast("Visits cannot be deleted from here", "warning");
+                    return;
+                }
+                showToast('Activity purged from SRM');
+                loadTasks();
+                if (bsModal) bsModal.hide();
+            } catch (err) {
+                showToast("Purge failed: " + (err?.data?.detail || "Unknown error"), "error");
+            }
+        }
+
+
+        // Init
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const add = urlParams.get('add');
+            const editId = urlParams.get('id');
+
+            if (add === 'true') {
+                setTimeout(openModal, 800);
+            } else if (editId) {
+                // Wait for tasks to load then open
+                const checkInterval = setInterval(() => {
+                    if (tasks.length > 0) {
+                        openEditModal(editId);
+                        clearInterval(checkInterval);
+                    }
+                }, 500);
+                setTimeout(() => clearInterval(checkInterval), 5000); // safety timeout
+            }
+        });
+
+        ApiClient.getEmployees().then(emps => {
+            const sel = document.getElementById('ev-user');
+            if (sel && isAdmin) {
+                sel.innerHTML = '<option value="All Employees" style="font-weight:bold; color:var(--primary);">👥 Assign All Staff</option>' +
+                    emps.map(e => {
+                        const uniqueVal = e.name || e.email;
+                        const role = (e.role || '').replace(/_/g, ' ');
+                        return `<option value="${uniqueVal}">${e.name || e.email} (${role})</option>`;
+                    }).join('');
+            }
+            if (typeof configureTodoAssignmentUi === 'function') configureTodoAssignmentUi();
+        });
+
+        ApiClient.getClients().then(clients => {
+            const sel = document.getElementById('td-client');
+            if (sel) {
+                sel.innerHTML = '<option value="">— No Client —</option>' +
+                    clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+            }
+        });
+
+        loadTasks();
+    </script>
+</body>
+
+</html>

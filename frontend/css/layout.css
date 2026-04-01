@@ -1,0 +1,177 @@
+/* frontend/css/layout.css */
+/* App Shell Framework */
+.app-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-app);
+}
+
+/* Sidebar handled by #sidebar-container in theme.css */
+
+/* Main Content Wrapper */
+.main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 0; /* Allow flexbox to compute width correctly */
+    position: relative;
+    overflow-x: hidden; /* Prevent horizontal scroll on the whole page */
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive Navigation */
+/* Responsive Sidebar Toggles handled in theme.css */
+
+/* Sidebar Toggle Button */
+.sidebar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.5rem;
+    padding: 0;
+    margin-right: 15px;
+    cursor: pointer;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar-toggle {
+        display: block;
+    }
+}
+
+/* Sidebar handled by Premium Sidebar system in theme.css */
+
+/* Main Content Wrapper */
+.main-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+}
+
+/* Sidebar handled by Premium Sidebar system in theme.css */
+
+/* Top Navigation Bar (Header) - Handled by .top-header in theme.css */
+
+/* Legacy Topbar items removed - replaced by .top-header system */
+
+.bell-dot {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background-color: #EF4444;
+    border-radius: 50%;
+    border: 2px solid var(--surface);
+}
+
+/* Profile dropdown handled in theme.css & ui_components.js */
+
+/* Page Content Area - Final Standardized System */
+.page-content-standard, 
+.page-content, 
+.page-container {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 36px 24px; /* Reduced top from 24px to 16px */
+    margin: 0 auto; /* Removed top/bottom artificial margin gaps */
+    width: 100%; /* Full component width */
+    max-width: var(--page-max-width, 1440px);
+    transition: all 0.3s ease;
+    min-height: 0;
+}
+
+@media (max-width: 991.98px) {
+    .page-content-standard, .page-content, .page-container {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-content-standard, .page-content, .page-container {
+        padding: 16px !important;
+    }
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+}
+
+/* Login Spline Background */
+.login-view {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at bottom left, rgba(13, 148, 136, 0.1) 0%, transparent 40%);
+    background-color: #F8FAFC;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative background blur blobs */
+.login-blob-1 {
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: var(--primary);
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    top: -100px;
+    left: -100px;
+}
+
+.login-blob-2 {
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    background: var(--secondary);
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.15;
+    bottom: -50px;
+    right: -50px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 48px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    width: 100%;
+    max-width: 420px;
+    z-index: 10;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-logo {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    margin: 0 auto 16px;
+    box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.4);
+}

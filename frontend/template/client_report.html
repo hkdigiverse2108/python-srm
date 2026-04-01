@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Client Health Report | SRM AI SETU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .extra-small { font-size: 0.75rem; }
+        .uppercase { text-transform: uppercase; letter-spacing: 0.05rem; }
+        
+        /* Health Indicators */
+        .health-dot {
+            width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px;
+        }
+        .health-good { background-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        .health-warning { background-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+        .health-critical { background-color: #ef4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+
+        /* Responsive Cards */
+        .client-card-mobile { border-radius: 16px; border: 1px solid var(--border); }
+        .avatar-circle { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper">
+            <div class="page-content-standard">
+                
+                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="min-w-0">
+                        <h2 class="page-section-title fw-bold mb-1">Client Health & Intelligence</h2>
+                        <p class="text-muted mb-0 small">Monitor onboarding progress, revenue, and active issues across your converted clients.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light border bg-white fw-semibold shadow-sm" onclick="exportCSV()" style="border-radius:10px;">
+                            <i class="bi bi-filetype-csv text-success me-2"></i>Export CSV
+                        </button>
+                        <button class="btn btn-light border bg-white fw-semibold shadow-sm" onclick="exportPDF()" style="border-radius:10px;">
+                            <i class="bi bi-file-earmark-pdf text-danger me-2"></i>Export PDF
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm bg-primary-subtle p-3 h-100 rounded-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:48px; height:48px; font-size:1.5rem;">
+                                    <i class="bi bi-buildings"></i>
+                                </div>
+                                <div>
+                                    <div class="text-primary fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">TOTAL ACTIVE CLIENTS</div>
+                                    <div class="fs-4 fw-bold text-dark" id="kpi-clients">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm bg-warning-subtle p-3 h-100 rounded-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:48px; height:48px; font-size:1.5rem;">
+                                    <i class="bi bi-bug"></i>
+                                </div>
+                                <div>
+                                    <div class="text-warning-emphasis fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">ACTIVE CLIENT ISSUES</div>
+                                    <div class="fs-4 fw-bold text-dark" id="kpi-issues">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm bg-info-subtle p-3 h-100 rounded-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-info text-dark rounded-circle d-flex align-items-center justify-content-center" style="width:48px; height:48px; font-size:1.5rem;">
+                                    <i class="bi bi-camera-video"></i>
+                                </div>
+                                <div>
+                                    <div class="text-info-emphasis fw-bold mb-1" style="font-size:0.75rem; letter-spacing:0.5px;">TRAINING SESSIONS LOGGED</div>
+                                    <div class="fs-4 fw-bold text-dark" id="kpi-meetings">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="filter-wrapper" class="mb-4"></div>
+
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold mb-0 text-main"><i class="bi bi-bar-chart-steps me-2 text-primary"></i>Client Intelligence Grid</h6>
+                        <span class="badge bg-light text-dark border px-3 py-2 rounded-pill" id="record-count">0 Clients</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive d-none d-lg-block">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="bg-app border-bottom">
+                                    <tr>
+                                        <th class="ps-4 py-3 text-muted fw-bold extra-small uppercase">Client / Business</th>
+                                        <th class="py-3 text-muted fw-bold extra-small uppercase">Assigned PM</th>
+                                        <th class="py-3 text-muted fw-bold extra-small uppercase">Client Health</th>
+                                        <th class="py-3 text-muted fw-bold extra-small uppercase">Registration Date</th>
+                                        <th class="py-3 text-muted fw-bold extra-small uppercase">Remaining Days</th>
+                                        <th class="pe-4 py-3 text-end text-muted fw-bold extra-small uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-tbody">
+                                    <tr><td colspan="6" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Compiling report...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="p-3 d-block d-lg-none" id="report-cards">
+                            <div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Compiling report...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/utils.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        requireAuth();
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.innerHTML = renderSidebar('client_report');
+        injectTopHeader('Client Report');
+
+        let reportData = [];
+
+        async function compileReport() {
+            try {
+                // Fetch raw entities to build a true CRM report
+                const [clients, issues, meetings] = await Promise.all([
+                    apiGet('/clients/'),
+                    apiGet('/issues/?limit=1000'),
+                    apiGet('/meetings/?limit=1000')
+                ]);
+
+                let totalOpenIssues = 0;
+
+                reportData = clients.map(client => {
+                    const clientIssues = issues.filter(i => i.client_id === client.id && i.status !== 'RESOLVED' && i.status !== 'CANCELLED');
+                    const clientMeetings = meetings.filter(m => m.client_id === client.id);
+                    
+                    // Determine Health
+                    let healthClass = 'health-good';
+                    let healthText = 'Healthy';
+                    if (clientIssues.length > 0) {
+                        const hasHighSev = clientIssues.some(i => i.severity === 'HIGH');
+                        healthClass = hasHighSev ? 'health-critical' : 'health-warning';
+                        healthText = hasHighSev ? 'Critical Issues' : 'Has Open Issues';
+                    }
+                    
+                    totalOpenIssues += clientIssues.length;
+
+                    return {
+                        ...client,
+                        openIssuesCount: clientIssues.length,
+                        meetingsCount: clientMeetings.length,
+                        healthClass,
+                        healthText
+                    };
+                });
+
+                // Sort newest first
+                reportData.sort((a, b) => b.id - a.id);
+
+                document.getElementById('kpi-clients').textContent = reportData.length;
+                document.getElementById('kpi-issues').textContent = totalOpenIssues;
+                // Only count active/upcoming sessions for the KPI
+                const activeMeetings = meetings.filter(m => m.status === 'OPEN' || m.status === 'IN_PROGRESS');
+                document.getElementById('kpi-meetings').textContent = activeMeetings.length;
+
+                initFilters();
+                renderTable(reportData);
+
+            } catch (err) {
+                console.error('Report Compilation Failed', err);
+                const errHtml = `<tr><td colspan="6" class="text-center py-5 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load report data.</td></tr>`;
+                document.getElementById('report-tbody').innerHTML = errHtml;
+                document.getElementById('report-cards').innerHTML = errHtml;
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('report-tbody');
+            const cards = document.getElementById('report-cards');
+            document.getElementById('record-count').textContent = `${data.length} Clients`;
+
+            if (!data.length) {
+                const emptyHtml = `<tr><td colspan="6" class="text-center py-5 text-muted">No clients match the current filters.</td></tr>`;
+                tbody.innerHTML = emptyHtml;
+                cards.innerHTML = emptyHtml;
+                return;
+            }
+
+            let rows = '';
+            let cardHtml = '';
+
+            data.forEach(c => {
+                const bizName = c.business_name || c.company_name || c.shop_name || c.company || c.organization || c.project_name || 'Direct Client';
+                const pmName = c.pm_name || c.onboarding_pm_name || 'Unassigned';
+                const pmInitials = (pmName !== 'Unassigned') ? pmName.slice(0, 2).toUpperCase() : '?';
+                const rawDate = c.created_at || c.date_added || c.createdAt || c.timestamp;
+                const regDateObj = rawDate ? new Date(rawDate) : new Date();
+                const regDate = rawDate ? regDateObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+
+                // --- Remaining Days Logic ---
+                const today = new Date();
+                const diffTime = today.getTime() - regDateObj.getTime();
+                const daysPassed = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+
+                let remainingHtml = '';
+                let remainingExportText = '';
+                if (daysPassed <= 10) {
+                    const left = 10 - daysPassed;
+                    remainingHtml = `<span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1"><i class="bi bi-hourglass-split me-1"></i>Buffer: ${left} Days</span>`;
+                    remainingExportText = `Buffer: ${left} Days`;
+                } else {
+                    const left = 375 - daysPassed;
+                    if (left > 0) {
+                        remainingHtml = `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-calendar-check me-1"></i>${left} Days Left</span>`;
+                        remainingExportText = `${left} Days Left`;
+                    } else {
+                        remainingHtml = `<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i class="bi bi-exclamation-circle me-1"></i>Expired</span>`;
+                        remainingExportText = `Expired`;
+                    }
+                }
+                c.remainingExportText = remainingExportText;
+                // ----------------------------
+
+                // Desktop Row
+                rows += `
+                <tr class="border-bottom">
+                    <td class="ps-4">
+                        <div class="fw-bold text-main" style="font-size:1.05rem;">${bizName}</div>
+                        <div class="text-muted small"><i class="bi bi-person me-1"></i>${c.name}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle bg-primary-subtle text-primary border" style="width:28px;height:28px;font-size:0.7rem;">${pmInitials}</div>
+                            <span class="text-dark fw-medium small">${pmName}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center mb-1">
+                            <span class="${c.healthClass} health-dot"></span>
+                            <span class="fw-medium small text-dark">${c.healthText}</span>
+                        </div>
+                        <div class="text-muted extra-small">${c.openIssuesCount} Open Issues · ${c.meetingsCount} Sessions</div>
+                    </td>
+                    <td class="text-muted small">${regDate}</td>
+                    <td>${remainingHtml}</td>
+                    <td class="pe-4 text-end">
+                        <a href="clients.html?id=${c.id}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-medium">View</a>
+                    </td>
+                </tr>`;
+
+                // Mobile Card
+                cardHtml += `
+                <div class="client-card-mobile bg-white shadow-sm mb-3 p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0">${bizName}</h6>
+                            <div class="text-muted small">${c.name}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border"><span class="${c.healthClass} health-dot" style="width:6px;height:6px;"></span>${c.healthText}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-circle bg-primary-subtle text-primary" style="width:24px;height:24px;font-size:0.6rem;">${pmInitials}</div>
+                            <span class="text-muted" style="font-size:0.75rem;">${pmName}</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="text-muted" style="font-size:0.7rem;">Added ${regDate}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            tbody.innerHTML = rows;
+            cards.innerHTML = cardHtml;
+        }
+
+        function initFilters() {
+            const pms = [...new Set(reportData.map(c => c.pm_name || c.onboarding_pm_name).filter(n => n && n !== 'Unassigned'))];
+            
+            renderFilterPanel({
+                containerId: 'filter-wrapper',
+                filters: [
+                    { type: 'select', label: 'Assigned PM', id: 'filter-pm', options: [
+                        { value: 'ALL', label: 'All PMs' },
+                        ...pms.map(name => ({ value: name, label: name }))
+                    ]},
+                    { type: 'select', label: 'Client Health', id: 'filter-health', options: [
+                        { value: 'ALL', label: 'All Statuses' },
+                        { value: 'health-good', label: 'Healthy (No Issues)' },
+                        { value: 'health-warning', label: 'Warning (Has Issues)' },
+                        { value: 'health-critical', label: 'Critical (High Sev Issues)' }
+                    ]}
+                ],
+                onApply: (filters) => {
+                    let filtered = reportData;
+                    if (filters['pm'] && filters['pm'] !== 'ALL') {
+                        filtered = filtered.filter(c => (c.pm_name || c.onboarding_pm_name) === filters['pm']);
+                    }
+                    if (filters['health'] && filters['health'] !== 'ALL') {
+                        filtered = filtered.filter(c => c.healthClass === filters['health']);
+                    }
+                    renderTable(filtered);
+                },
+                onReset: () => renderTable(reportData)
+            });
+        }
+
+        function exportCSV() {
+            if (!reportData.length) return showToast('No data to export', 'error');
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Client ID,Business Name,Contact Name,Assigned PM,Open Issues,Total Meetings,Health Status,Date Added,Remaining Days\n";
+            
+            reportData.forEach(c => {
+                const bizName = `"${(c.business_name || c.company_name || c.shop_name || c.company || c.organization || c.project_name || 'Direct Client').replace(/"/g, '""')}"`;
+                const contactName = `"${(c.name || '').replace(/"/g, '""')}"`;
+                const pm = `"${(c.pm_name || c.onboarding_pm_name || 'Unassigned').replace(/"/g, '""')}"`;
+                const rawDate = c.created_at || c.date_added || c.createdAt || c.timestamp;
+                const date = rawDate ? new Date(rawDate).toLocaleDateString('en-CA') : 'N/A';
+                const row = [c.id, bizName, contactName, pm, c.openIssuesCount, c.meetingsCount, c.healthText, date, c.remainingExportText || ''].join(",");
+                csvContent += row + "\n";
+            });
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Client_Health_Report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.text("Client Health & Intelligence Report", 14, 20);
+            
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Generated: ${new Date().toLocaleDateString('en-IN')}`, 14, 28);
+
+            const tableData = reportData.map(c => [
+                c.id,
+                c.business_name || c.company_name || c.shop_name || c.company || c.organization || c.project_name || 'Direct Client',
+                c.name,
+                c.pm_name || c.onboarding_pm_name || 'Unassigned',
+                `${c.openIssuesCount} Open / ${c.meetingsCount} Sessions`,
+                c.healthText,
+                c.remainingExportText || ''
+            ]);
+
+            doc.autoTable({
+                startY: 35,
+                head: [["ID", "Business Name", "Contact", "Manager", "Interactions", "Health", "Remaining Days"]],
+                body: tableData,
+                theme: 'grid',
+                headStyles: { fillColor: [79, 70, 229] }, // Indigo-600
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`Client_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+        }
+
+        compileReport();
+    </script>
+</body>
+</html>

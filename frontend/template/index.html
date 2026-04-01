@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<!-- frontend/template/index.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SRM AI SETU — Login</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            background: var(--bg-app);
+        }
+
+        /* ── LEFT PANEL (Brand) ───────────────────────────────── */
+        .login-left {
+            width: 48%;
+            background: linear-gradient(145deg, #1d4ed8 0%, #6366f1 45%, #8b5cf6 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 4rem;
+            overflow: hidden;
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: -120px;
+            right: -80px;
+            width: 380px;
+            height: 380px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 50%;
+        }
+
+        .login-left::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -60px;
+            width: 300px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .left-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(70px);
+            pointer-events: none;
+        }
+
+        .left-blob-1 {
+            width: 260px;
+            height: 260px;
+            background: rgba(167, 139, 250, 0.35);
+            top: 10%;
+            right: 5%;
+        }
+
+        .left-blob-2 {
+            width: 200px;
+            height: 200px;
+            background: rgba(99, 102, 241, 0.4);
+            bottom: 15%;
+            left: 10%;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.20);
+            border-radius: 100px;
+            padding: 6px 16px 6px 8px;
+            margin-bottom: 2.5rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .brand-badge-icon {
+            width: 32px;
+            height: 32px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-badge-icon i {
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .brand-badge span {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .left-headline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 800;
+            color: white;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.25rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-headline span {
+            color: rgba(196, 181, 253, 1);
+        }
+
+        .left-desc {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 380px;
+            margin-bottom: 2.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-stats {
+            display: flex;
+            gap: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .left-stat {
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 14px 20px;
+            backdrop-filter: blur(8px);
+            text-align: center;
+        }
+
+        .left-stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .left-stat-label {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+        }
+
+        .left-footer {
+            position: absolute;
+            bottom: 2rem;
+            left: 4rem;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.73rem;
+            z-index: 1;
+        }
+
+        /* ── RIGHT PANEL (Form) ───────────────────────────────── */
+        .login-right {
+            flex: 1;
+            background: var(--bg-app);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        .login-right::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(at 90% 10%, rgba(224, 231, 255, 0.4) 0, transparent 50%),
+                radial-gradient(at 10% 90%, rgba(238, 242, 255, 0.3) 0, transparent 50%);
+            z-index: 0;
+        }
+
+        .login-form-card {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 2.5rem 2.25rem 1.75rem;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--border);
+        }
+
+        .form-eyebrow {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.09em;
+            color: var(--primary);
+            margin-bottom: 0.4rem;
+        }
+
+        .form-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: -0.025em;
+            margin-bottom: 0.3rem;
+        }
+
+        .form-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.75rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            margin-bottom: 1.1rem;
+        }
+
+        .input-wrapper i.input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 11px 14px 11px 38px;
+            border: 1.5px solid var(--border);
+            border-radius: 9px;
+            font-size: 0.875rem;
+            color: var(--text-main);
+            background: var(--bg-app);
+            transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px var(--primary-ring);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-placeholder);
+        }
+
+        .input-field[type="password"],
+        .input-field[type="text"] {
+            padding-right: 40px;
+        }
+
+        .error-box {
+            display: none;
+            background: var(--danger-light);
+            border: 1px solid #fca5a5;
+            border-radius: 9px;
+            padding: 11px 14px;
+            font-size: 0.82rem;
+            color: var(--danger);
+            margin-bottom: 1.1rem;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .error-box.visible {
+            display: flex;
+        }
+
+        .input-field.is-invalid {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+        }
+
+        .field-hint {
+            font-size: 0.78rem;
+            color: #ef4444;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .field-hint.visible {
+            display: block;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s;
+            z-index: 5;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary);
+        }
+
+        /* Hide the browser's native password reveal button (Edge/Chrome) */
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 9px;
+            color: #ffffff !important;
+            font-size: 0.92rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+        }
+
+        .btn-login:hover:not(:disabled) {
+            background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%) !important;
+            color: #ffffff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .btn-login.success {
+            background: #10b981 !important;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.28);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 1.4rem 0;
+            color: var(--text-muted);
+            font-size: 0.73rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .demo-hint {
+            background: var(--success-light);
+            border: 1px solid #a7f3d0;
+            border-radius: 9px;
+            padding: 11px 13px;
+            font-size: 0.8rem;
+            color: var(--success-text);
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .demo-hint i {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .demo-hint code {
+            background: rgba(6, 95, 70, 0.10);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 0.77rem;
+        }
+
+        /* Trust strip inside card */
+        .card-trust-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            margin-top: 1.5rem;
+            padding-top: 1.1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .trust-item i {
+            font-size: 0.82rem;
+            color: var(--primary);
+        }
+
+        .right-footer {
+            position: relative;
+            z-index: 1;
+            margin-top: 1.1rem;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .login-left {
+                display: none;
+            }
+
+            .login-right {
+                width: 100%;
+            }
+        }
+
+        /* Fade out for redirect */
+        body.fading-out {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .redirect-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-app);
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .redirect-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="redirect-overlay" id="redirect-overlay"></div>
+    <!-- LEFT BRAND PANEL -->
+    <div class="login-left">
+        <div class="left-blob left-blob-1"></div>
+        <div class="left-blob left-blob-2"></div>
+
+        <div class="brand-badge">
+            <div class="brand-badge-icon">
+                <i class="bi bi-diagram-3-fill"></i>
+            </div>
+            <span>SRM AI SETU</span>
+        </div>
+
+        <h1 class="left-headline">
+            Manage Smarter.<br>
+            Grow <span>Faster.</span>
+        </h1>
+
+        <p class="left-desc">
+            A unified SRM platform built for modern sales teams — track leads, clients, visits, projects and billing all
+            from one powerful workspace.
+        </p>
+
+        <div class="left-stats">
+            <div class="left-stat">
+                <div class="left-stat-val">360°</div>
+                <div class="left-stat-label">Client View</div>
+            </div>
+            <div class="left-stat">
+                <div class="left-stat-val">Real-time</div>
+                <div class="left-stat-label">Analytics</div>
+            </div>
+            <div class="left-stat">
+                <div class="left-stat-val">AI</div>
+                <div class="left-stat-label">Powered</div>
+            </div>
+        </div>
+
+        <div class="left-footer">© 2026 Harikrushn DigiVerse LLP. All rights reserved.</div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="login-right">
+        <div class="login-form-card">
+            <!-- Logout Success State -->
+            <div id="logout-success" style="display: none; text-align: center;">
+                <div
+                    style="width: 56px; height: 56px; background: var(--bg-app); border-radius: 14px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--primary); border: 1px solid var(--border);">
+                    <i class="bi bi-check2-circle" style="font-size: 28px;"></i>
+                </div>
+                <h2 class="form-title" style="margin-bottom: 8px;">Logged Out Successfully</h2>
+                <p class="form-subtitle" style="margin-bottom: 28px;">Your session has been securely terminated. Thank
+                    you for using SRM AI SETU.</p>
+                <div>
+                    <a href="index.html" class="btn-login"
+                        style="padding: 10px 24px; min-width: 120px; border-radius: 8px; text-decoration: none; display: inline-flex; width: auto; margin: 0 auto;">
+                        <i class="bi bi-arrow-left" style="margin-right: 8px;"></i>
+                        Return to Login
+                    </a>
+                </div>
+            </div>
+
+            <!-- Login Fields -->
+            <div id="login-fields">
+                <p class="form-eyebrow">Welcome Back</p>
+                <h2 class="form-title">Sign in to your workspace</h2>
+                <p class="form-subtitle">Enter your credentials to access your dashboard.</p>
+                        <div id="error-box" class="alert d-flex align-items-center gap-2 p-3 mb-4"
+                            style="display: none !important; border-radius: 12px; font-size: 0.9rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; backdrop-filter: blur(8px); animation: slideDown 0.3s ease-out;">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            <span id="error-message"></span>
+                        </div>
+            </div>
+
+            <form id="login-form" novalidate>
+                <div>
+                    <label class="form-label" for="email">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="text" id="email" class="input-field" placeholder="admin@example.com" required
+                            autocomplete="email" inputmode="email">
+                    </div>
+                    <p class="field-hint" id="email-hint"></p>
+                </div>
+
+                <div>
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input type="password" id="password" class="input-field" placeholder="••••••••" required
+                            autocomplete="current-password">
+                        <button type="button" class="password-toggle"
+                            onclick="togglePasswordVisibility('password', 'pass-eye')" id="toggle-pass-btn">
+                            <i class="bi bi-eye" id="pass-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login" id="login-btn">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    Sign In to Dashboard
+                </button>
+            </form>
+
+            <!-- Trust Strip -->
+            <div class="card-trust-strip">
+                <div class="trust-item">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>Secure Login</span>
+                </div>
+                <div class="trust-item">
+                    <i class="bi bi-lock-fill"></i>
+                    <span>Encrypted</span>
+                </div>
+                <div class="trust-item">
+                    <i class="bi bi-person-check-fill"></i>
+                    <span>Trusted Access</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-footer">Handcrafted with <span style="color: var(--primary);">♥</span> by the HK DigiVerse
+            team</div>
+    </div>
+
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/utils.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script>
+
+        function showError(msg) {
+            const errBox = document.getElementById('error-box');
+            const errMsg = document.getElementById('error-message');
+            errMsg.innerText = msg;
+            errBox.style.setProperty('display', 'flex', 'important');
+            // Auto hide after 10s for access denied to keep UI clean? No, let user see it.
+        }
+
+        // Returns {msg, field} or null if valid
+        function validateLoginInputs(email, password) {
+            if (!email) return { msg: 'Email address is required.', field: 'email' };
+            if (!email.includes('@')) return { msg: 'Please enter a valid email — it must include "@" (e.g. name@example.com).', field: 'email' };
+            const parts = email.split('@');
+            if (parts[0].length === 0) return { msg: 'The part before "@" cannot be empty (e.g. name@example.com).', field: 'email' };
+            if (parts.length !== 2 || !parts[1]) return { msg: 'Please enter a valid email address (e.g. name@example.com).', field: 'email' };
+            if (!parts[1].includes('.')) return { msg: 'The email domain must contain "." (e.g. example.com).', field: 'email' };
+            const domainParts = parts[1].split('.');
+            if (domainParts.some(p => p.length === 0)) return { msg: 'Please enter a valid email address (e.g. name@example.com).', field: 'email' };
+            if (!password) return { msg: 'Password is required.', field: 'password' };
+            if (password.length < 4) return { msg: 'Password is too short — please enter at least 4 characters.', field: 'password' };
+            return null; // valid
+        }
+
+        // Handle Logout Message
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('msg') === 'logged_out') {
+                document.getElementById('logout-success').style.display = 'block';
+                document.getElementById('login-fields').style.display = 'none';
+                document.getElementById('login-form').style.display = 'none';
+                const strip = document.querySelector('.card-trust-strip');
+                if (strip) strip.style.display = 'none';
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-btn');
+            const errBox = document.getElementById('error-box');
+            const errText = document.getElementById('error-message');
+
+            errBox.style.setProperty('display', 'none', 'important');
+
+            const emailVal = document.getElementById('email').value.trim();
+            const passwordVal = document.getElementById('password').value;
+
+            const validationError = validateLoginInputs(emailVal, passwordVal);
+            if (validationError) {
+                showError(validationError.msg);
+                if (validationError.field === 'email') {
+                    setEmailInvalid(validationError.msg);
+                }
+                document.getElementById(validationError.field).focus();
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner"></div> Verifying...`;
+
+            const formData = new URLSearchParams();
+            formData.append('username', emailVal);
+            formData.append('password', passwordVal);
+
+            try {
+                const res = await fetch(`${API}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData.toString()
+                });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.detail || 'Invalid email or password');
+                }
+
+                const data = await res.json();
+                sessionStorage.setItem('access_token', data.access_token);
+                if (data.refresh_token) sessionStorage.setItem('refresh_token', data.refresh_token);
+
+                btn.classList.add('success');
+                btn.innerHTML = `<i class="bi bi-check-lg"></i> Success! Redirecting...`;
+
+                // Sync profile before redirect
+                try {
+                    const r = await fetch(`${API}/auth/profile`, { headers: { 'Authorization': `Bearer ${data.access_token}` } });
+                    if (r.ok) {
+                        const p = await r.json();
+                        sessionStorage.setItem('srm_user', JSON.stringify({ id: p.id, name: p.name || p.email, email: p.email, role: p.role }));
+                    }
+                } catch (_) { }
+
+                setTimeout(() => {
+                    document.getElementById('redirect-overlay').classList.add('active');
+                    setTimeout(() => window.location.replace('dashboard.html'), 350);
+                }, 400);
+
+            } catch (err) {
+                errText.textContent = err.message || 'Login failed. Please try again.';
+                errBox.style.setProperty('display', 'flex', 'important');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-box-arrow-in-right"></i> Sign In to Dashboard`;
+            }
+        });
+
+        // Real-time inline validation on blur
+        const emailInput = document.getElementById('email');
+        const emailHint = document.getElementById('email-hint');
+
+        emailInput.addEventListener('blur', () => {
+            const val = emailInput.value.trim();
+            if (!val) {
+                setEmailInvalid('Email address is required.');
+            } else if (!val.includes('@')) {
+                setEmailInvalid('Missing "@" — try name@example.com');
+            } else {
+                const parts = val.split('@');
+                if (parts[0].length === 0) {
+                    setEmailInvalid('The part before "@" cannot be empty.');
+                } else if (!parts[1] || !parts[1].includes('.')) {
+                    setEmailInvalid('Domain must contain "." — try name@example.com');
+                } else {
+                    setEmailValid();
+                }
+            }
+        });
+
+        emailInput.addEventListener('input', () => {
+            document.getElementById('error-box').style.setProperty('display', 'none', 'important');
+            if (emailInput.classList.contains('is-invalid')) {
+                const val = emailInput.value.trim();
+                if (val.includes('@') && val.split('@').length === 2 && val.split('@')[1].includes('.') && val.split('@')[0].length > 0) {
+                    setEmailValid();
+                }
+            }
+        });
+
+        document.getElementById('password').addEventListener('input', () => {
+            document.getElementById('error-box').style.setProperty('display', 'none', 'important');
+        });
+
+        function setEmailInvalid(msg) {
+            emailInput.classList.add('is-invalid');
+            emailHint.textContent = msg;
+            emailHint.classList.add('visible');
+        }
+
+        function setEmailValid() {
+            emailInput.classList.remove('is-invalid');
+            emailHint.textContent = '';
+            emailHint.classList.remove('visible');
+        }
+    </script>
+</body>
+
+</html>
+

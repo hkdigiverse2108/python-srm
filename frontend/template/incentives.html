@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<!-- frontend/template/incentives.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Incentives — SRM AI SETU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260321">
+    <link rel="stylesheet" href="../css/components.css?v=20260321">
+</head>
+
+<body>
+    <style>
+        /* Incentive-specific adjustments while respecting theme.css */
+        .page-content {
+            padding-bottom: 28px;
+        }
+
+        .stat-card {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff !important;
+            border-radius: 16px !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .stat-card.card-primary::before {
+            background: var(--primary);
+        }
+
+        .stat-card.card-success::before {
+            background: var(--success);
+        }
+
+        .stat-card.card-warning::before {
+            background: var(--warning);
+        }
+
+        .stat-card.card-info::before {
+            background: var(--info);
+        }
+
+        .stat-card.card-purple::before {
+            background: #8b5cf6; /* Violet-500 */
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06) !important;
+            border-color: rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .premium-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 14px !important;
+        }
+
+        .premium-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            border-radius: 14px 14px 0 0;
+            z-index: 10;
+        }
+
+        .premium-card.card-primary::before { background: var(--primary); }
+        .premium-card.card-info::before { background: var(--info); }
+        .premium-card.card-success::before { background: var(--success); }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .achievement-progress {
+            height: 6px;
+            background: var(--primary-light);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .achievement-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 100px;
+            transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* ── Table & Layout Fundamentals ─────────────────────── */
+        .table th,
+        .table td {
+            padding: 10px 14px !important;
+            vertical-align: middle;
+        }
+
+        .slabs-table th,
+        .slabs-table td {
+            padding: 6px 6px !important;
+            font-size: 0.75rem;
+        }
+
+        .slabs-table thead th {
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+            font-size: 0.68rem;
+        }
+
+        /* ── Modern Table Responsiveness (Horizontal Scroll) ── */
+        .table-responsive {
+            overflow-x: auto !important;
+            overflow-y: visible !important;
+            position: relative;
+            scrollbar-width: thin;
+            border-radius: 0 0 14px 14px;
+            -webkit-overflow-scrolling: touch;
+            background: var(--surface);
+        }
+
+        /* Premium Scrollbar Styling */
+        .table-responsive::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .table-responsive::-webkit-scrollbar-track {
+            background: var(--bg-app);
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .badge-pending {
+            background: var(--warning-light);
+            color: var(--warning-text);
+            border: 1px solid rgba(217, 119, 6, 0.2);
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+        .badge-ready {
+            background: var(--success-light);
+            color: var(--success-text);
+            border: 1px solid rgba(5, 150, 105, 0.2);
+            font-size: 0.72rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+
+
+
+        .pct-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .incentive-card-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .preview-breakdown {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(0,0,0,0.05);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+
+        .preview-row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 0;
+            border-bottom: none;
+        }
+
+        .preview-row .label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .preview-row .value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .preview-row.full-width {
+            grid-column: span 2;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            margin-top: 4px;
+        }
+
+        .preview-total-card {
+            background: linear-gradient(135deg, #4f46e5, #4338ca);
+            border-radius: 16px;
+            padding: 20px;
+            color: white;
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
+        .preview-total-card .label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .preview-total-card .value {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .slab-form-shell {
+            background: linear-gradient(180deg, rgba(79, 70, 229, 0.05), rgba(79, 70, 229, 0.02));
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .slab-metric {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            background: var(--bg-app);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .slab-range-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+            padding: 3px 6px;
+            border-radius: 6px;
+            background: var(--primary-light);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.72rem;
+        }
+
+        .slab-cell-note {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .slab-modal-grid {
+            background: var(--bg-app);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .slab-input-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .slabs-table {
+            width: 100%;
+            table-layout: fixed;
+            margin-bottom: 0;
+            font-size: 0.8rem;
+        }
+
+        .slips-table-wrap {
+            overflow-x: auto;
+        }
+
+        .slips-table {
+            width: 100%;
+            min-width: 650px;
+            table-layout: fixed;
+            font-size: 0.82rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0;
+        }
+
+        .slips-table col.col-employee {
+            width: 24%;
+        }
+
+        .slips-table col.col-period {
+            width: 18%;
+        }
+
+        .slips-table col.col-tasks {
+            width: 10%;
+        }
+
+        .slips-table col.col-slab {
+            width: 20%;
+        }
+
+        .slips-table col.col-rate {
+            width: 14%;
+        }
+
+        .slips-table col.col-total {
+            width: 14%;
+        }
+
+        .slip-employee-cell {
+            min-width: 0;
+        }
+
+        .slip-employee-name,
+        .slip-slab-label {
+            display: block;
+            line-height: 1.25;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        .slip-period-cell,
+        .slip-task-cell,
+        .slip-rate-cell,
+        .slip-total-cell {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 991.98px) {
+            .slips-table {
+                min-width: 720px;
+            }
+
+            .slip-employee-name,
+            .slip-slab-label {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+
+        /* Inline Validation */
+        .is-invalid {
+            border-color: #dc2626 !important;
+        }
+
+        .is-invalid:focus {
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+        }
+
+        .invalid-feedback {
+            display: block;
+            color: #dc2626;
+            font-size: 0.72rem;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* ── Modern Calculation Card Styling ── */
+        .srm-box {
+            background: var(--surface) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        .calc-mode-selector {
+            display: flex;
+            background: var(--bg-app);
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .mode-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 8px 12px;
+            border-radius: 9px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .mode-btn.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+        }
+
+        .calc-input-card {
+            background: var(--bg-app);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+            transition: all 0.3s ease;
+        }
+
+        .calc-header-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, var(--primary), #4338ca);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 16px -4px rgba(79, 70, 229, 0.4);
+        }
+
+        .calc-step-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* New Preview Aesthetics */
+        .premium-preview-container {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 0;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .preview-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1px;
+            background: rgba(0,0,0,0.05);
+        }
+
+        .preview-summary-item {
+            background: white;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .preview-summary-item .label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        .preview-summary-item .value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .preview-footer-bulk {
+            background: var(--bg-app);
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+    </style>
+
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper" style="min-width:0;">
+            <div class="page-content-standard">
+
+                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <div>
+                        <h2 class="page-section-title fw-bold mb-1">Incentives</h2>
+                        <p id="page-desc" class="text-white-50 mb-0 small">Earnings & Performance Tracking</p>
+                    </div>
+                    <div id="admin-header-actions" style="display:none;">
+                        <button class="btn btn-premium-action shadow-sm" onclick="openCalcModal()">
+                            <i class="bi bi-lightning-charge-fill me-1"></i>Calculate Incentive
+                        </button>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card card-primary h-100 p-3">
+                            <div class="stat-label mb-2">Active Slabs</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary-light text-primary rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-layers-half fs-5"></i>
+                                </div>
+                                <div class="stat-value" id="stat-slabs">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card card-success h-100 p-3">
+                            <div class="stat-label mb-2">Total Tasks</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-success-light text-success rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-check2-circle fs-5"></i>
+                                </div>
+                                <div class="stat-value" id="stat-tasks">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card card-purple h-100 p-3">
+                            <div class="stat-label mb-2">Confirmed Incentive</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-purple-light text-purple rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px; background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                                    <i class="bi bi-cash-stack fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value" id="stat-confirmed" style="font-size:1.15rem;">-</div>
+                                    <div
+                                        style="font-size:0.6rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">
+                                        Confirmed</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="card stat-card card-warning h-100 p-3">
+                            <div class="stat-label mb-2">Pending Incentive</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-warning-light text-warning rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-hourglass-split fs-5"></i>
+                                </div>
+                                <div>
+                                    <div class="stat-value" id="stat-pending" style="font-size:1.15rem;">-</div>
+                                    <div
+                                        style="font-size:0.6rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">
+                                        In Review</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Panel Wrapper -->
+                <div id="filter-wrapper" style="margin-top: 40px !important; margin-bottom: 16px !important;"></div>
+
+                <!-- Employee Life Progress (Personal Dashboard) -->
+                <div id="employee-progress-row" class="row g-4 mb-4" style="display:none;">
+                    <div class="col-12">
+                        <div class="card premium-card card-primary border-0 shadow-sm p-4" style="background: var(--surface); border-radius: 20px !important;">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-primary-light text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 52px; height: 52px; background: var(--bg-app); border: 1px solid var(--border);">
+                                        <i class="bi bi-graph-up-arrow fs-4"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-800 mb-0" style="letter-spacing:-0.01em;">Live Performance <span class="text-primary" id="progress-month-year"></span></h5>
+                                        <p class="text-muted small mb-0" id="progress-summary">Tracking your incentive journey</p>
+                                    </div>
+                                </div>
+                                <div class="text-md-end">
+                                    <div class="stat-label mb-1">Total Impact</div>
+                                    <div class="stat-value text-primary" id="progress-cumulative-total" style="font-size:1.8rem;">-</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 pt-2">
+                                <div class="d-flex justify-content-between align-items-end mb-2">
+                                    <span class="small fw-700 text-muted text-uppercase" style="letter-spacing:0.05em;" id="progress-start-label">Start of Month</span>
+                                    <span class="small fw-800 text-primary" id="progress-next-milestone">Next Slab Milestone</span>
+                                </div>
+                                <div class="progress" style="height: 12px; border-radius: 100px; background: var(--bg-app); border: 1px solid var(--border);">
+                                    <div id="progress-bar-history" class="progress-bar" role="progressbar" style="width: 0%; background: var(--text-muted); opacity:0.3;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div id="progress-bar-current" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; background: linear-gradient(90deg, var(--primary), #4338ca);" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-2">
+                                    <span class="text-muted" style="font-size:0.75rem;"><strong id="progress-history-count">0</strong> tasks history</span>
+                                    <span class="text-primary fw-bold" style="font-size:0.75rem;" id="progress-remaining-text">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="row g-4">
+
+                    <div class="col-xl-4">
+                        <div class="card premium-card card-primary border-0 shadow-sm overflow-visible">
+                            <div class="card-header bg-surface border-bottom d-flex justify-content-between align-items-center"
+                                style="padding: 14px 20px 12px; background: linear-gradient(to right, rgba(248,250,252,0.8), rgba(255,255,255,0.9)); border-radius: 14px 14px 0 0;">
+                                <h6 class="fw-bold mb-0 text-muted text-uppercase"
+                                    style="font-size: 0.78rem; letter-spacing: 0.07em;"><i
+                                        class="bi bi-shield-lock me-2 text-primary"></i>Incentive Slabs</h6>
+                                <button id="btn-add-slab" class="btn btn-sm btn-outline-primary"
+                                    onclick="toggleAddSlabForm()" style="display:none; border-radius: 8px;">
+                                    <i class="bi bi-plus-lg"></i>
+                                </button>
+                            </div>
+
+                            <div id="add-slab-form" class="px-4 py-4 slab-form-shell" style="display:none;">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label slab-input-label">Min Tasks</label>
+                                        <input type="number" id="slab-min" class="form-control form-control-sm"
+                                            placeholder="e.g. 1" min="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label slab-input-label">Max Tasks</label>
+                                        <input type="number" id="slab-max" class="form-control form-control-sm"
+                                            placeholder="e.g. 10" min="1">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label slab-input-label">Incentive Per Task</label>
+                                        <input type="number" id="slab-per-unit" class="form-control form-control-sm"
+                                            placeholder="1200" min="0" step="0.01">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label slab-input-label">Slab Bonus</label>
+                                        <input type="number" id="slab-bonus" class="form-control form-control-sm"
+                                            placeholder="0" min="0" step="0.01">
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <span class="slab-metric"><i class="bi bi-check2-square"></i> Task range
+                                        based</span>
+                                    <span class="slab-metric"><i class="bi bi-cash-stack"></i> Flat per-task rate</span>
+                                    <span class="slab-metric"><i class="bi bi-stars"></i> Optional slab bonus</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-primary flex-grow-1" onclick="addSlab()">Save
+                                        Slab</button>
+                                    <button class="btn btn-sm btn-secondary"
+                                        onclick="toggleAddSlabForm()">Cancel</button>
+                                </div>
+                                <span id="slab-msg" class="small d-none mt-2 d-block"></span>
+                            </div>
+
+                            <!-- Slab table - standard Bootstrap utility -->
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle small mb-0 slabs-table">
+                                    <colgroup>
+                                        <col style="width:25%">
+                                        <col style="width:30%">
+                                        <col style="width:25%">
+                                        <col id="slab-actions-col-width" style="width:20%;display:none;">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Range</th>
+                                            <th>Per Task</th>
+                                            <th>Bonus</th>
+                                            <th id="slab-actions-col" class="text-center pe-3" style="display:none;">
+                                                Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="slabs-tbody">
+                                        <tr>
+                                            <td colspan="4" class="text-center py-4 text-muted small"><span
+                                                    class="spinner-border spinner-border-sm me-2"></span>Loading...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-xl-8">
+                        <div class="card premium-card card-info border-0 shadow-sm">
+                            <div class="card-header bg-surface border-bottom d-flex justify-content-between align-items-center gap-2 flex-wrap"
+                                style="padding: 14px 20px 12px; background: linear-gradient(to right, rgba(248,250,252,0.8), rgba(255,255,255,0.9)); border-radius: 14px 14px 0 0;">
+                                <div>
+                                    <h6 class="fw-bold mb-0 incentive-card-title text-muted text-uppercase"
+                                        style="font-size: 0.78rem; letter-spacing: 0.07em;">
+                                        <i class="bi bi-table me-2"></i>Incentive Slips
+                                    </h6>
+                                    <div class="text-muted mt-1" id="slip-filter-summary" style="font-size:0.75rem;">All
+                                        slips</div>
+                                </div>
+                                <button id="btn-calc" class="btn btn-sm btn-primary" onclick="openCalcModal()"
+                                    style="display:none; border-radius: 8px;">
+                                    <i class="bi bi-lightning-charge-fill me-1"></i>Calculate Incentive
+                                </button>
+                            </div>
+
+                            <!-- Slips table -->
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 slips-table">
+                                    <colgroup>
+                                        <col class="col-employee">
+                                        <col class="col-period">
+                                        <col class="col-tasks">
+                                        <col class="col-slab">
+                                        <col class="col-rate">
+                                        <col class="col-total">
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th class="ps-3">Employee</th>
+                                            <th>Period / Time</th>
+                                            <th class="ps-4">Tasks</th>
+                                            <th>Slab</th>
+                                            <th class="text-end">Per Task</th>
+                                            <th class="pe-3 text-end">Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="slips-tbody">
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <span class="spinner-border spinner-border-sm me-2"></span>Loading...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unified Modern Calculate Incentive Modal -->
+    <div class="srm-overlay" id="calcModal">
+        <div class="srm-box" style="max-width:540px; padding: 20px; border-radius: 20px; max-height: 90vh; overflow-y: auto; scrollbar-width: thin;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="calc-header-icon">
+                    <i class="bi bi-calculator"></i>
+                </div>
+                <div>
+                    <span class="calc-step-label">Step 1 of 2</span>
+                    <h5 class="fw-800 mb-0" style="letter-spacing: -0.02em;">Incentive Engine</h5>
+                </div>
+                <button class="btn-close ms-auto" onclick="closeCalcModal()"></button>
+            </div>
+
+            <!-- Mode Selector -->
+            <div id="calc-step-inputs-wrap">
+                <div class="calc-mode-selector">
+                    <button class="mode-btn active" id="mode-single" onclick="setCalcMode('single')">
+                        <i class="bi bi-person"></i> Single Employee
+                    </button>
+                    <button class="mode-btn" id="mode-bulk" onclick="setCalcMode('bulk')">
+                        <i class="bi bi-people"></i> All Employees
+                    </button>
+                </div>
+
+                <!-- Input Card -->
+                <div class="calc-input-card mb-3">
+                    <div class="row g-3">
+                        <div class="col-12" id="calc-user-row">
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.65rem;">Target Employee</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 py-2" style="border-radius: 10px 0 0 10px;"><i class="bi bi-person text-muted small"></i></span>
+                                <select id="calc-user" class="form-select border-start-0 ps-0 py-2" style="border-radius: 0 10px 10px 0; font-size: 0.9rem;">
+                                    <option value="">Loading...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-muted small text-uppercase" style="letter-spacing: 0.05em; font-size: 0.65rem;">Calculation Period</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0 py-2" style="border-radius: 10px 0 0 10px;"><i class="bi bi-calendar3 text-muted small"></i></span>
+                                <input type="month" id="calc-period" class="form-control border-start-0 ps-0 py-2" style="border-radius: 0 10px 10px 0; font-size: 0.9rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-0 rounded-4 d-flex align-items-center gap-3 py-3 px-4 mb-4" id="bulk-info-alert" style="display:none !important; background: rgba(79, 70, 229, 0.08); color: var(--primary);">
+                    <i class="bi bi-info-circle-fill fs-5"></i>
+                    <div class="small fw-600">This will generate incentive slips for all eligible employees for the selected month.</div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn py-2 px-3 fw-800 text-muted small" onclick="closeCalcModal()">Cancel</button>
+                    <button class="btn btn-primary py-2 px-4 fw-800 rounded-3 shadow-sm small" id="calc-preview-btn" onclick="previewCalcIncentive()">
+                        <span id="btn-calc-text">Proceed to Preview</span>
+                        <i class="bi bi-arrow-right-short ms-1 fs-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Modern Preview Results -->
+            <div id="calc-step-preview" style="display:none;">
+                <div class="premium-preview-container mb-4 shadow-sm">
+                    <div class="preview-summary-grid" style="background: var(--border);">
+                        <div class="preview-summary-item border-end" style="background: var(--surface); flex: 1.2;">
+                            <span class="label">Employee</span>
+                            <span class="value text-truncate" id="prev-employee" style="color: var(--primary);">Loading...</span>
+                        </div>
+                        <div class="preview-summary-item" style="background: var(--surface); border-left: 1px solid var(--border);">
+                            <span class="label">Payable Month</span>
+                            <span class="value" id="prev-period">-</span>
+                        </div>
+                    </div>
+
+                    <div class="px-3 py-2 border-top border-bottom bg-light d-flex align-items-center justify-content-between" style="font-size: 0.72rem; letter-spacing: 0.02em;">
+                        <span class="text-muted fw-600"><i class="bi bi-clock-history me-1"></i>ANALYSIS WINDOW:</span>
+                        <span class="fw-800 text-main" id="prev-audit-window">Checking history...</span>
+                    </div>
+
+                    <div class="p-3" style="background: var(--bg-app);">
+                        <div id="prev-breakdown-container">
+                            <!-- Monthly breakdown will be injected here -->
+                        </div>
+                        
+                        <div class="mt-3 pt-2 border-top border-light">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-700 text-muted text-uppercase">Payable Clients (Settled)</span>
+                                <span class="fw-800 text-success" id="prev-confirmed">0 Clients</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-700 text-muted text-uppercase">Slab Benefit Level</span>
+                                <span class="fw-800 text-primary" id="prev-slab">Stepped / Tiered</span>
+                            </div>
+                        </div>
+                        <hr class="my-3 opacity-10">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small fw-700 text-muted text-uppercase">Subtotal (Clients Rate)</span>
+                            <span class="fw-800 text-main" id="prev-base">-</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="small fw-700 text-muted text-uppercase">Performance Bonuses</span>
+                            <span class="fw-800 text-primary" id="prev-slab-bonus">-</span>
+                        </div>
+                        <div class="preview-total-card p-2 rounded-3 mt-3" style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid rgba(255,255,255,0.1);">
+                            <div class="d-flex justify-content-between align-items-center gap-2">
+                                <div style="min-width: 120px;">
+                                    <div class="label opacity-75 small fw-700 text-white" style="font-size: 0.7rem; letter-spacing: 0.05em;">GRAND TOTAL</div>
+                                    <div class="small opacity-50 text-white" style="font-size: 0.6rem;">Ready for confirmation</div>
+                                </div>
+                                <div class="value fs-3 fw-800 text-white" id="prev-total" style="line-height:1;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="slip-exists-warning" class="preview-footer-bulk" style="display:none; color: #92400e; background: #fffbeb;">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        A slip already exists for this period.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between gap-2">
+                    <button class="btn py-2 px-3 fw-800 text-muted small" onclick="backToCalcInputs()">
+                        <i class="bi bi-arrow-left me-1"></i>Back
+                    </button>
+                    <button class="btn btn-success py-2 px-4 fw-800 rounded-3 shadow-sm small" id="calc-submit-btn" onclick="calcIncentive()">
+                        <i class="bi bi-check-circle-fill me-2"></i>Confirm & Save
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bulk Confirm State -->
+            <div id="calc-step-bulk-confirm" style="display:none;">
+                <div class="text-center py-4 mb-4">
+                    <div class="bg-primary-light text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                        <i class="bi bi-layers-fill fs-1"></i>
+                    </div>
+                    <h5 class="fw-800">Review Bulk Generation</h5>
+                    <p class="text-muted px-4">Generating slips for all employees can take a few seconds. This action will process all eligible tasks for the selected month.</p>
+                </div>
+
+                <div class="calc-input-card mb-4 bg-light border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-700 text-muted">TARGET PERIOD</span>
+                        <span class="fw-800 text-main fs-5" id="bulk-prev-period">-</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn py-3 px-4 fw-800 text-muted" onclick="backToCalcInputs()">Cancel</button>
+                    <button class="btn btn-primary py-3 px-5 fw-800 rounded-4 shadow-sm" id="calc-bulk-confirm-btn" onclick="calcIncentive()">
+                        <i class="bi bi-lightning-fill me-2"></i>Run Engine Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Slab Modal -->
+    <div class="srm-overlay" id="editSlabModal">
+        <div class="srm-box" style="max-width:460px;">
+            <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+                <h5 class="fw-bold mb-0"><i class="bi bi-pencil-square text-primary me-2"></i>Edit Slab</h5>
+                <button class="btn-close" onclick="closeEditSlabModal()"></button>
+            </div>
+            <input type="hidden" id="edit-slab-id">
+            <div class="slab-modal-grid mb-3">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label slab-input-label">Min Tasks <span class="text-danger">*</span></label>
+                        <input type="number" id="edit-slab-min" class="form-control" min="0">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label slab-input-label">Max Tasks <span class="text-danger">*</span></label>
+                        <input type="number" id="edit-slab-max" class="form-control" min="1">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label slab-input-label">Per Task (Rs) <span
+                                class="text-danger">*</span></label>
+                        <input type="number" id="edit-slab-per-unit" class="form-control" min="0" step="0.01">
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label slab-input-label">Slab Bonus (Rs)</label>
+                        <input type="number" id="edit-slab-bonus" class="form-control" min="0" step="0.01">
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                <button class="btn btn-light border" onclick="closeEditSlabModal()">Cancel</button>
+                <button class="btn btn-primary px-4 fw-semibold" id="edit-slab-submit-btn" onclick="saveEditSlab()">Save
+                    Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/utils.js?v=20260326"></script>
+    <script src="../js/api.js?v=20260321"></script>
+    <script src="../js/auth.js?v=20260321"></script>
+    <script src="../js/ui_components.js?v=20260321"></script>
+    <script src="../js/app.js?v=20260321"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script>
+        requireAuth();
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.innerHTML = renderSidebar('incentives');
+        injectTopHeader('Incentives');
+
+        // Backward-compatible shim for stale cached api.js builds.
+        if (window.ApiClient && typeof ApiClient.previewIncentive !== 'function') {
+            ApiClient.previewIncentive = function (data) {
+                return ApiClient.request('/incentives/calculate/preview', { method: 'POST', body: data });
+            };
+        }
+
+        const user = getUser();
+        const isAdmin = user?.role === 'ADMIN';
+        const canManageIncentive = window.hasFeatureAccess ? window.hasFeatureAccess('incentive_manage_roles') : isAdmin;
+        const canViewAllIncentive = window.hasFeatureAccess ? window.hasFeatureAccess('incentive_view_all_roles') : isAdmin;
+
+        if (canManageIncentive) {
+            document.getElementById('admin-header-actions').style.display = 'block';
+            document.getElementById('btn-add-slab').style.display = 'inline-flex';
+            document.getElementById('slab-actions-col').style.display = '';
+            document.getElementById('slab-actions-col-width').style.display = '';
+            document.getElementById('btn-calc').style.display = 'inline-flex';
+        }
+
+        let currentCalcMode = 'single';
+        function setCalcMode(mode) {
+            currentCalcMode = mode;
+            document.getElementById('mode-single').classList.toggle('active', mode === 'single');
+            document.getElementById('mode-bulk').classList.toggle('active', mode === 'bulk');
+            document.getElementById('calc-user-row').style.display = (mode === 'single' ? 'block' : 'none');
+            document.getElementById('bulk-info-alert').style.setProperty('display', mode === 'bulk' ? 'flex' : 'none', mode === 'bulk' ? 'important' : '');
+            
+            const btnText = document.getElementById('btn-calc-text');
+            if (btnText) {
+                btnText.textContent = mode === 'single' ? 'Proceed to Preview' : 'Configure Bulk Scan';
+            }
+        }
+
+        // Modal helpers
+        function openCalcModal() {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to calculate incentives', 'error');
+                return;
+            }
+            // Reset to step 1
+            setCalcMode('single');
+            backToCalcInputs();
+            
+            // Clear validation state
+            const calcBox = document.getElementById('calcModal');
+            if (calcBox) {
+                calcBox.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                calcBox.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+
+            document.getElementById('calcModal').classList.add('show');
+        }
+        function closeCalcModal() { document.getElementById('calcModal').classList.remove('show'); }
+        function openEditSlabModal() { document.getElementById('editSlabModal').classList.add('show'); }
+        function closeEditSlabModal() { document.getElementById('editSlabModal').classList.remove('show'); }
+        document.getElementById('calcModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeCalcModal(); });
+        document.getElementById('editSlabModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeEditSlabModal(); });
+
+        function backToCalcInputs() {
+            document.getElementById('calc-step-inputs-wrap').style.display = '';
+            document.getElementById('calc-step-preview').style.display = 'none';
+            document.getElementById('calc-step-bulk-confirm').style.display = 'none';
+            const stepLabel = document.querySelector('.calc-step-label');
+            if (stepLabel) stepLabel.textContent = 'Step 1 of 2';
+        }
+
+
+        // Load employees into filter and calc selects (admin only)
+        function populateEmployeeFilters() {
+            if (!canManageIncentive && !canViewAllIncentive) {
+                initFilters();
+                return;
+            }
+            ApiClient.getEmployees().then(emps => {
+                const calcEl = document.getElementById('calc-user');
+                const incentiveUsers = (emps || []).filter(e => {
+                    const role = String(e.role || '').toUpperCase();
+                    if (role === 'ADMIN' || role === 'CLIENT') return false;
+                    if (e.incentive_enabled === false) return false;
+                    return true;
+                });
+                const calcOpts = '<option value="">-- Select Employee --</option>' + incentiveUsers.map(e => `<option value="${e.id}">${e.name || ('Employee #' + e.id)}</option>`).join('');
+                if (calcEl) calcEl.innerHTML = calcOpts;
+                initFilters(incentiveUsers);
+            }).catch(() => {
+                initFilters();
+            });
+        }
+
+        function getDefaultBulkPeriod() {
+            const monthFilter = document.getElementById('slip-period-filter');
+            if (monthFilter && monthFilter.value) return monthFilter.value;
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+
+        // Toggle add slab form
+        function toggleAddSlabForm() {
+            const f = document.getElementById('add-slab-form');
+            const isClosing = f.style.display !== 'none';
+            if (!isClosing) {
+                // Clear validation state on open
+                f.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                f.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            }
+            f.style.display = isClosing ? 'none' : 'block';
+        }
+
+        // Load slabs
+        async function loadSlabs() {
+            const tbody = document.getElementById('slabs-tbody');
+            const slabColspan = canManageIncentive ? 4 : 3;
+            tbody.innerHTML = `<tr><td colspan="${slabColspan}" class="text-center py-4 text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>`;
+            try {
+                const slabs = await ApiClient.getIncentiveSlabs();
+                window.__incentiveSlabsCache = slabs || [];
+                document.getElementById('stat-slabs').innerText = slabs?.length || 0;
+                if (!slabs || !slabs.length) {
+                    tbody.innerHTML = `<tr><td colspan="${slabColspan}" class="text-center py-4 text-muted small">No slabs configured yet.</td></tr>`;
+                    return;
+                }
+                const fmt = n => Number(n).toLocaleString('en-IN');
+                tbody.innerHTML = slabs.map(s => `<tr>
+                    <td class="ps-3 fw-semibold"><span class="slab-range-badge">${s.min_units}-${s.max_units}</span></td>
+                    <td class="fw-bold text-primary">Rs ${fmt(s.incentive_per_unit)}</td>
+                    <td class="fw-bold text-success">Rs ${fmt(s.slab_bonus)}</td>
+                    ${canManageIncentive ? `<td class="pe-3 text-center">
+                        <button class="btn btn-sm py-0 px-2" style="background:var(--primary-light);color:var(--primary);border:1px solid var(--primary-ring);font-size:0.72rem;border-radius:6px;" onclick="openEditSlab(${s.id},${s.min_units},${s.max_units},${s.incentive_per_unit},${s.slab_bonus})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm py-0 px-2 ms-1" style="background:var(--danger-light);color:var(--danger-text);border:1px solid var(--danger-ring);font-size:0.72rem;border-radius:6px;" onclick="deleteSlab(${s.id})"><i class="bi bi-trash"></i></button>
+                    </td>` : ''}
+                </tr>`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="${slabColspan}" class="text-center py-4 text-danger small">${e.message || 'Error'}</td></tr>`;
+            }
+        }
+
+        // Add slab
+        async function addSlab() {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to manage slabs', 'error');
+                return;
+            }
+            const min = parseInt(document.getElementById('slab-min').value);
+            const max = parseInt(document.getElementById('slab-max').value);
+            const perUnit = parseFloat(document.getElementById('slab-per-unit').value);
+            const bonus = parseFloat(document.getElementById('slab-bonus').value || '0');
+
+            const rules = {
+                'slab-min': (val) => (parseInt(val) >= 0) || 'Invalid min tasks',
+                'slab-max': (val) => {
+                    const m = parseInt(val);
+                    if (isNaN(m) || m <= 0) return 'Invalid max tasks';
+                    if (m < min) return 'Max must be >= Min';
+                    return true;
+                },
+                'slab-per-unit': (val) => (parseFloat(val) >= 0) || 'Invalid per-task rate'
+            };
+
+            if (!window.validateForm(document.getElementById('add-slab-form'), rules)) {
+                return;
+            }
+            try {
+                await ApiClient.createIncentiveSlab({ min_units: min, max_units: max, incentive_per_unit: perUnit, slab_bonus: bonus });
+                ['slab-min', 'slab-max', 'slab-per-unit', 'slab-bonus'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+                msg.textContent = 'Slab added!';
+                msg.className = 'small text-success mt-2 d-block';
+                setTimeout(() => { msg.className = 'small d-none'; toggleAddSlabForm(); }, 1500);
+                loadSlabs();
+            } catch (e) {
+                msg.textContent = e.data?.detail || e.message || 'Failed.';
+                msg.className = 'small text-danger mt-2 d-block';
+            }
+        }
+
+        // Edit slab
+        function openEditSlab(id, min, max, perUnit, bonus) {
+            document.getElementById('edit-slab-id').value = id;
+            document.getElementById('edit-slab-min').value = min;
+            document.getElementById('edit-slab-max').value = max;
+            document.getElementById('edit-slab-per-unit').value = perUnit;
+            document.getElementById('edit-slab-bonus').value = bonus;
+
+            const form = document.getElementById('editSlabModal');
+            // Clear validation state
+            form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+
+            openEditSlabModal();
+        }
+
+        async function saveEditSlab() {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to manage slabs', 'error');
+                return;
+            }
+            const id = parseInt(document.getElementById('edit-slab-id').value);
+            const perUnit = parseFloat(document.getElementById('edit-slab-per-unit').value);
+            const bonus = parseFloat(document.getElementById('edit-slab-bonus').value || '0');
+            const btn = document.getElementById('edit-slab-submit-btn');
+
+            const rules = {
+                'edit-slab-min': (val) => (parseInt(val) >= 0) || 'Invalid min',
+                'edit-slab-max': (val) => {
+                    const m = parseInt(val);
+                    if (isNaN(m) || m <= 0) return 'Invalid max';
+                    if (m < min) return 'Max >= Min';
+                    return true;
+                },
+                'edit-slab-per-unit': (val) => (parseFloat(val) >= 0) || 'Invalid rate'
+            };
+
+            if (!window.validateForm(document.getElementById('editSlabModal'), rules)) {
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Saving...';
+            try {
+                await ApiClient.updateIncentiveSlab(id, { min_units: min, max_units: max, incentive_per_unit: perUnit, slab_bonus: bonus });
+                closeEditSlabModal();
+                showToast('Slab updated!', 'success');
+                loadSlabs();
+            } catch (e) {
+                showToast(e.data?.detail || e.message || 'Failed.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Save Changes';
+            }
+        }
+
+        async function deleteSlab(id) {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to manage slabs', 'error');
+                return;
+            }
+            if (!confirm('Delete this slab?')) return;
+            try {
+                await ApiClient.deleteIncentiveSlab(id);
+                showToast('Slab deleted.', 'success');
+                loadSlabs();
+            } catch (e) {
+                showToast(e.data?.detail || e.message || 'Failed.', 'error');
+            }
+        }
+
+        // Days since helper
+        function daysSince(isoStr) {
+            if (!isoStr) return 999;
+            return Math.floor((Date.now() - new Date(isoStr)) / 86400000);
+        }
+
+        // Format date + time
+        function fmtDateTime(isoStr) {
+            if (!isoStr) return '-';
+            const d = new Date(isoStr);
+            const date = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+            return `${date}<br><span class="text-muted" style="font-size:0.72rem;">${time}</span>`;
+        }
+
+        // Load slips
+        async function loadSlips() {
+            const userId = currentFilters['slip-user-filter'] === 'ALL' ? '' : (currentFilters['slip-user-filter'] || '');
+            const tbody = document.getElementById('slips-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>';
+            try {
+                let slips;
+                if (userId) {
+                    slips = await ApiClient.getUserIncentiveSlips(userId);
+                } else if (canViewAllIncentive) {
+                    slips = await ApiClient.getAllIncentiveSlips();
+                } else {
+                    slips = await ApiClient.getMyIncentiveSlips();
+                }
+
+                const fmt = n => Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+                // Apply client-side filters
+                const periodFilter = currentFilters['slip-period-filter'] || '';
+                const statusFilter = currentFilters['slip-status-filter'] || '';
+                if (periodFilter) slips = slips.filter(s => s.period === periodFilter);
+                if (statusFilter === 'ready') slips = slips.filter(s => daysSince(s.generated_at) >= 10);
+                else if (statusFilter === 'pending') slips = slips.filter(s => daysSince(s.generated_at) < 10);
+
+                // Update stat cards
+                const confirmedSlips = slips.filter(s => daysSince(s.generated_at) >= 10);
+                const pendingSlips = slips.filter(s => daysSince(s.generated_at) < 10);
+                const totalTasks = slips.reduce((acc, s) => acc + Number(s.achieved), 0);
+                const confirmedTotal = confirmedSlips.reduce((acc, s) => acc + Number(s.total_incentive), 0);
+                const pendingTotal = pendingSlips.reduce((acc, s) => acc + Number(s.total_incentive), 0);
+
+                document.getElementById('stat-tasks').innerText = totalTasks;
+                document.getElementById('stat-confirmed').innerText = 'Rs\u00a0' + fmt(confirmedTotal);
+                document.getElementById('stat-pending').innerText = 'Rs\u00a0' + fmt(pendingTotal);
+                document.getElementById('slip-filter-summary').innerText = `${slips.length} slip${slips.length === 1 ? '' : 's'}`;
+
+                if (!canManageIncentive) {
+                    const desc = document.querySelector('.page-content-standard p.text-muted');
+                    if (desc) desc.textContent = 'View your personal tasks, achievements and incentive history.';
+                }
+
+                if (!slips.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No incentive slips found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = slips.map(s => {
+                    const name = s.user_name || ('Employee #' + s.user_id);
+                    const parts = name.split(' ');
+                    const firstName = parts[0];
+                    const lastName = parts.slice(1).join(' ');
+                    const perTask = Number(s.amount_per_unit || 0);
+                    const slabBonus = Number(s.slab_bonus_amount || 0);
+                    const rawAppliedSlab = s.applied_slab == null ? '' : String(s.applied_slab).trim();
+                    const hasValidSlab = rawAppliedSlab !== '' && rawAppliedSlab !== '0' && rawAppliedSlab !== '0.0' && rawAppliedSlab.toLowerCase() !== 'none';
+                    const slabLabel = hasValidSlab ? rawAppliedSlab : 'No slab matched';
+                    const managerRemarkEnc = encodeURIComponent(s.manager_remarks || '');
+                    return `<tr>
+                        <td class="ps-3 slip-employee-cell">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold text-main" style="font-size:0.9rem; line-height:1.2;">${firstName}</span>
+                                ${lastName ? `<span class="text-muted" style="font-size:0.8rem; line-height:1.1;">${lastName}</span>` : ''}
+                            </div>
+                        </td>
+                        <td class="slip-period-cell text-nowrap" style="line-height:1.3;">
+                            <span class="fw-semibold text-main" style="font-size:0.82rem;">${s.period}</span>
+                            <span class="text-muted d-block" style="font-size:0.72rem;">${fmtDateTime(s.generated_at)}</span>
+                        </td>
+                        <td class="slip-task-cell text-nowrap ps-4">
+                            <span class="fw-bold" style="font-size:0.88rem;">${s.achieved}</span>
+                            <span class="text-muted" style="font-size:0.72rem; display:block;">Tasks</span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold text-main slip-slab-label" style="font-size:0.75rem; display:block; line-height:1.2;">${slabLabel}</span>
+                            <span class="text-muted d-block" style="font-size:0.68rem;">Bonus: Rs&nbsp;${fmt(slabBonus)}</span>
+                        </td>
+                        <td class="text-end slip-rate-cell text-nowrap">
+                            <span class="text-primary fw-semibold">Rs&nbsp;${fmt(perTask)}</span>
+                        </td>
+                        <td class="pe-3 text-end fw-bold slip-total-cell text-nowrap">Rs&nbsp;${fmt(s.total_incentive)}</td>
+                    </tr>`;
+                }).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-5 text-danger small">${e.message || 'Error'}</td></tr>`;
+                document.getElementById('stat-tasks').innerText = '-';
+                document.getElementById('stat-confirmed').innerText = '-';
+                document.getElementById('stat-pending').innerText = '-';
+                document.getElementById('slip-filter-summary').innerText = 'Unable to load';
+            }
+        }
+
+        async function toggleIncentiveVisibility(slipId, isVisible) {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to change visibility', 'error');
+                return;
+            }
+            try {
+                await ApiClient.updateIncentiveSlipVisibility(slipId, { is_visible_to_employee: Boolean(isVisible) });
+                showToast(Boolean(isVisible) ? 'Incentive slip released to employee' : 'Incentive slip hidden from employee', 'success');
+                loadSlips();
+            } catch (e) {
+                showToast(e.data?.detail || e.message || 'Failed to update visibility', 'error');
+            }
+        }
+
+        async function openIncentiveRemarks(slipId, employeeRemarkEnc, managerRemarkEnc, isManager) {
+            const employeeRemarks = decodeURIComponent(employeeRemarkEnc || '');
+            const managerRemarks = decodeURIComponent(managerRemarkEnc || '');
+            if (isManager) {
+                const newManagerRemarks = prompt('Manager remarks for this incentive slip:', managerRemarks || '');
+                if (newManagerRemarks === null) return;
+                try {
+                    await ApiClient.updateIncentiveSlipRemarks(slipId, { manager_remarks: newManagerRemarks });
+                    showToast('Manager remarks saved', 'success');
+                    loadSlips();
+                } catch (e) {
+                    showToast(e.data?.detail || e.message || 'Failed to save remarks', 'error');
+                }
+                return;
+            }
+
+            const newEmployeeRemarks = prompt('Your remarks for this incentive slip:', employeeRemarks || '');
+            if (newEmployeeRemarks === null) return;
+            try {
+                await ApiClient.updateIncentiveSlipRemarks(slipId, { employee_remarks: newEmployeeRemarks });
+                showToast('Remarks saved', 'success');
+                loadSlips();
+            } catch (e) {
+                showToast(e.data?.detail || e.message || 'Failed to save remarks', 'error');
+            }
+        }
+
+        // Step 1: Preview calculation
+        async function previewCalcIncentive() {
+            if (!canManageIncentive) {
+                showToast('You do not have permission to calculate incentives', 'error');
+                return;
+            }
+
+            const period = document.getElementById('calc-period').value;
+            const rules = { 'calc-period': 'Select a period' };
+            
+            if (currentCalcMode === 'single') {
+                rules['calc-user'] = 'Select an employee';
+            }
+
+            if (!window.validateForm(document.getElementById('calcModal'), rules)) {
+                return;
+            }
+
+            if (currentCalcMode === 'bulk') {
+                document.getElementById('bulk-prev-period').textContent = period;
+                document.getElementById('calc-step-inputs-wrap').style.display = 'none';
+                document.getElementById('calc-step-bulk-confirm').style.display = 'block';
+                const stepLabel = document.querySelector('.calc-step-label');
+                if (stepLabel) stepLabel.textContent = 'Step 2 of 2';
+                return;
+            }
+
+            const userId = document.getElementById('calc-user').value;
+            const btn = document.getElementById('calc-preview-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analysing...';
+
+            try {
+                const prev = await ApiClient.previewIncentive({ user_id: parseInt(userId), period });
+                const fmt = n => 'Rs\u00a0' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                
+                document.getElementById('prev-employee').textContent = prev.user_name;
+                document.getElementById('prev-period').textContent = prev.period;
+                document.getElementById('prev-confirmed').textContent = `${prev.confirmed_tasks} Client${prev.confirmed_tasks !== 1 ? 's' : ''}`;
+                document.getElementById('prev-slab').textContent = prev.slab_range ? `${prev.slab_range}` : 'None';
+                document.getElementById('prev-base').textContent = fmt(prev.base_incentive);
+                document.getElementById('prev-slab-bonus').textContent = fmt(prev.slab_bonus);
+                document.getElementById('prev-total').textContent = fmt(prev.total_incentive);
+                
+                // Set Audit Window
+                const winStart = prev.audit_window_start || 'History Start';
+                const winEnd = prev.audit_window_end || 'Today';
+                document.getElementById('prev-audit-window').textContent = `${winStart} \u2192 ${winEnd}`;
+
+                // Populate Breakdown
+                const breakdownContainer = document.getElementById('prev-breakdown-container');
+                if (prev.monthly_breakdown && prev.monthly_breakdown.length > 0) {
+                    breakdownContainer.innerHTML = prev.monthly_breakdown.map(b => `
+                        <div class="d-flex justify-content-between align-items-center mb-2 py-1 border-bottom border-light">
+                            <span class="small fw-700 text-muted text-uppercase">${b.month_label} Performance</span>
+                            <div class="text-end">
+                                <span class="fw-800 text-main d-block" style="font-size:0.85rem;">${fmt(b.base_incentive)}</span>
+                                <span class="text-muted" style="font-size:0.65rem;">${b.count} Clients</span>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    breakdownContainer.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-2 py-1 border-bottom border-light">
+                            <span class="small fw-700 text-muted text-uppercase">Direct Adjustment</span>
+                            <span class="fw-800 text-main">${prev.confirmed_tasks} Clients</span>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('slip-exists-warning').style.display = prev.slip_exists ? 'flex' : 'none';
+                document.getElementById('calc-submit-btn').disabled = !!prev.slip_exists;
+
+                document.getElementById('calc-step-inputs-wrap').style.display = 'none';
+                document.getElementById('calc-step-preview').style.display = 'block';
+                const stepLabel = document.querySelector('.calc-step-label');
+                if (stepLabel) stepLabel.textContent = 'Step 2 of 2';
+                
+                if (prev.confirmed_tasks === 0) {
+                    showToast('Note: No eligible clients found in this period (Check 10-day buffer)', 'warning');
+                }
+            } catch (e) {
+                console.error('Preview Error:', e);
+                const msg = e.data?.detail || e.message || 'Calculation engine failed';
+                const finalMsg = typeof msg === 'object' ? JSON.stringify(msg) : String(msg);
+                showToast('Preview Error: ' + finalMsg, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Proceed to Preview <i class="bi bi-arrow-right-short ms-1 fs-5"></i>';
+            }
+        }
+
+        // Step 2: Save incentive slip (Unified for Single/Bulk)
+        async function calcIncentive() {
+            if (!canManageIncentive) return;
+
+            const period = document.getElementById('calc-period').value;
+            const userId = document.getElementById('calc-user').value;
+            const isBulk = currentCalcMode === 'bulk';
+            const btnId = isBulk ? 'calc-bulk-confirm-btn' : 'calc-submit-btn';
+            const btn = document.getElementById(btnId);
+            
+            btn.disabled = true;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+
+            try {
+                if (isBulk) {
+                    const res = await ApiClient.calculateIncentiveBulk({ period });
+                    showToast(`Success: ${res.created_slips} slips generated, ${res.skipped_existing} skipped.`, 'success');
+                } else {
+                    await ApiClient.calculateIncentive({ user_id: parseInt(userId), period });
+                    showToast('Incentive slip saved successfully!', 'success');
+                }
+                closeCalcModal();
+                await loadSlips();
+            } catch (e) {
+                showToast(e.data?.detail || e.message || 'Operation failed', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        let currentFilters = {};
+
+        // Initialize Filters
+        function initFilters(users = []) {
+            const filters = [
+                { type: 'month', label: 'Month', id: 'slip-period-filter' },
+                {
+                    type: 'select', label: 'Status', id: 'slip-status-filter', options: [
+                        { value: 'ALL', label: 'All Status' },
+                        { value: 'ready', label: 'In Salary' },
+                        { value: 'pending', label: 'Pending' }
+                    ]
+                }
+            ];
+            if (canViewAllIncentive || canManageIncentive) {
+                filters.splice(1, 0, {
+                    type: 'select',
+                    label: 'Employee',
+                    id: 'slip-user-filter',
+                    options: [
+                        { value: 'ALL', label: 'All Employees' },
+                        ...users.map(u => ({ value: u.id, label: u.name || ('Employee #' + u.id) }))
+                    ]
+                });
+            }
+
+            renderFilterPanel({
+                containerId: 'filter-wrapper',
+                filters,
+                onApply: (data) => {
+                    currentFilters = data;
+                    loadSlips();
+                },
+                onReset: () => {
+                    currentFilters = {};
+                    loadSlips();
+                }
+            });
+        }
+
+        // Employee Specific: Load current progress for the dashboard
+        async function loadEmployeeProgress() {
+            if (isAdmin && !canManageIncentive) return; // Admins see everything, but this is a 'Personal' tracker
+            
+            const row = document.getElementById('employee-progress-row');
+            if (!row) return;
+
+            try {
+                const now = new Date();
+                const period = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+                
+                // Reuse preview endpoint for live status
+                const res = await ApiClient.previewIncentive({ 
+                    user_id: user.id, 
+                    period 
+                });
+
+                row.style.display = 'flex';
+                document.getElementById('progress-month-year').innerText = `— ${now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}`;
+                document.getElementById('progress-cumulative-total').innerText = (res.offset + res.confirmed_tasks);
+                document.getElementById('progress-history-count').innerText = res.offset;
+                
+                // Calculate next milestone
+                const slabs = window.__incentiveSlabsCache || [];
+                let nextSlab = slabs.find(s => s.min_units > (res.offset + res.confirmed_tasks));
+                
+                const totalReached = res.offset + res.confirmed_tasks;
+                
+                if (nextSlab) {
+                    const remaining = nextSlab.min_units - totalReached;
+                    document.getElementById('progress-next-milestone').innerText = `Next Milestone: ${nextSlab.min_units} Tasks`;
+                    document.getElementById('progress-remaining-text').innerText = `${remaining} more tasks to unlock Slab ${slabs.indexOf(nextSlab) + 1}`;
+                    
+                    // Progress bar math
+                    const prevMax = slabs[slabs.indexOf(nextSlab) - 1]?.max_units || 0;
+                    const range = nextSlab.min_units - prevMax;
+                    const historyInSlab = Math.max(0, Math.min(res.offset, nextSlab.min_units) - prevMax);
+                    const currentInSlab = Math.max(0, Math.min(totalReached, nextSlab.min_units) - Math.max(res.offset, prevMax));
+                    
+                    const historyPct = (historyInSlab / range) * 100;
+                    const currentPct = (currentInSlab / range) * 100;
+                    
+                    document.getElementById('progress-bar-history').style.width = `${historyPct}%`;
+                    document.getElementById('progress-bar-current').style.width = `${currentPct}%`;
+                } else {
+                    document.getElementById('progress-next-milestone').innerText = `Ultimate Slab Reached!`;
+                    document.getElementById('progress-remaining-text').innerText = `Maximum incentive rate applied!`;
+                    document.getElementById('progress-bar-current').style.width = `100%`;
+                    document.getElementById('progress-bar-history').style.width = `0%`;
+                }
+
+            } catch (e) {
+                console.error('Progress load failed:', e);
+                row.style.display = 'none';
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', async () => {
+            populateEmployeeFilters();
+            await loadSlabs();
+            loadSlips();
+
+            if (!isAdmin) {
+                loadEmployeeProgress();
+            }
+
+            // Set max month for calculation picker to current month
+            const calcPeriodEl = document.getElementById('calc-period');
+            if (calcPeriodEl) {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const maxMonth = `${year}-${month}`;
+                calcPeriodEl.setAttribute('max', maxMonth);
+                // Also default to current month if not set
+                if (!calcPeriodEl.value) calcPeriodEl.value = maxMonth;
+            }
+        });
+    </script>
+</body>
+
+</html>

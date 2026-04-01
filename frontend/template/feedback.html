@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<!-- frontend/template/feedback.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Feedback Management — SRM AI SETU</title>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="/frontend/css/theme.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <style>
+        :root {
+            --crm-primary: var(--primary);
+            --crm-bg: var(--bg-app);
+            --crm-card-shadow: var(--shadow-sm);
+            --crm-border: var(--border);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--crm-bg);
+        }
+
+        .main-content {
+            min-height: 100vh;
+        }
+
+        /* Agent Avatar */
+        .agent-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--crm-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        /* Score Badge */
+        .overall-score {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .bg-score-high {
+            background-color: #10B981;
+            /* Success Green */
+        }
+
+        .bg-score-mid {
+            background-color: #F59E0B;
+            /* Warning Orange */
+        }
+
+        .bg-score-low {
+            background-color: #EF4444;
+            /* Danger Red */
+        }
+    </style>
+</head>
+
+<body>
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper">
+            <div class="page-content-standard">
+                    <div class="page-header-glass d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div>
+                            <h2 class="page-section-title fw-bold mb-1">Feedback Management</h2>
+                            <p class="text-muted mb-0 small">Track client feedback and service quality scores.</p>
+                        </div>
+                        <button class="btn-premium-action text-white shadow-sm" style="background: var(--primary);" 
+                            data-bs-toggle="modal" data-bs-target="#addFeedbackModal">
+                            <i class="bi bi-plus-circle-fill"></i> Add Feedback
+                        </button>
+                    </div>
+
+                <!-- Dashboard Stats -->
+                <div class="row g-4 mb-4" id="stats-container">
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-primary bg-opacity-10 text-primary"><i
+                                    class="bi bi-chat-left-quote"></i></div>
+                            <h4 class="fw-bold mb-1" id="total-feedback-val">0</h4>
+                            <div class="text-muted small">Total Feedback</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-star"></i></div>
+                            <h4 class="fw-bold mb-1" id="avg-product-rating-val">0.0</h4>
+                            <div class="text-muted small">Avg. Product Rating</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-info bg-opacity-10 text-info"><i class="bi bi-person-check"></i>
+                            </div>
+                            <h4 class="fw-bold mb-1" id="avg-sales-rating-val">0.0</h4>
+                            <div class="text-muted small">Avg. Sales Rating</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="kpi-card">
+                            <div class="kpi-icon bg-success bg-opacity-10 text-success"><i
+                                    class="bi bi-emoji-smile"></i>
+                            </div>
+                            <h4 class="fw-bold mb-1" id="satisfaction-rate-val">0%</h4>
+                            <div class="text-muted small">Satisfaction Rate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Standardized Filter Panel -->
+                <div id="feedback-filter-container"></div>
+
+                <!-- Premium Table -->
+                <div class="table-container">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0 fw-bold">Recent Feedback Records</h6>
+                        <div class="text-muted small">Total: <span id="record-count">0</span></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-premium align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Client / Product</th>
+                                    <th>Sales Agent</th>
+                                    <th>PRODUCT RATINGS</th>
+                                    <th>Feedback</th>
+                                    <th>Score</th>
+                                    <th class="text-end">Date / Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="feedback-table">
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">Loading feedback data...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div><!-- /page-content -->
+    </div><!-- /flex-grow-1 -->
+    </div><!-- /d-flex -->
+
+    <!-- Modal: Delete Confirmation -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-body text-center p-5">
+                    <div class="mb-3"
+                        style="width:64px; height:64px; background:#FEE2E2; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto;">
+                        <i class="bi bi-trash3" style="font-size:1.8rem; color:#EF4444;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2" style="color:var(--text-main);">Delete Feedback?</h5>
+                    <p class="text-muted mb-1" style="font-size:0.9rem;">You are about to delete feedback from:</p>
+                    <p class="fw-semibold mb-3" id="delete-client-name" style="color:#4361ee; font-size:0.95rem;">—</p>
+                    <p class="text-muted" style="font-size:0.82rem;">This action <strong>cannot be undone</strong>. The
+                        record will be permanently removed.</p>
+                </div>
+                <div class="modal-footer border-0 px-5 pb-4 pt-0 d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light px-5 fw-semibold" data-bs-dismiss="modal"
+                        style="border-radius:10px; border:1px solid var(--border);">Cancel</button>
+                    <button type="button" class="btn btn-danger px-5 fw-semibold" id="confirm-delete-btn"
+                        style="border-radius:10px;"><i class="bi bi-trash3 me-1"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Feedback (Compact QR Version) -->
+    <div class="modal fade" id="addFeedbackModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Add New Feedback</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-5">
+                    <div id="qr-loading" class="mb-3 text-muted small"><i
+                            class="bi bi-hourglass-split me-2"></i>Generating localized QR...</div>
+                    <div class="qr-container mb-4" style="min-height: 200px;">
+                        <img id="agent-qr-code" src="" alt="QR Code"
+                            class="img-fluid rounded shadow-sm border p-2 bg-white"
+                            style="width: 200px; display: none;">
+                    </div>
+                    <h5 class="fw-bold mb-2">Feedback QR Code</h5>
+                    <p class="text-muted small px-4 mb-4">Scan this QR code with a mobile device to submit feedback
+                        directly.</p>
+
+                    <div class="mx-auto bg-primary-soft p-3 rounded-3 small mb-4 text-break border"
+                        style="max-width: 320px; font-family: monospace; font-size: 11px; border-color: var(--primary-ring) !important;">
+                        <div class="text-muted mb-2 border-bottom pb-1"
+                            style="font-size: 10px; letter-spacing: 0.5px; border-color: var(--primary-ring) !important;">
+                            TARGET URL</div>
+                        <span id="qr-debug-url" class="text-primary fw-bold">detecting...</span>
+                    </div>
+
+                    <div class="small">
+                        <span class="text-muted">Referral Code:</span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1"
+                            id="ref-code-display" style="padding: 6px 12px; font-size: 0.85rem;">...</span>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light p-3">
+                    <button class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary px-4" id="save-feedback-btn">Save Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/utils.js?v=2.3"></script>
+    <script src="../js/api.js?v=2.3"></script>
+    <script src="../js/auth.js?v=2.3"></script>
+    <script src="../js/ui_components.js?v=20260312"></script>
+    <script src="../js/app.js?v=2.3"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script>
+        requireAuth();
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.innerHTML = renderSidebar('feedback');
+        injectTopHeader('Feedback');
+
+        // Initialize Filter Panel
+        const initFilterPanel = () => {
+            renderFilterPanel({
+                containerId: 'feedback-filter-container',
+                title: 'Feedback Filters',
+                headerContent: `
+                    <div class="filter-header-search">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" class="form-control" placeholder="Search feedback..." id="fb-search">
+                    </div>
+                `,
+                filters: [
+                    { id: 'fb-filter-client', label: 'Client', type: 'select', options: [{ value: '', label: 'All Clients' }] },
+                    { id: 'fb-filter-product', label: 'Product', type: 'select', options: [{ value: '', label: 'All Products' }] },
+                    { id: 'fb-filter-agent', label: 'Sales Agent', type: 'select', options: [{ value: '', label: 'All Agents' }] },
+                    { 
+                        id: 'fb-filter-dateRange', 
+                        label: 'Date Range', 
+                        type: 'select', 
+                        options: [
+                            { value: 'ALL', label: 'All Time' },
+                            { value: 'TODAY', label: 'Today' },
+                            { value: 'YESTERDAY', label: 'Yesterday' },
+                            { value: 'THIS_WEEK', label: 'This Week' },
+                            { value: 'THIS_MONTH', label: 'This Month' },
+                            { value: 'LAST_30', label: 'Last 30 Days' },
+                            { value: 'CUSTOM', label: 'Custom Date' }
+                        ] 
+                    },
+                    { id: 'fb-filter-custom-start', label: 'Start Date', type: 'date' },
+                    { id: 'fb-filter-custom-end', label: 'End Date', type: 'date' }
+                ],
+                onApply: (data) => {
+                    renderFeedbackTable();
+                },
+                onReset: () => {
+                    const searchInput = document.getElementById('fb-search');
+                    if (searchInput) searchInput.value = '';
+                    renderFeedbackTable();
+                }
+            });
+
+            // Re-attach search listener since it's injected into the panel header
+            const searchInput = document.getElementById('fb-search');
+            if (searchInput) {
+                searchInput.addEventListener('input', renderFeedbackTable);
+            }
+
+            // Sync Custom Date visibility (SURGICAL)
+            const dateRangeEl = document.getElementById('fb-filter-dateRange');
+            const startField = document.getElementById('fb-filter-custom-start')?.closest('.filter-field');
+            const endField = document.getElementById('fb-filter-custom-end')?.closest('.filter-field');
+
+            if (dateRangeEl) {
+                const updateCustomVisibility = () => {
+                    const isCustom = dateRangeEl.value === 'CUSTOM';
+                    if (startField) startField.style.display = isCustom ? 'block' : 'none';
+                    if (endField) endField.style.display = isCustom ? 'block' : 'none';
+                };
+                dateRangeEl.addEventListener('change', () => {
+                    updateCustomVisibility();
+                    renderFeedbackTable();
+                });
+                updateCustomVisibility();
+            }
+        };
+
+
+        let baseData = [];
+
+        const updateKPIs = (data) => {
+            const total = data.length;
+            const avgRating = total > 0 ? (data.reduce((acc, curr) => acc + (curr.rating || 0), 0) / total).toFixed(1) : '0.0';
+            const satisfied = total > 0 ? ((data.filter(f => f.rating >= 4).length / total) * 100).toFixed(0) : '0';
+
+            document.getElementById('total-feedback-val').textContent = total.toLocaleString();
+            document.getElementById('avg-product-rating-val').textContent = avgRating;
+            document.getElementById('avg-sales-rating-val').textContent = avgRating; // Using same rating for now
+            document.getElementById('satisfaction-rate-val').textContent = satisfied + '%';
+        };
+
+        const loadFeedback = async () => {
+            const tbody = document.getElementById('feedback-table');
+            try {
+                const response = await ApiClient.request('/feedback/all');
+                baseData = response || [];
+                updateKPIs(baseData);
+                renderFeedbackTable();
+                populateFilters();
+            } catch (e) {
+                console.error("Failed to load feedback:", e);
+                const status = e.status || "Unknown";
+                const detail = e.data?.detail || e.message || "Connection failed";
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5">
+                            <i class="bi bi-exclamation-triangle text-danger fs-1 mb-3"></i>
+                            <h5 class="text-danger">Failed to Load Feedback Data</h5>
+                            <p class="text-muted">Error ${status}: ${detail}</p>
+                            <button class="btn btn-outline-primary btn-sm mt-2" onclick="loadFeedback()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+                            </button>
+                        </td></tr>`;
+            }
+        };
+
+        const populateFilters = () => {
+            const clients = [...new Set(baseData.map(d => d.client_name))].filter(Boolean).sort();
+            const clientFilterEl = document.getElementById('fb-filter-client');
+            if (clientFilterEl) {
+                clientFilterEl.innerHTML = '<option value="">All Clients</option>' +
+                    clients.map(c => `<option value="${c}">${c}</option>`).join('');
+            }
+
+            const products = [...new Set(baseData.map(d => d.product))].filter(Boolean).sort();
+            const productFilterEl = document.getElementById('fb-filter-product');
+            if (productFilterEl) {
+                productFilterEl.innerHTML = '<option value="">All Products</option>' +
+                    products.map(p => `<option value="${p}">${p}</option>`).join('');
+            }
+
+            const agents = [...new Set(baseData.map(d => d.agent_name))].filter(Boolean).sort();
+            const agentFilterEl = document.getElementById('fb-filter-agent');
+            if (agentFilterEl) {
+                agentFilterEl.innerHTML = '<option value="">All Agents</option>' +
+                    agents.map(agent => `<option value="${agent}">${agent}</option>`).join('');
+            }
+        };
+
+        const renderFeedbackTable = () => {
+            const clientFilter = document.getElementById('fb-filter-client')?.value || '';
+            const productFilter = document.getElementById('fb-filter-product')?.value || '';
+            const agentFilter = document.getElementById('fb-filter-agent')?.value || '';
+            const dateRange = document.getElementById('fb-filter-dateRange')?.value || 'ALL';
+            const customStart = document.getElementById('fb-filter-custom-start')?.value || '';
+            const customEnd = document.getElementById('fb-filter-custom-end')?.value || '';
+            const searchInput = document.getElementById('fb-search');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            const filteredData = baseData.filter(f => {
+                const matchesClient = !clientFilter || f.client_name === clientFilter;
+                const matchesProduct = !productFilter || f.product === productFilter;
+                const matchesAgent = !agentFilter || f.agent_name === agentFilter;
+                
+                // Date Filtering Logic (SURGICAL)
+                let matchesDate = true;
+                if (dateRange !== 'ALL') {
+                    const fDate = new Date(f.created_at);
+                    const now = new Date();
+                    const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+                    if (dateRange === 'TODAY') {
+                        matchesDate = fDate >= todayMid;
+                    } else if (dateRange === 'YESTERDAY') {
+                        const yesterday = new Date(todayMid);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        const endOfYesterday = new Date(todayMid);
+                        matchesDate = fDate >= yesterday && fDate < endOfYesterday;
+                    } else if (dateRange === 'THIS_WEEK') {
+                        const curr = new Date(todayMid);
+                        const first = curr.getDate() - curr.getDay();
+                        const weekStart = new Date(curr.setDate(first));
+                        matchesDate = fDate >= weekStart;
+                    } else if (dateRange === 'THIS_MONTH') {
+                        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                        matchesDate = fDate >= monthStart;
+                    } else if (dateRange === 'LAST_30') {
+                        const thirtyDaysAgo = new Date(todayMid);
+                        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                        matchesDate = fDate >= thirtyDaysAgo;
+                    } else if (dateRange === 'CUSTOM' && customStart && customEnd) {
+                        const start = new Date(customStart);
+                        const end = new Date(customEnd);
+                        end.setHours(23, 59, 59, 999);
+                        matchesDate = fDate >= start && fDate <= end;
+                    }
+                }
+
+                const matchesSearch = (f.client_name?.toLowerCase() || '').includes(searchTerm) ||
+                    (f.agent_name?.toLowerCase() || '').includes(searchTerm) ||
+                    (f.comments?.toLowerCase() || '').includes(searchTerm) ||
+                    (f.shop_name?.toLowerCase() || '').includes(searchTerm) ||
+                    (f.product?.toLowerCase() || '').includes(searchTerm);
+                
+                return matchesClient && matchesProduct && matchesAgent && matchesDate && matchesSearch;
+            });
+
+            const countEl = document.getElementById('record-count');
+            if (countEl) countEl.textContent = filteredData.length;
+
+            const tbody = document.getElementById('feedback-table');
+            if (filteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">No records found.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filteredData.map(f => {
+                const initials = (f.agent_name || '?').split(' ').map(n => n[0]).join('').toUpperCase();
+                const createdDate = new Date(f.created_at);
+                const dateStr = createdDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                const timeStr = createdDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                <tr>
+                    <td>
+                        <div class="fw-bold">${f.client_name || 'Guest'}</div>
+                        <div class="text-muted small">${f.shop_name || 'N/A'} • ${f.product || 'N/A'}</div>
+                        <div class="text-muted" style="font-size: 0.7rem;">${f.mobile || ''}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="agent-avatar text-white border border-primary-ring">${initials}</div>
+                            <div>
+                                <div class="fw-medium">${f.agent_name || 'System'}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">${f.agent_role || 'Sales Executive'}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted small fw-bold" style="width: 45px;">Product Rating</span>
+                            <div class="star-rating text-warning" style="font-size: 0.8rem;">
+                                ${'★'.repeat(f.rating)}${'☆'.repeat(5 - f.rating)}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="max-width: 200px;"><div class="text-muted small text-truncate-2">${f.comments || 'No comments provided'}</div></td>
+                    <td><div class="overall-score ${f.rating >= 4 ? 'bg-score-high' : (f.rating >= 2 ? 'bg-score-mid' : 'bg-score-low')}">${f.rating}.0</div></td>
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-3">
+                            <div class="text-end">
+                                <div class="text-muted small fw-bold mb-0">${dateStr}</div>
+                                <div class="text-muted" style="font-size: 0.7rem;">${timeStr}</div>
+                            </div>
+                            <button class="btn btn-link btn-sm p-0 mb-1" title="Delete" onclick="deleteFeedback(${f.id})"><i class="bi bi-trash text-danger"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        };
+
+        // Delete feedback — custom modal
+        let _pendingDeleteId = null;
+
+        const deleteFeedback = (id) => {
+            const record = baseData.find(f => f.id === id);
+            const clientName = record?.client_name || 'this record';
+            document.getElementById('delete-client-name').textContent = clientName;
+            _pendingDeleteId = id;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteConfirmModal')).show();
+        };
+
+        document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+            if (_pendingDeleteId === null) return;
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Deleting...';
+            try {
+                await ApiClient.deleteFeedback(_pendingDeleteId);
+                baseData = baseData.filter(f => f.id !== _pendingDeleteId);
+                bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+                renderFeedbackTable();
+                showToast('Feedback deleted successfully.', 'success');
+            } catch (e) {
+                console.error('Delete failed:', e);
+                showToast('Failed to delete feedback. Please try again.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-trash3 me-1"></i> Delete';
+                _pendingDeleteId = null;
+            }
+        });
+
+        // Initial Load
+
+        // ── Auto-Polling: silently refresh every 15s to catch new submissions ──
+        const silentRefresh = async () => {
+            try {
+                const fresh = await ApiClient.request('/feedback/all');
+                if (!fresh) return;
+
+                // Only re-render if count changed OR latest ID changed
+                const freshCount = fresh.length;
+                const oldCount = baseData.length;
+                const freshLatestId = fresh[fresh.length - 1]?.id;
+                const oldLatestId = baseData[baseData.length - 1]?.id;
+
+                if (freshCount !== oldCount || freshLatestId !== oldLatestId) {
+                    baseData = fresh;
+                    updateKPIs(baseData);
+                    renderFeedbackTable();
+                    populateFilters();
+
+                    // Only toast if a NEW entry arrived (not a delete from this tab)
+                    if (freshCount > oldCount) {
+                        showToast(`${freshCount - oldCount} new feedback received!`, 'success');
+                    }
+                }
+            } catch (e) {
+                // Silent — don't show error toasts for background polls
+                console.warn('Auto-refresh failed silently:', e);
+            }
+        };
+
+        // Poll every 15 seconds
+        setInterval(silentRefresh, 15000);
+
+        // QR Code Logic
+        const updateModalQR = async () => {
+            const qrImg = document.getElementById('agent-qr-code');
+            const qrLoading = document.getElementById('qr-loading');
+            const debugUrlEl = document.getElementById('qr-debug-url');
+            const refDisplay = document.getElementById('ref-code-display');
+
+            if (qrImg) qrImg.style.display = 'none';
+            if (qrLoading) qrLoading.style.display = 'block';
+
+            let user = ApiClient.getCurrentUser();
+
+            // If no referral code, try to generate one via API
+            if (!user?.referral_code && user?.id) {
+                try {
+                    const res = await ApiClient.request(`/users/${user.id}/referral-code`, { method: 'POST' });
+                    if (res.code) {
+                        user.referral_code = res.code;
+                        ApiClient.setCurrentUser(user);
+                    }
+                } catch (e) { console.error("Failed to auto-gen ref code", e); }
+            }
+
+            const refCode = user?.referral_code || "REF-GUEST";
+            const protocol = window.location.protocol;
+            const port = window.location.port || (protocol === 'https:' ? '443' : '80');
+
+            // Try to get server LAN IP so QR works on mobile
+            let hostName = window.location.hostname;
+            if (hostName === '127.0.0.1' || hostName === 'localhost') {
+                try {
+                    const netInfo = await ApiClient.request('/system/ip');
+                    if (netInfo.ip && netInfo.ip !== '127.0.0.1') {
+                        hostName = netInfo.ip;
+                    }
+                } catch (e) { console.warn("Could not fetch network IP", e); }
+            }
+
+            // Generate URL - pointed to the feedback page
+            const host = (port === '80' || port === '443') ? hostName : `${hostName}:${port}`;
+            const feedbackUrl = `${protocol}//${host}/frontend/template/client_feedback.html?ref=${refCode}`;
+
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(feedbackUrl)}`;
+            refDisplay.textContent = refCode;
+            debugUrlEl.textContent = feedbackUrl;
+
+            qrImg.onload = () => {
+                qrImg.style.display = 'inline-block';
+                qrLoading.style.display = 'none';
+            };
+
+            if (hostName === '127.0.0.1') {
+                debugUrlEl.classList.remove('text-primary');
+                debugUrlEl.classList.add('text-danger');
+                debugUrlEl.title = "Warning: localhost will not work on other devices!";
+            } else {
+                debugUrlEl.classList.add('text-primary');
+                debugUrlEl.classList.remove('text-danger');
+            }
+        };
+
+        const modalEl = document.getElementById('addFeedbackModal');
+        modalEl.addEventListener('shown.bs.modal', updateModalQR);
+
+        document.getElementById('save-feedback-btn').addEventListener('click', () => {
+            alert("Feedback updated! (Frontend Demo)");
+            bootstrap.Modal.getInstance(modalEl).hide();
+        });
+
+        // Final Initialization call - after all functions are defined
+        initFilterPanel();
+        loadFeedback();
+    </script>
+</body>
+
+</html>

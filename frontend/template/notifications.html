@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!-- frontend/template/notifications.html -->
+<html lang="en">
+
+<head>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notifications | SRM AI SETU</title>
+    <link rel="stylesheet" href="../css/bootstrap.min.css">
+    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../css/theme.css?v=20260327">
+    <link rel="stylesheet" href="../css/components.css?v=20260327">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .filter-wrapper {
+            background-color: var(--bg-surface, #f8f9fa);
+            border: 1px solid var(--border, #dee2e6);
+            border-radius: 10px;
+            padding: 4px;
+            display: inline-flex;
+            align-items: center;
+        }
+        .filter-btn {
+            border: none;
+            background: transparent;
+            color: var(--text-2, #6c757d);
+            border-radius: 8px;
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .filter-btn:hover {
+            color: var(--text-1, #212529);
+        }
+        .filter-btn.active {
+            background-color: var(--primary, #0d6efd);
+            color: #fff !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-app">
+    <div class="d-flex">
+        <div id="sidebar"></div>
+        <div class="flex-grow-1 main-wrapper">
+            <div class="page-content-standard">
+                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="mb-2 mb-sm-0">
+                        <h2 class="page-section-title fw-bold mb-1">
+                            <i class="bi bi-layout-text-window-reverse me-2 text-primary"></i>Master Notification Feed
+                        </h2>
+                        <p class="text-muted mb-0" style="font-size:0.93rem;">
+                            A full timeline of all system alerts, critical updates, and activity.
+                            <span id="notif-unread-count" class="badge bg-danger rounded-pill ms-2" style="font-size:11px;">Loading…</span>
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <!-- Segmented Filter Buttons -->
+                        <div class="filter-wrapper shadow-sm">
+                            <button id="filter-all" class="filter-btn active">
+                                <i class="bi bi-list-ul me-1"></i>All
+                            </button>
+                            <button id="filter-unread" class="filter-btn">
+                                <i class="bi bi-bell me-1"></i>Unread Only
+                            </button>
+                        </div>
+                        <!-- Mark All as Read Button -->
+                        <button class="btn btn-primary shadow-sm fw-semibold d-flex align-items-center py-2 px-3" style="border-radius: 10px; font-size: 0.9rem;" onclick="clearNotifications()">
+                            <i class="bi bi-check2-all me-2 fs-5"></i> Mark All as Read
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0" style="border-radius: 12px; width: 100%; max-width: none;">
+                    <div class="card-body p-0">
+                        <!-- Feed -->
+                        <div id="notif-list">
+                            <!-- Dynamically loaded -->
+                            <div class="text-center py-5">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- /page-content -->
+        </div>
+    </div>
+
+    <script src="../js/utils.js?v=20260327"></script>
+    <script src="../js/api.js?v=20260327"></script>
+    <script src="../js/auth.js?v=20260327"></script>
+    <script src="../js/ui_components.js?v=20260327"></script>
+    <script src="../js/app.js?v=20260327"></script>
+    <script src="../js/notifications.js?v=4.0"></script>
+    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script>
+        requireAuth();
+        const sb = document.getElementById('sidebar');
+        if (sb) sb.innerHTML = renderSidebar('notifications');
+        injectTopHeader('Notifications');
+    </script>
+</body>
+
+</html>
+
+
