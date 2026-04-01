@@ -46,7 +46,7 @@ settings = Settings()
 
 # Global API Configuration (Networking)
 HOST = os.getenv("SRM_HOST", "0.0.0.0")
-PORT = int(os.getenv("SRM_PORT", os.getenv("PORT", "8000")))
+PORT = int(os.getenv("SRM_PORT", os.getenv("PORT", "8080")))
 
 _env_api_url = os.getenv("API_BASE_URL")
 if _env_api_url:
