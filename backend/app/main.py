@@ -142,14 +142,7 @@ async def favicon():
         return FileResponse(favicon_path)
     return Response(status_code=204)
 
-@app.get("/")
-async def root():
-    return {
-        "message": "Welcome to SRM AI SETU",
-        "backend_api_docs": "/docs",
-        "frontend_app": "/frontend/template/index.html",
-        "status": "active"
-    }
+
 
 app.include_router(api_router, prefix="/api")
 
@@ -164,3 +157,11 @@ async def get_config(request: Request):
     return {
         "API_BASE_URL": f"{request_base}/api"
     }
+
+# This must remain at the bottom of the file, below all app.include_router() calls!
+# html=True tells FastAPI to automatically serve index.html on '/' and match other .html files.
+template_path = os.path.join(frontend_path, "template")
+if os.path.exists(template_path):
+    app.mount("/", StaticFiles(directory=template_path, html=True), name="frontend_templates")
+else:
+    print(f"WARNING: Frontend templates path not found at {template_path}")
