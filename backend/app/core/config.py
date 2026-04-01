@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SENDER_EMAIL: str = ""
+    
+    SRM_HOST: str = "0.0.0.0"
+    SRM_PORT: int = 8080
+    API_BASE_URL: str = ""
+
+
 
     model_config = SettingsConfigDict(
         env_file=env_file_path,
@@ -45,12 +51,12 @@ class Settings(BaseSettings):
 settings = Settings()
 
 # Global API Configuration (Networking)
-HOST = os.getenv("SRM_HOST", "0.0.0.0")
-PORT = int(os.getenv("SRM_PORT", os.getenv("PORT", "8080")))
+HOST = settings.SRM_HOST
+PORT = settings.SRM_PORT
 
-_env_api_url = os.getenv("API_BASE_URL")
-if _env_api_url:
-    API_BASE_URL = _env_api_url
+# Final calculated API Base URL for internal/fallback use
+if settings.API_BASE_URL:
+    API_BASE_URL = settings.API_BASE_URL
 else:
     _display_host = "localhost" if HOST == "0.0.0.0" else HOST
     API_BASE_URL = f"http://{_display_host}:{PORT}/api"

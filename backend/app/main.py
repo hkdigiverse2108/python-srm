@@ -155,7 +155,11 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/api/config")
 async def get_config(request: Request):
-    # Prefer request-derived base URL so frontend always targets the active host/port.
+    # If API_BASE_URL is explicitly set in .env/settings, use it.
+    if settings.API_BASE_URL:
+        return {"API_BASE_URL": settings.API_BASE_URL}
+        
+    # Fallback: Prefer request-derived base URL so frontend always targets the active host/port.
     request_base = str(request.base_url).rstrip("/")
     return {
         "API_BASE_URL": f"{request_base}/api"
