@@ -21,6 +21,8 @@ import json
 import io
 import re
 
+import httpx
+import base64
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
@@ -187,16 +189,22 @@ class BillingService:
 
         if base_amount <= 0: raise HTTPException(status_code=400, detail="Amount > 0 required")
 
+        is_default_amt = (req.amount is None)
         gst_amount = round(base_amount * 0.18, 2) if req.gst_type == "WITH_GST" else 0.0
         total_amount = round(base_amount + gst_amount, 2)
 
         return {
             "payment_type": req.payment_type,
             "gst_type": req.gst_type,
+            "requires_qr": req.payment_type != "CASH",
             "amount": total_amount,
             "base_amount": base_amount,
             "gst_amount": gst_amount,
-            "total_amount": total_amount
+            "total_amount": total_amount,
+            "amount_source": "DEFAULT" if is_default_amt else "MANUAL",
+            "qr_available": True, # At least static or PhonePe is always a fallback
+            "payment_upi_id": settings_defaults.get("payment_upi_id"),
+            "payment_account_name": settings_defaults.get("payment_account_name")
         }
 
     async def create_invoice(self, bill_in: BillCreate, current_user: User) -> Bill:
@@ -350,3 +358,98 @@ class BillingService:
                 await c.save()
         await bill.save()
         return bill
+
+    async def generate_payment_qr_for_new_invoice(
+        self, payment_type: str, gst_type: str, amount: float, phone: str
+    ) -> Dict[str, Any]:
+        """
+        Step 2 of Wizard: Generates either a static QR (Personal) or 
+        a dynamic PhonePe Pay Page link (Business).
+        """
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Amount must be > 0")
+
+        # 1. PhonePe Business Account (Dynamic Gateway)
+        if payment_type == "BUSINESS_ACCOUNT":
+            txn_id = f"T{datetime.datetime.now().strftime('%y%m%d%H%M%S')}{uuid.uuid4().hex[:4].upper()}"
+            paise_amount = int(round(amount * 100))
+            
+            # Use placeholders/settings for base URLs
+            base_url = settings.PHONEPE_CALLBACK_BASE_URL or "http://localhost:8000"
+            if not base_url.startswith("http"): base_url = f"https://{base_url}"
+            
+            payload = {
+                "merchantId": settings.PHONEPE_MERCHANT_ID,
+                "merchantTransactionId": txn_id,
+                "merchantUserId": f"U{phone[-10:]}",
+                "amount": paise_amount,
+                "redirectUrl": f"{base_url}/frontend/template/billing.html",
+                "redirectMode": "REDIRECT",
+                "callbackUrl": f"{base_url}/api/billing/phonepe-callback",
+                "mobileNumber": phone[-10:],
+                "paymentInstrument": {"type": "PAY_PAGE"}
+            }
+            
+            # Encode & Sign
+            payload_json = json.dumps(payload)
+            payload_main = base64.b64encode(payload_json.encode()).decode()
+            
+            endpoint = "/pg/v1/pay"
+            salt_key = settings.PHONEPE_SALT_KEY
+            salt_idx = settings.PHONEPE_SALT_INDEX
+            
+            hash_raw = f"{payload_main}{endpoint}{salt_key}"
+            hash_hex = hashlib.sha256(hash_raw.encode()).hexdigest()
+            x_verify = f"{hash_hex}###{salt_idx}"
+            
+            # API Call
+            pp_env = settings.PHONEPE_ENV or "sandbox"
+            base_api = settings.PHONEPE_BASE_URL or "https://api-preprod.phonepe.com/apis/pg-sandbox"
+            if pp_env == "production":
+                base_api = "https://api.phonepe.com/apis/hermes"
+            
+            api_url = f"{base_api}{endpoint}"
+            
+            try:
+                async with httpx.AsyncClient(timeout=15.0) as client:
+                    resp = await client.post(
+                        api_url,
+                        json={"request": payload_main},
+                        headers={"Content-Type": "application/json", "X-VERIFY": x_verify},
+                    )
+                    resp_data = resp.json()
+                    
+                if resp_data.get("success"):
+                    pay_url = resp_data["data"]["instrumentResponse"]["redirectInfo"]["url"]
+                    return {
+                        "type": "gateway",
+                        "gateway": "phonepe",
+                        "pay_url": pay_url,
+                        "transaction_id": txn_id,
+                        "amount": amount
+                    }
+                else:
+                    msg = resp_data.get("message", "PhonePe initiation failed")
+                    raise HTTPException(status_code=400, detail=f"Gateway Error: {msg}")
+            except Exception as e:
+                print(f"[PhonePe Error] {e}")
+                raise HTTPException(status_code=502, detail=f"Payment Gateway unreachable: {str(e)}")
+
+        # 2. Static QR Fallback (Personal or Other)
+        defaults = await self.get_invoice_defaults()
+        upi_id = defaults.get("payment_upi_id") or ""
+        qr_url = defaults.get("payment_qr_image_url") or ""
+        
+        # Build a raw UPI dynamic link if we have an ID
+        # upi://pay?pa=ID&pn=NAME&am=AMT&cu=INR
+        clean_upi = upi_id.split('?')[0]  # strip any existing params
+        name_encoded = quote("Harikrushn DigiVerse")
+        dynamic_upi = f"upi://pay?pa={clean_upi}&pn={name_encoded}&am={amount}&cu=INR"
+        
+        return {
+            "type": "static",
+            "upi_id": upi_id,
+            "qr_image_url": qr_url,
+            "dynamic_upi_link": dynamic_upi,
+            "amount": amount
+        }

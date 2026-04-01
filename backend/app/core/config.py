@@ -23,9 +23,10 @@ class Settings(BaseSettings):
 
     # PhonePe Payment Gateway — uncomment gateway code in billing/service.py to activate
     # Test credentials (switch to production keys before go-live)
-    PHONEPE_MERCHANT_ID: str = "M22QDSISBR7LX_2511271619"
-    PHONEPE_SALT_KEY: str = "MTQyYmNmZGItZDFiNC00NzFjLWEzYzgtMWM0YjkxMTNjNmVm"
+    PHONEPE_MERCHANT_ID: str = "PGTESTPAYUAT86"
+    PHONEPE_SALT_KEY: str = "96434309-7796-489d-8924-ab56988a6076"
     PHONEPE_SALT_INDEX: str = "1"
+    PHONEPE_BASE_URL: str = "https://api-preprod.phonepe.com/apis/pg-sandbox"
     PHONEPE_ENV: str = "sandbox"          # change to "production" for live
     PHONEPE_CALLBACK_BASE_URL: str = ""   # e.g. https://yourdomain.com (must be public)
 

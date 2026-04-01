@@ -1043,6 +1043,7 @@
             document.getElementById('default-amount-chip').textContent = '₹' + Number(defaultAmount).toLocaleString('en-IN');
             document.getElementById('autofill-note').textContent = '';
             _setWizardStep(1);
+            document.getElementById('createModal').querySelector('.modal-box').style.width = '680px';
             document.getElementById('createModal').classList.remove('d-none');
         }
         function closeCreateModal() {
@@ -1143,48 +1144,58 @@
                 <div class="small text-muted mt-1">No QR needed. Collect cash from client and proceed.</div>
             </div>`;
                 wizardQRData = { requires_qr: false, total_amount: total, base_amount: amt, gst_amount: gstAmt };
+                document.getElementById('createModal').querySelector('.modal-box').style.width = '680px';
                 return;
             }
 
             document.getElementById('step2-confirm-btn').innerHTML = '<i class="bi bi-check-circle me-2"></i>Payment Done — Create Invoice';
             document.getElementById('p2-qr-zone').innerHTML = '<div class="text-muted small"><span class="spinner-border spinner-border-sm me-2"></span>Generating payment QR...</div>';
 
-            try {
-                wizardQRData = await ApiClient.generateInvoicePaymentQR({
-                    payment_type: pt, gst_type: gt, amount: amt, phone: phone,
-                });
-                const qr = wizardQRData;
-                let qrHtml = '';
-                if (qr.qr_image_b64) {
-                    qrHtml = `<div>
-                <img src="${qr.qr_image_b64}" alt="Payment QR" style="width:180px;height:180px;object-fit:contain;border-radius:12px;border:2px solid #e2e8f0;background:#fff;padding:4px;">
-                <div class="fw-bold mt-2" style="font-size:0.9rem;color:var(--text-main);">${qr.upi_name || 'UPI Payment'}</div>
-                ${qr.upi_id ? `<div class="small text-muted">UPI: ${qr.upi_id}</div>` : ''}
-            </div>`;
-                } else if (qr.static_qr_url) {
-                    qrHtml = `<div>
-                <img src="${qr.static_qr_url}" alt="Payment QR" style="width:180px;height:180px;object-fit:contain;border-radius:12px;border:2px solid #e2e8f0;background:#fff;padding:4px;">
-                <div class="fw-bold mt-2">${qr.upi_name || 'UPI Payment'}</div>
-                ${qr.upi_id ? `<div class="small text-muted">UPI: ${qr.upi_id}</div>` : ''}
-            </div>`;
-                } else if (qr.upi_id) {
-                    qrHtml = `<div style="padding:16px 0;">
-                <div style="font-size:2.5rem;color:#6366f1;"><i class="bi bi-upc-scan"></i></div>
-                <div class="fw-bold mt-2">${qr.upi_name || 'UPI ID'}</div>
-                <div class="mt-1" style="font-family:monospace;font-size:1rem;color:#2e5b82;background:#eff6ff;padding:6px 12px;border-radius:8px;display:inline-block;">${qr.upi_id}</div>
-                <div class="small text-muted mt-2">Client can pay using any UPI app.</div>
-            </div>`;
-                } else {
-                    qrHtml = `<div style="padding:16px;"><div class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No QR/UPI configured. Configure in Settings → Billing.</div></div>`;
-                }
-                document.getElementById('p2-qr-zone').innerHTML = qrHtml;
-            } catch (e) {
+                try {
+                    wizardQRData = await ApiClient.generateInvoicePaymentQR({
+                        payment_type: pt, gst_type: gt, amount: total, phone: phone,
+                    });
+                    const qr = wizardQRData;
+                    let qrHtml = '';
+                    
+                    if (qr.type === 'gateway' && qr.pay_url) {
+                        qrHtml = `
+                        <div style="width:100%; height:550px; border-radius:12px; overflow:hidden; border:1.5px solid var(--border); background:#fff;">
+                            <iframe src="${qr.pay_url}" style="width:100%; height:100%; border:none;" allow="payment"></iframe>
+                        </div>
+                        <div class="mt-2 small text-muted"><i class="bi bi-shield-lock-fill text-success me-1"></i>Secure Transaction via PhonePe Gateway</div>`;
+                        // Expand modal for gateway
+                        document.getElementById('createModal').querySelector('.modal-box').style.width = '900px';
+                        document.getElementById('createModal').querySelector('.modal-box').style.maxWidth = '95vw';
+                    } else if (qr.qr_image_url || qr.static_qr_url || qr.qr_image_b64) {
+                        const src = qr.qr_image_b64 || qr.qr_image_url || qr.static_qr_url;
+                        qrHtml = `<div>
+                    <img src="${src}" alt="Payment QR" style="width:200px;height:200px;object-fit:contain;border-radius:12px;border:2px solid #e2e8f0;background:#fff;padding:4px;">
+                    <div class="fw-bold mt-2" style="font-size:0.9rem;color:var(--text-main);">${qr.upi_name || 'UPI Payment'}</div>
+                    ${qr.upi_id ? `<div class="small text-muted">UPI: ${qr.upi_id}</div>` : ''}
+                    ${qr.dynamic_upi_link ? `<div class="mt-2"><a href="${qr.dynamic_upi_link}" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size:11px;"><i class="bi bi-phone me-1"></i>Pay via App</a></div>` : ''}
+                </div>`;
+                    } else if (qr.upi_id) {
+                        qrHtml = `<div style="padding:16px 0;">
+                    <div style="font-size:2.5rem;color:#6366f1;"><i class="bi bi-upc-scan"></i></div>
+                    <div class="fw-bold mt-2">${qr.upi_name || 'UPI ID'}</div>
+                    <div class="mt-1" style="font-family:monospace;font-size:1rem;color:#2e5b82;background:#eff6ff;padding:6px 12px;border-radius:8px;display:inline-block;">${qr.upi_id}</div>
+                    <div class="small text-muted mt-2">Client can pay using any UPI app.</div>
+                </div>`;
+                    } else {
+                        qrHtml = `<div style="padding:16px;"><div class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>No QR/UPI configured. Configure in Settings → Billing.</div></div>`;
+                    }
+                    document.getElementById('p2-qr-zone').innerHTML = qrHtml;
+                } catch (e) {
                 document.getElementById('p2-qr-zone').innerHTML = `<div class="text-danger small"><i class="bi bi-exclamation-triangle me-1"></i>${e.data?.detail || e.message || 'Failed to load QR'}</div>`;
                 wizardQRData = null;
             }
         }
 
-        function goToStep1() { _setWizardStep(1); }
+        function goToStep1() { 
+            _setWizardStep(1); 
+            document.getElementById('createModal').querySelector('.modal-box').style.width = '680px';
+        }
 
         function goToStep3() {
             // Build preview of what will be created
