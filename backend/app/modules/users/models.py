@@ -34,4 +34,4 @@ class User(Document):
     department: Optional[str] = None
 
     class Settings:
-        name = "users"
+        name = "srm_users"

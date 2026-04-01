@@ -14,4 +14,4 @@ class Attendance(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "attendance"
+        name = "srm_attendance"

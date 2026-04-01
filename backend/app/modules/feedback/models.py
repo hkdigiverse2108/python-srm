@@ -18,7 +18,7 @@ class Feedback(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "feedbacks"
+        name = "srm_feedbacks"
 
 class UserFeedback(Document):
     user_id: Indexed(PydanticObjectId)
@@ -29,4 +29,4 @@ class UserFeedback(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "user_feedbacks"
+        name = "srm_user_feedbacks"

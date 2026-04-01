@@ -33,4 +33,4 @@ class Issue(Document):
     assigned_group: Optional[str] = None
 
     class Settings:
-        name = "issues"
+        name = "srm_issues"

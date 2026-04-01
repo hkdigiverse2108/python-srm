@@ -41,4 +41,4 @@ class ActivityLog(Document):
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "activity_logs"
+        name = "srm_activity_logs"

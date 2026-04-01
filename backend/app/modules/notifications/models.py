@@ -16,4 +16,4 @@ class Notification(Document):
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "notifications"
+        name = "srm_notifications"

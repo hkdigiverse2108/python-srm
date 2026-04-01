@@ -40,7 +40,7 @@ class LeaveRecord(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "leave_records"
+        name = "srm_leave_records"
 
 class SalarySlip(Document):
     user_id: PydanticObjectId
@@ -68,5 +68,5 @@ class SalarySlip(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "salary_slips"
+        name = "srm_salary_slips"
 

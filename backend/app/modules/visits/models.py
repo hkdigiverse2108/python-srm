@@ -48,4 +48,4 @@ class Visit(Document):
     shop_demo_stage: int = 0
 
     class Settings:
-        name = "visits"
+        name = "srm_visits"

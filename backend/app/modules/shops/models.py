@@ -71,7 +71,7 @@ class Shop(Document):
     onboarding_pm_name: Optional[str] = None
 
     class Settings:
-        name = "shops"
+        name = "srm_shops"
 
     # Back-compat alias
     @property

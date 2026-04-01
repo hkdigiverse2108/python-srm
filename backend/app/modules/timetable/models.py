@@ -19,4 +19,4 @@ class TimetableEvent(Document):
     is_deleted: bool = False
 
     class Settings:
-        name = "timetable_events"
+        name = "srm_timetable_events"

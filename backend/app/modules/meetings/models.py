@@ -50,4 +50,4 @@ class MeetingSummary(Document):
     priority: str = "MEDIUM"
 
     class Settings:
-        name = "meeting_summaries"
+        name = "srm_meeting_summaries"

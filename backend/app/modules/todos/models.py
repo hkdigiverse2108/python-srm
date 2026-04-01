@@ -36,4 +36,4 @@ class Todo(Document):
     client_id: Optional[PydanticObjectId] = None
 
     class Settings:
-        name = "todos"
+        name = "srm_todos"

@@ -48,4 +48,4 @@ class Bill(Document):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "bills"
+        name = "srm_bills"

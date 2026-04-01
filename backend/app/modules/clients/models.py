@@ -36,7 +36,7 @@ class Client(Document):
     created_at: Optional[datetime] = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "clients"
+        name = "srm_clients"
         indexes = [
             IndexModel(
                 [("phone", 1)], 
@@ -44,4 +44,4 @@ class Client(Document):
                 partialFilterExpression={"phone": {"$type": "string"}}
             ),
         ]
-
+

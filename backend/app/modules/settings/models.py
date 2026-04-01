@@ -10,11 +10,11 @@ class SystemSettings(Document):
     delete_policy: Optional[str] = "SOFT"
 
     class Settings:
-        name = "system_settings"
+        name = "srm_system_settings"
 
 class AppSetting(Document):
     key: Indexed(str, unique=True)
     value: Union[str, List[Any], Dict[str, Any], int, float]
 
     class Settings:
-        name = "app_settings"
+        name = "srm_app_settings"

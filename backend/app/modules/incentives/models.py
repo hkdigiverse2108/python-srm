@@ -11,7 +11,7 @@ class IncentiveSlab(Document):
     slab_bonus: float = 0.0
 
     class Settings:
-        name = "incentive_slabs"
+        name = "srm_incentive_slabs"
 
 class EmployeePerformance(Document):
     user_id: PydanticObjectId
@@ -19,7 +19,7 @@ class EmployeePerformance(Document):
     closed_units: int = 0
 
     class Settings:
-        name = "employee_performances"
+        name = "srm_employee_performances"
 
 class IncentiveSlip(Document):
     user_id: PydanticObjectId
@@ -39,4 +39,4 @@ class IncentiveSlip(Document):
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "incentive_slips"
+        name = "srm_incentive_slips"

@@ -63,10 +63,10 @@ async def lifespan(app: FastAPI):
     """Startup & shutdown hooks."""
     # ── Startup ──────────────────────────────────────────────────
     try:
-        print(f"[Lifespan] Connecting to MongoDB (DB: aisetu_srm)...")
+        print(f"[Lifespan] Connecting to MongoDB (DB: aisetu_db)...")
         print(f"[Lifespan] URI: {settings.MONGODB_URI}")
         mongo_client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_URI)
-        db_name = "aisetu_srm"
+        db_name = "aisetu_db"
         
         await init_beanie(
             database=mongo_client[db_name],

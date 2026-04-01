@@ -36,4 +36,4 @@ class Project(Document):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     class Settings:
-        name = "projects"
+        name = "srm_projects"

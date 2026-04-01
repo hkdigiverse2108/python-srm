@@ -23,4 +23,4 @@ class Payment(Document):
     verified_at: Optional[datetime] = None
 
     class Settings:
-        name = "payments"
+        name = "srm_payments"
