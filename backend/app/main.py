@@ -66,6 +66,7 @@ async def lifespan(app: FastAPI):
         print(f"[Lifespan] Connecting to MongoDB (DB: aisetu_db)...")
         print(f"[Lifespan] URI: {settings.MONGODB_URI}")
         mongo_client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_URI)
+        mongo_client.append_metadata = lambda *args, **kwargs: None
         db_name = "aisetu_db"
         
         await init_beanie(
