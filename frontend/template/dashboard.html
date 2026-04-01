@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/frontend/favicon.ico">
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -14,12 +14,12 @@
             console.error('DIAGNOSTIC GLOBAL ERROR:', msg, 'at', url, 'line', line);
         };
     </script>
-    <link rel="stylesheet" href="../css/bootstrap.min.css">
-    <link rel="stylesheet" href="../css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../css/theme.css?v=20260321">
-    <link rel="stylesheet" href="../css/components.css?v=20260321">
-    <script src="../js/chart.umd.min.js"></script>
-    <script src="../js/Sortable.min.js"></script>
+    <link rel="stylesheet" href="/frontend/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/frontend/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/frontend/css/theme.css?v=20260321">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=20260321">
+    <script src="/frontend/js/chart.umd.min.js"></script>
+    <script src="/frontend/js/Sortable.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -1467,11 +1467,11 @@
         </div><!-- /.page-content-standard -->
     </div>
 
-    <script src="../js/utils.js?v=20260321"></script>
-    <script src="../js/api.js?v=20260321"></script>
-    <script src="../js/ui_components.js?v=20260321"></script>
-    <script src="../js/auth.js?v=20260321"></script>
-    <script src="../js/bootstrap.bundle.min.js"></script>
+    <script src="/frontend/js/utils.js?v=20260321"></script>
+    <script src="/frontend/js/api.js?v=20260321"></script>
+    <script src="/frontend/js/ui_components.js?v=20260321"></script>
+    <script src="/frontend/js/auth.js?v=20260321"></script>
+    <script src="/frontend/js/bootstrap.bundle.min.js"></script>
     <script>
         requireAuth();
         const currentUser = typeof getUser === 'function' ? getUser() : (window.ApiClient ? window.ApiClient.getCurrentUser() : null);
