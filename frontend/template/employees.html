@@ -277,7 +277,7 @@
                 </div>
 
                 <!-- Standard Filter Wrapper (Directory) -->
-                <div id="filter-wrapper" class="mb-4"></div>
+                <div id="filter-wrapper"></div>
 
                 <!-- Employees Table -->
                 <div class="card shadow-sm grid-card">
@@ -582,7 +582,7 @@
                     {
                         type: 'select',
                         label: 'Status',
-                        id: 'filter-status',
+                        id: 'status',
                         options: [
                             { value: 'ALL', label: 'All Status' },
                             { value: 'true', label: 'Active' },
@@ -592,7 +592,12 @@
                 ],
                 onApply: (data) => {
                     lastFilters = data;
-                    loadEmployees(data);
+                    loadEmployees({ 
+                        dept: data['dept'], 
+                        role: data['role'], 
+                        status: data['status'], 
+                        search: data['search'] 
+                    });
                 },
                 onReset: () => {
                     lastFilters = {};

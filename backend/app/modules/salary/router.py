@@ -10,7 +10,8 @@ from app.modules.users.models import User, UserRole
 from app.modules.salary.models import LeaveRecord, SalarySlip, LeaveStatus
 from app.modules.salary.schemas import (
     LeaveApplicationCreate, LeaveRecordRead, LeaveApproval,
-    SalarySlipGenerate, SalarySlipRead, SalaryPreviewResponse
+    SalarySlipGenerate, SalarySlipRead, SalaryPreviewResponse,
+    SalaryBulkGenerateRequest, SalaryBulkGenerateResponse
 )
 from app.modules.notifications.models import Notification
 from app.modules.settings.models import SystemSettings
@@ -285,7 +286,7 @@ async def delete_leave(
 # SALARY ENDPOINTS
 # ═══════════════════════════════════════════════════════
 
-@router.get("/salary/preview")
+@router.get("/salary/preview", response_model=SalaryPreviewResponse)
 async def preview_salary(
     user_id: PydanticObjectId = Query(...),
     month: str = Query(...),
@@ -296,7 +297,15 @@ async def preview_salary(
     await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to preview salary")
     return await SalaryService().preview_salary(user_id, month, extra_deduction, base_salary=base_salary)
 
-@router.post("/salary/generate")
+@router.post("/salary/generate-bulk", response_model=SalaryBulkGenerateResponse)
+async def generate_bulk_salary(
+    bulk_in: SalaryBulkGenerateRequest,
+    current_user: User = Depends(staff_checker)
+) -> Any:
+    await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to generate bulk salary")
+    return await SalaryService().generate_bulk_salary(bulk_in.month, bulk_in.extra_deduction_default)
+
+@router.post("/salary/generate", response_model=SalarySlipRead)
 async def generate_salary_slip(
     salary_in: SalarySlipGenerate,
     current_user: User = Depends(staff_checker)
@@ -304,7 +313,7 @@ async def generate_salary_slip(
     await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to generate salary")
     return await SalaryService().generate_salary_slip(salary_in)
 
-@router.post("/salary/regenerate")
+@router.post("/salary/regenerate", response_model=SalarySlipRead)
 async def regenerate_salary_slip(
     salary_in: SalarySlipGenerate,
     current_user: User = Depends(staff_checker)
@@ -312,7 +321,7 @@ async def regenerate_salary_slip(
     await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to regenerate salary")
     return await SalaryService().regenerate_salary_slip(salary_in)
 
-@router.patch("/salary/update-draft/{slip_id}")
+@router.patch("/salary/update-draft/{slip_id}", response_model=SalarySlipRead)
 async def update_draft_salary_slip(
     slip_id: PydanticObjectId,
     salary_in: SalarySlipGenerate,
@@ -321,7 +330,7 @@ async def update_draft_salary_slip(
     await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to update draft salary")
     return await SalaryService().update_draft_slip(slip_id, salary_in)
 
-@router.patch("/salary/confirm/{slip_id}")
+@router.patch("/salary/confirm/{slip_id}", response_model=SalarySlipRead)
 async def confirm_salary_slip(
     slip_id: PydanticObjectId,
     current_user: User = Depends(staff_checker)
@@ -329,21 +338,21 @@ async def confirm_salary_slip(
     await _require_feature_access(current_user, "salary_manage_roles", "You do not have permission to confirm salary")
     return await SalaryService().confirm_salary_slip(slip_id, current_user.id)
 
-@router.get("/salary/all")
+@router.get("/salary/all", response_model=List[SalarySlipRead])
 async def get_all_salary_slips(
     current_user: User = Depends(staff_checker)
 ) -> Any:
     await _require_feature_access(current_user, "salary_view_all_roles", "You do not have permission to view all salary slips")
     return await SalaryService().get_all_salary_slips()
 
-@router.get("/salary/me")
+@router.get("/salary/me", response_model=List[SalarySlipRead])
 async def get_my_salary_slips(
     current_user: User = Depends(staff_checker)
 ) -> Any:
     # Non-admins only see CONFIRMED slips
     return await SalaryService().get_user_salary_slips(current_user.id, show_drafts=False, only_visible=True)
 
-@router.get("/salary/{user_id}")
+@router.get("/salary/{user_id}", response_model=List[SalarySlipRead])
 async def get_user_salary_slips(
     user_id: PydanticObjectId,
     current_user: User = Depends(staff_checker)
@@ -351,7 +360,7 @@ async def get_user_salary_slips(
     await _require_feature_access(current_user, "salary_view_all_roles", "You do not have permission to view this employee salary slips")
     return await SalaryService().get_user_salary_slips(user_id)
 
-@router.patch("/salary/slip/{slip_id}/remarks")
+@router.patch("/salary/slip/{slip_id}/remarks", response_model=SalarySlipRead)
 async def update_salary_slip_remarks(
     slip_id: PydanticObjectId,
     payload: dict,
@@ -382,7 +391,7 @@ async def update_salary_slip_remarks(
     await slip.save()
     return await SalaryService()._format_slip(slip)
 
-@router.patch("/salary/slip/{slip_id}/visibility")
+@router.patch("/salary/slip/{slip_id}/visibility", response_model=SalarySlipRead)
 async def update_salary_slip_visibility(
     slip_id: PydanticObjectId,
     payload: dict,

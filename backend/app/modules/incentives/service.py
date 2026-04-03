@@ -211,6 +211,13 @@ class IncentiveService:
     async def get_visible_user_incentive_slips(self, user_id: PydanticObjectId):
         return await self.get_user_incentive_slips(user_id, visible_only=True)
 
+    async def calculate_progressive_incentive(self, user_id: PydanticObjectId, period: str):
+        """Fetch existing incentive slips for a user and period."""
+        return await IncentiveSlip.find(
+            IncentiveSlip.user_id == user_id,
+            IncentiveSlip.period == period
+        ).to_list()
+
     async def get_all_incentive_slips(self):
         slips = await IncentiveSlip.find_all().sort("-period", "-generated_at").to_list()
         results = []
@@ -224,37 +231,58 @@ class IncentiveService:
     async def preview_incentive(self, user_id: PydanticObjectId, period: str, closed_units: Optional[int] = None) -> dict:
         user = await User.get(user_id)
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(status_code=404, detail="Employee not found")
         
-        achieved = 0
-        if closed_units is not None:
-            achieved = closed_units
-        else:
-            period_start, _ = self._get_period_bounds(period)
-            
-            last_slip = await IncentiveSlip.find(
-                IncentiveSlip.user_id == user.id,
-                IncentiveSlip.period < period
-            ).sort("-generated_at").first_or_none()
+        target = getattr(user, "target", 0)
+        
+        period_start, _ = self._get_period_bounds(period)
+        
+        last_slip = await IncentiveSlip.find(
+            IncentiveSlip.user_id == user.id,
+            IncentiveSlip.period < period
+        ).sort("-generated_at").first_or_none()
 
-            eligibility_start = (last_slip.generated_at - timedelta(days=10)) if last_slip and last_slip.generated_at else (period_start - timedelta(days=10))
-            eligibility_end = datetime.now(UTC) - timedelta(days=10)
+        eligibility_start = (last_slip.generated_at - timedelta(days=10)) if last_slip and last_slip.generated_at else (period_start - timedelta(days=10))
+        eligibility_end = datetime.now(UTC) - timedelta(days=10)
 
-            query = self._apply_role_scope_query(user).find(
-                Client.created_at >= eligibility_start,
-                Client.created_at < eligibility_end
-            )
-            achieved = await query.count()
+        # Base query for all clients in window
+        base_q = self._apply_role_scope_query(user).find(
+            Client.created_at >= eligibility_start,
+            Client.created_at < eligibility_end
+        )
+        
+        total_tasks = await base_q.count()
+        confirmed_tasks = await base_q.find(Client.status == "ACTIVE").count()
+        refunded_tasks = await base_q.find(Client.status == "REFUNDED").count()
+        pending_tasks = total_tasks - confirmed_tasks - refunded_tasks
 
+        # Override achieved if manual closed_units provided (e.g. for "what-if" scenarios)
+        achieved = closed_units if closed_units is not None else confirmed_tasks
+        
         calc_result = await self._calculate_stepped_incentive(achieved, offset=0)
         
+        # Check if slip already exists
+        exists = await IncentiveSlip.find_one(IncentiveSlip.user_id == user_id, IncentiveSlip.period == period)
+        
+        base_incentive = achieved * calc_result["incentive_per_unit"]
+        percentage = (achieved / target * 100) if target > 0 else 0.0
+
         return {
             "user_id": str(user_id),
             "user_name": user.name or f"User #{user_id}",
             "period": period,
+            "target": target,
             "confirmed_tasks": achieved,
+            "pending_tasks": pending_tasks,
+            "refunded_tasks": refunded_tasks,
+            "total_tasks_in_period": total_tasks,
             "slab_range": calc_result["applied_slab_label"],
             "incentive_per_task": calc_result["incentive_per_unit"],
+            "base_incentive": round(base_incentive, 2),
+            "slab_bonus": calc_result["slab_bonus"],
             "total_incentive": calc_result["total_incentive"],
-            "slab_bonus": calc_result["slab_bonus"]
+            "percentage": round(percentage, 2),
+            "slip_exists": exists is not None,
+            "audit_window_start": eligibility_start.strftime("%Y-%m-%d"),
+            "audit_window_end": eligibility_end.strftime("%Y-%m-%d")
         }

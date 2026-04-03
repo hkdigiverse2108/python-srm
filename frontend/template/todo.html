@@ -1316,7 +1316,7 @@
                         host_id: user.id,
                         attendee_ids: attendeeIds,
                         priority: priority,
-                        client_id: clientId ? parseInt(clientId) : null,
+                        client_id: clientId || null,
                         target_type: attendeeIds.length > 0 ? 'MANUAL' : (clientId ? 'CLIENT' : 'ROLE_BASED')
                     };
                     await ApiClient.createUnifiedMeeting(meetingPayload);
@@ -1327,7 +1327,7 @@
                                 title, due_date: date, assigned_to: assignedTo,
                                 description, priority, related_entity: related,
                                 start_time: startTime, end_time: endTime,
-                                client_id: clientId ? parseInt(clientId) : null
+                                client_id: clientId || null
                             };
                             if (editingTaskId) {
                                 const originalId = editingTaskId.split('_')[1];

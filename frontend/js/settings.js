@@ -697,26 +697,28 @@ async function loadInvoiceSettings() {
     try {
         if (!window.ApiClient) throw new Error('ApiClient not initialized');
         const data = await window.ApiClient.getInvoiceSettings();
-        document.getElementById('inv-default-amount').value = data.invoice_default_amount || 12000;
-        document.getElementById('inv-personal-no-gst-amount').value = data.personal_without_gst_default_amount || 12000;
-        document.getElementById('inv-seq-with-gst').value = data.invoice_seq_with_gst || 1;
-        document.getElementById('inv-seq-without-gst').value = data.invoice_seq_without_gst || 1;
-        document.getElementById('inv-company-name').value = data.company_name || '';
-        document.getElementById('inv-company-address').value = data.company_address || '';
-        document.getElementById('inv-header-image-details').value = data.company_header_image_details || '';
-        document.getElementById('inv-company-phone').value = data.company_phone || '';
-        document.getElementById('inv-company-email').value = data.company_email || '';
-        document.getElementById('inv-company-gstin').value = data.company_gstin || '';
-        document.getElementById('inv-company-pan').value = data.company_pan || '';
-        document.getElementById('inv-company-cin').value = data.company_cin || '';
-        document.getElementById('inv-company-cst-code').value = data.company_cst_code || '';
-        document.getElementById('inv-terms-conditions').value = data.invoice_terms_conditions || '';
-        document.getElementById('inv-business-upi-id').value = data.business_payment_upi_id || data.payment_upi_id || '';
-        document.getElementById('inv-business-upi-name').value = data.business_payment_account_name || data.payment_account_name || '';
-        document.getElementById('inv-business-bank-name').value = data.business_payment_bank_name || data.payment_bank_name || '';
-        document.getElementById('inv-business-bank-account-number').value = data.business_payment_account_number || data.payment_account_number || '';
-        document.getElementById('inv-business-bank-ifsc').value = data.business_payment_ifsc || data.payment_ifsc || '';
-        document.getElementById('inv-business-bank-branch').value = data.business_payment_branch || data.payment_branch || '';
+        const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+        setVal('inv-default-amount', data.invoice_default_amount || 12000);
+        setVal('inv-personal-no-gst-amount', data.personal_without_gst_default_amount || 12000);
+        setVal('inv-year', data.invoice_year || new Date().getFullYear());
+        setVal('inv-seq-with-gst', data.invoice_seq_with_gst || 1);
+        setVal('inv-seq-without-gst', data.invoice_seq_without_gst || 1);
+        setVal('inv-company-name', data.company_name || '');
+        setVal('inv-company-address', data.company_address || '');
+        setVal('inv-header-image-details', data.company_header_image_details || '');
+        setVal('inv-company-phone', data.company_phone || '');
+        setVal('inv-company-email', data.company_email || '');
+        setVal('inv-company-gstin', data.company_gstin || '');
+        setVal('inv-company-pan', data.company_pan || '');
+        setVal('inv-company-cin', data.company_cin || '');
+        setVal('inv-company-cst-code', data.company_cst_code || '');
+        setVal('inv-terms-conditions', data.invoice_terms_conditions || '');
+        setVal('inv-business-upi-id', data.business_payment_upi_id || data.payment_upi_id || '');
+        setVal('inv-business-upi-name', data.business_payment_account_name || data.payment_account_name || '');
+        setVal('inv-business-bank-name', data.business_payment_bank_name || data.payment_bank_name || '');
+        setVal('inv-business-bank-account-number', data.business_payment_account_number || data.payment_account_number || '');
+        setVal('inv-business-bank-ifsc', data.business_payment_ifsc || data.payment_ifsc || '');
+        setVal('inv-business-bank-branch', data.business_payment_branch || data.payment_branch || '');
         
         const bQrUrl = data.business_payment_qr_image_url || data.payment_qr_image_url || '';
         const bInput = document.getElementById('inv-business-qr-url');
@@ -731,12 +733,12 @@ async function loadInvoiceSettings() {
             }
         }
 
-        document.getElementById('inv-personal-upi-id').value = data.personal_payment_upi_id || '';
-        document.getElementById('inv-personal-upi-name').value = data.personal_payment_account_name || '';
-        document.getElementById('inv-personal-bank-name').value = data.personal_payment_bank_name || '';
-        document.getElementById('inv-personal-bank-account-number').value = data.personal_payment_account_number || '';
-        document.getElementById('inv-personal-bank-ifsc').value = data.personal_payment_ifsc || '';
-        document.getElementById('inv-personal-bank-branch').value = data.personal_payment_branch || '';
+        setVal('inv-personal-upi-id', data.personal_payment_upi_id || '');
+        setVal('inv-personal-upi-name', data.personal_payment_account_name || '');
+        setVal('inv-personal-bank-name', data.personal_payment_bank_name || '');
+        setVal('inv-personal-bank-account-number', data.personal_payment_account_number || '');
+        setVal('inv-personal-bank-ifsc', data.personal_payment_ifsc || '');
+        setVal('inv-personal-bank-branch', data.personal_payment_branch || '');
         
         const pQrUrl = data.personal_payment_qr_image_url || '';
         const pInput = document.getElementById('inv-personal-qr-url');
@@ -782,36 +784,39 @@ async function saveInvoiceSettings() {
         return;
     }
 
+    const getVal = (id, fb = '') => { const el = document.getElementById(id); return el ? el.value : fb; };
+
     const payload = {
-        invoice_default_amount: parseFloat(document.getElementById('inv-default-amount').value) || 12000,
-        personal_without_gst_default_amount: parseFloat(document.getElementById('inv-personal-no-gst-amount').value) || 12000,
-        invoice_seq_with_gst: parseInt(document.getElementById('inv-seq-with-gst').value, 10) || 1,
-        invoice_seq_without_gst: parseInt(document.getElementById('inv-seq-without-gst').value, 10) || 1,
-        company_name: document.getElementById('inv-company-name').value.trim(),
-        company_address: document.getElementById('inv-company-address').value.trim(),
-        company_header_image_details: document.getElementById('inv-header-image-details').value.trim(),
-        company_phone: document.getElementById('inv-company-phone').value.trim(),
-        company_email: document.getElementById('inv-company-email').value.trim(),
-        company_gstin: document.getElementById('inv-company-gstin').value.trim(),
-        company_pan: document.getElementById('inv-company-pan').value.trim(),
-        company_cin: document.getElementById('inv-company-cin').value.trim(),
-        company_cst_code: document.getElementById('inv-company-cst-code').value.trim(),
-        invoice_terms_conditions: document.getElementById('inv-terms-conditions').value.trim(),
-        business_payment_upi_id: document.getElementById('inv-business-upi-id').value.trim(),
-        business_payment_account_name: document.getElementById('inv-business-upi-name').value.trim(),
-        business_payment_bank_name: document.getElementById('inv-business-bank-name').value.trim(),
-        business_payment_account_number: document.getElementById('inv-business-bank-account-number').value.trim(),
-        business_payment_ifsc: document.getElementById('inv-business-bank-ifsc').value.trim(),
-        business_payment_branch: document.getElementById('inv-business-bank-branch').value.trim(),
-        business_payment_qr_image_url: document.getElementById('inv-business-qr-url').value.trim(),
-        personal_payment_upi_id: document.getElementById('inv-personal-upi-id').value.trim(),
-        personal_payment_account_name: document.getElementById('inv-personal-upi-name').value.trim(),
-        personal_payment_bank_name: document.getElementById('inv-personal-bank-name').value.trim(),
-        personal_payment_account_number: document.getElementById('inv-personal-bank-account-number').value.trim(),
-        personal_payment_ifsc: document.getElementById('inv-personal-bank-ifsc').value.trim(),
-        personal_payment_branch: document.getElementById('inv-personal-bank-branch').value.trim(),
-        personal_payment_qr_image_url: document.getElementById('inv-personal-qr-url').value.trim(),
-        invoice_verifier_roles: selectedRoles.join(','),
+        invoice_default_amount: parseFloat(getVal('inv-default-amount', '12000')) || 12000,
+        personal_without_gst_default_amount: parseFloat(getVal('inv-personal-no-gst-amount', '12000')) || 12000,
+        invoice_year: parseInt(getVal('inv-year'), 10) || new Date().getFullYear(),
+        invoice_seq_with_gst: parseInt(getVal('inv-seq-with-gst'), 10) || 1,
+        invoice_seq_without_gst: parseInt(getVal('inv-seq-without-gst'), 10) || 1,
+        company_name: getVal('inv-company-name').trim(),
+        company_address: getVal('inv-company-address').trim(),
+        company_header_image_details: getVal('inv-header-image-details').trim(),
+        company_phone: getVal('inv-company-phone').trim(),
+        company_email: getVal('inv-company-email').trim(),
+        company_gstin: getVal('inv-company-gstin').trim(),
+        company_pan: getVal('inv-company-pan').trim(),
+        company_cin: getVal('inv-company-cin').trim(),
+        company_cst_code: getVal('inv-company-cst-code').trim(),
+        invoice_terms_conditions: getVal('inv-terms-conditions').trim(),
+        business_payment_upi_id: getVal('inv-business-upi-id').trim(),
+        business_payment_account_name: getVal('inv-business-upi-name').trim(),
+        business_payment_bank_name: getVal('inv-business-bank-name').trim(),
+        business_payment_account_number: getVal('inv-business-bank-account-number').trim(),
+        business_payment_ifsc: getVal('inv-business-bank-ifsc').trim(),
+        business_payment_branch: getVal('inv-business-bank-branch').trim(),
+        business_payment_qr_image_url: getVal('inv-business-qr-url').trim(),
+        personal_payment_upi_id: getVal('inv-personal-upi-id').trim(),
+        personal_payment_account_name: getVal('inv-personal-upi-name').trim(),
+        personal_payment_bank_name: getVal('inv-personal-bank-name').trim(),
+        personal_payment_account_number: getVal('inv-personal-bank-account-number').trim(),
+        personal_payment_ifsc: getVal('inv-personal-bank-ifsc').trim(),
+        personal_payment_branch: getVal('inv-personal-bank-branch').trim(),
+        personal_payment_qr_image_url: getVal('inv-personal-qr-url').trim(),
+        invoice_verifier_roles: selectedRoles.join(',')
     };
     try {
         toggleLoading('btn-save-inv', 'spn-save-inv', 'icon-save-inv', true);

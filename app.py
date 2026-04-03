@@ -106,7 +106,8 @@ if __name__ == "__main__":
             "app.main:app", 
             host=HOST, 
             port=PORT,
-            reload=False,
+            reload=True,
+            reload_dirs=[backend_dir],
             log_level="info"
         )
     except KeyboardInterrupt:

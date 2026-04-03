@@ -46,63 +46,43 @@ class BillingService:
             new_setting = AppSetting(key=key, value=value)
             await new_setting.insert()
 
-    async def _get_highest_sequence(self, prefix: str, year: int, sync_website: bool = False) -> int:
+    async def _get_website_max_seq(self, prefix: str, year: int) -> int:
         """
-        Finds the highest sequence number (NNN) from invoice_number strings (Prefix/YYYY/NNN).
-        If sync_website is True, it also checks the 'website_payment' collection.
+        Finds the highest sequence number (NNN) from website_payment ONLY.
+        Only counts 'SUCCESS' statuses as per user's requirement.
         """
         max_seq = 0
         regex = f"^{prefix}/{year}/"
-
-        # 1. Check CRM Bills (srm_bills)
-        last_bill = await Bill.get_pymongo_collection().find_one(
-            {"invoice_number": {"$regex": regex}, "is_deleted": False},
-            sort=[("invoice_number", -1)]
+        website_coll = Bill.get_pymongo_collection().database["website_payment"]
+        possible_fields = ["invoice", "invoice_no", "invoice_number"]
+        or_filters = [{f: {"$regex": regex}} for f in possible_fields]
+        
+        last_site_payment = await website_coll.find_one(
+            {"$and": [{"status": "SUCCESS"}, {"$or": or_filters}]},
+            sort=[("_id", -1)]
         )
-        if last_bill and last_bill.get("invoice_number"):
-            try:
-                # Extract NNN from "Prefix/YYYY/NNN"
-                parts = last_bill["invoice_number"].split("/")
-                if len(parts) == 3:
-                    max_seq = max(max_seq, int(parts[2]))
-            except (ValueError, IndexError):
-                pass
 
-        # 2. Check Website Payments (website_payment) if required
-        if sync_website:
-            # We look for successful payments that have an invoice-like string
-            # Since the field name is slightly uncertain, we check common ones or use a regex on values if possible.
-            # However, usually it's 'invoice_no' or 'invoice_number'.
-            website_coll = Bill.get_pymongo_collection().database["website_payment"]
-            
-            # Potential field names: invoice_number, invoice_no, invoice_string
-            possible_fields = ["invoice_number", "invoice_no", "invoice_string"]
-            
-            # We'll use an $or query to find the latest in ANY of these fields that matches the pattern
-            or_filters = [{f: {"$regex": regex}} for f in possible_fields]
-            
-            # Only count 'succeeded' payments as per user requirement
-            last_site_payment = await website_coll.find_one(
-                {"$and": [{"status": {"$in": ["succeeded", "SUCCESS", "PAID"]}}, {"$or": or_filters}]},
-                sort=[("_id", -1)] # Use _id desc to find the most recent successful one
-            )
-            
-            if last_site_payment:
-                # Find which field matched
-                for f in possible_fields:
-                    val = last_site_payment.get(f)
-                    if val and isinstance(val, str) and "/" in val:
-                        try:
-                            parts = val.split("/")
-                            if len(parts) == 3:
-                                max_seq = max(max_seq, int(parts[2]))
-                        except (ValueError, IndexError):
-                            continue
 
+        if last_site_payment:
+            for f in possible_fields:
+                val = last_site_payment.get(f)
+                if val and isinstance(val, str) and "/" in val:
+                    try:
+                        parts = val.split("/")
+                        if len(parts) == 3:
+                            max_seq = max(max_seq, int(parts[2]))
+                    except (ValueError, IndexError):
+                        continue
         return max_seq
 
     async def _next_invoice_number(self, gst_type: str) -> tuple[str, str, int]:
-        year = datetime.datetime.now(UTC).year
+        # Determine the year (override from settings or system year)
+        year_str = await self._get_setting("invoice_year", "")
+        try:
+            year = int(year_str) if year_str else datetime.datetime.now(UTC).year
+        except ValueError:
+            year = datetime.datetime.now(UTC).year
+
         if gst_type == "WITHOUT_GST":
             seq_key = "invoice_seq_without_gst"
             series = "PINV"
@@ -114,43 +94,37 @@ class BillingService:
             prefix = "Inv"
             sync_website = True
 
-        # Determine the next sequence
-        # We check both the AppSetting (as a baseline) and the actual collections (for sync)
+        # 1. BOSS: Get the starting number from Settings
         start_str = await self._get_setting(seq_key, "1")
-        setting_start = int(start_str or "1")
+        current = max(int(start_str or "1"), 1)
         
-        # Get the actual max from DB collections
-        db_max = await self._get_highest_sequence(prefix, year, sync_website=sync_website)
+        # 2. CONFLICT CHECK: Only check website_payment for SUCCESSful invoices
+        if sync_website:
+            website_max = await self._get_website_max_seq(prefix, year)
+            if website_max >= current:
+                current = website_max + 1
+
+        # 3. UNIQUENESS: Final check in website table to prevent overlaps
+        if sync_website:
+            website_coll = Bill.get_pymongo_collection().database["website_payment"]
+            while True:
+                invoice_number = f"{prefix}/{year}/{current:03d}"
+                site_exists = await website_coll.find_one({
+                    "$or": [
+                        {"invoice": invoice_number},
+                        {"invoice_no": invoice_number}
+                    ]
+                })
+                if not site_exists: break
+                current += 1
         
-        # The 'current' one we will assign is max(setting, db_max) + 1 if db_max exists
-        # If no entries exist, we start from setting_start (usually 1)
-        if db_max == 0:
-            current = max(setting_start, 1)
-        else:
-            current = max(setting_start, db_max + 1)
+        invoice_number = f"{prefix}/{year}/{current:03d}"
 
-        while True:
-            invoice_number = f"{prefix}/{year}/{current:03d}"
-            exists = await Bill.find_one(Bill.invoice_number == invoice_number)
-            if not exists:
-                # Also check website_payment just in case to be 100% sure of uniqueness
-                if sync_website:
-                    website_coll = Bill.get_pymongo_collection().database["website_payment"]
-                    site_exists = await website_coll.find_one({
-                        "$or": [
-                            {"invoice_number": invoice_number},
-                            {"invoice_no": invoice_number}
-                        ]
-                    })
-                    if not site_exists:
-                        break
-                else:
-                    break
-            current += 1
-
-        # Persist the next sequence pointer for responsiveness (avoiding full table scans every time)
+        # 4. SYNC: Save issued + 1 back to settings
         await self._set_setting(seq_key, str(current + 1))
+        
         return invoice_number, series, current
+
 
     def _current_role_name(self, current_user: User) -> str:
         return current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
@@ -218,18 +192,27 @@ class BillingService:
             "personal_payment_bank_name", "personal_payment_account_number", "personal_payment_ifsc", "personal_payment_branch",
             "payment_upi_id", "payment_account_name", "payment_qr_image_url", "payment_bank_name", "payment_account_number", "payment_ifsc", "payment_branch",
             "company_name", "company_address", "company_header_image_details", "company_phone", "company_email", "company_gstin", "company_pan", "company_cin", "company_cst_code",
-            "invoice_header_bg", "invoice_seq_with_gst", "invoice_seq_without_gst", "invoice_verifier_roles", "invoice_sender_roles", "invoice_creator_roles", "whatsapp_invoice_caption",
+            "invoice_header_bg", "invoice_seq_with_gst", "invoice_seq_without_gst", "invoice_year", "invoice_verifier_roles", "invoice_sender_roles", "invoice_creator_roles", "whatsapp_invoice_caption",
         ]
-        rows = await AppSetting.get_pymongo_collection().find({"key": {"$in": keys}}).to_list(length=None)
-        mapping = {r["key"]: r["value"] for r in rows}
+        # Use Beanie find with In operator for reliability
+        rows = await AppSetting.find(In(AppSetting.key, keys)).to_list()
+        mapping = {r.key: r.value for r in rows}
 
-        def _to_float(v: str | None, fb: float) -> float:
+        def _to_float(v: Any, fb: float) -> float:
             try: return float(v) if v not in (None, "") else fb
             except: return fb
 
-        def _to_int(v: str | None, fb: int) -> int:
+        def _to_int(v: Any, fb: int) -> int:
             try: return int(v) if v not in (None, "") else fb
             except: return fb
+
+        import datetime as _dt
+        current_system_year = _dt.datetime.now().year
+        year_val = mapping.get("invoice_year")
+        try:
+            resolved_year = int(year_val) if year_val else current_system_year
+        except (ValueError, TypeError):
+            resolved_year = current_system_year
 
         return {
             "invoice_default_amount": _to_float(mapping.get("invoice_default_amount"), 12000),
@@ -247,7 +230,13 @@ class BillingService:
             "business_payment_qr_image_url": mapping.get("business_payment_qr_image_url") or "",
             "personal_payment_upi_id": mapping.get("personal_payment_upi_id") or "",
             "personal_payment_qr_image_url": mapping.get("personal_payment_qr_image_url") or "",
+            # Sync keys
+            "invoice_year": resolved_year,
+            "invoice_seq_with_gst": _to_int(mapping.get("invoice_seq_with_gst"), 1),
+            "invoice_seq_without_gst": _to_int(mapping.get("invoice_seq_without_gst"), 1),
         }
+
+
 
     async def get_workflow_options(self, current_user: User) -> dict:
         settings_defaults = await self.get_invoice_defaults()
@@ -624,10 +613,13 @@ class BillingService:
         }
 
     async def save_invoice_settings(self, payload: dict) -> dict:
+        print(f"[DEBUG] save_invoice_settings PAYLOAD: {payload}")
         for key, value in payload.items():
             if value is not None:
+                print(f"[DEBUG] Saving setting: {key} = {value}")
                 await self._set_setting(key, str(value))
         return {"status": "success"}
+
 
     async def check_whatsapp_health(self, current_user: User) -> dict:
         # Placeholder for real WhatsApp health logic

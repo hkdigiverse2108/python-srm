@@ -125,6 +125,13 @@
     --icon-text-red: #dc2626;
     --icon-bg-blue: #eff6ff;
     --icon-text-blue: #2563eb;
+
+    /* ── Current Layout State ── */
+    --current-sb-width: var(--sb-width);
+}
+
+body.sidebar-collapsed {
+    --current-sb-width: var(--sb-collapsed-width);
 }
 
 /* ═══════════════════════════════════════════════════════════════

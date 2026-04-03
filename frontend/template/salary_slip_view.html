@@ -72,7 +72,10 @@
 
             if (window.__accessDenied) return;
 
-            if (!slipId) { showError('No salary slip ID provided in the URL.'); return; }
+            if (!slipId || slipId === 'undefined') { 
+                showError('No valid salary slip ID provided in the URL. Please go back to the salary list and try again.'); 
+                return; 
+            }
 
             const token = sessionStorage.getItem('access_token');
             if (!token || token === 'null' || token === 'undefined' || token === '') {

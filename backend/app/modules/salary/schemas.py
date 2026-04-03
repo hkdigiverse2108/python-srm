@@ -83,6 +83,8 @@ class SalaryPreviewResponse(MongoBaseSchema):
     final_salary: float
     approved_leaves: typing.List[typing.Any]
     has_existing_slip: bool = False
+    existing_slip_id: str | None = None
+    existing_slip_status: str | None = None
 
 
 class SalarySlipRead(MongoBaseSchema):
@@ -105,3 +107,16 @@ class SalarySlipRead(MongoBaseSchema):
     user_name: str | None = None
     confirmer_name: str | None = None
     generated_at: datetime.date
+
+
+class SalaryBulkGenerateRequest(MongoBaseSchema):
+    month: str  # YYYY-MM
+    extra_deduction_default: float = 0.0
+
+class SalaryBulkGenerateResponse(MongoBaseSchema):
+    month: str
+    processed_count: int
+    generated_count: int
+    skipped_count: int
+    failed_count: int
+    failures: list[dict] = []

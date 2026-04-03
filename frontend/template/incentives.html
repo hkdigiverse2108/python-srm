@@ -1131,8 +1131,8 @@
                     <td class="fw-bold text-primary">Rs ${fmt(s.incentive_per_unit)}</td>
                     <td class="fw-bold text-success">Rs ${fmt(s.slab_bonus)}</td>
                     ${canManageIncentive ? `<td class="pe-3 text-center">
-                        <button class="btn btn-sm py-0 px-2" style="background:var(--primary-light);color:var(--primary);border:1px solid var(--primary-ring);font-size:0.72rem;border-radius:6px;" onclick="openEditSlab(${s.id},${s.min_units},${s.max_units},${s.incentive_per_unit},${s.slab_bonus})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm py-0 px-2 ms-1" style="background:var(--danger-light);color:var(--danger-text);border:1px solid var(--danger-ring);font-size:0.72rem;border-radius:6px;" onclick="deleteSlab(${s.id})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm py-0 px-2" style="background:var(--primary-light);color:var(--primary);border:1px solid var(--primary-ring);font-size:0.72rem;border-radius:6px;" onclick="openEditSlab('${s.id}',${s.min_units},${s.max_units},${s.incentive_per_unit},${s.slab_bonus})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm py-0 px-2 ms-1" style="background:var(--danger-light);color:var(--danger-text);border:1px solid var(--danger-ring);font-size:0.72rem;border-radius:6px;" onclick="deleteSlab('${s.id}')"><i class="bi bi-trash"></i></button>
                     </td>` : ''}
                 </tr>`).join('');
             } catch (e) {
@@ -1199,7 +1199,7 @@
                 showToast('You do not have permission to manage slabs', 'error');
                 return;
             }
-            const id = parseInt(document.getElementById('edit-slab-id').value);
+            const id = document.getElementById('edit-slab-id').value;
             const perUnit = parseFloat(document.getElementById('edit-slab-per-unit').value);
             const bonus = parseFloat(document.getElementById('edit-slab-bonus').value || '0');
             const btn = document.getElementById('edit-slab-submit-btn');
@@ -1428,7 +1428,7 @@
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analysing...';
 
             try {
-                const prev = await ApiClient.previewIncentive({ user_id: parseInt(userId), period });
+                const prev = await ApiClient.previewIncentive({ user_id: userId, period });
                 const fmt = n => 'Rs\u00a0' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
                 
                 document.getElementById('prev-employee').textContent = prev.user_name;
@@ -1506,7 +1506,7 @@
                     const res = await ApiClient.calculateIncentiveBulk({ period });
                     showToast(`Success: ${res.created_slips} slips generated, ${res.skipped_existing} skipped.`, 'success');
                 } else {
-                    await ApiClient.calculateIncentive({ user_id: parseInt(userId), period });
+                    await ApiClient.calculateIncentive({ user_id: userId, period });
                     showToast('Incentive slip saved successfully!', 'success');
                 }
                 closeCalcModal();

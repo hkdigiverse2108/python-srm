@@ -143,6 +143,7 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.22s ease, visibility 0.22s ease;
+    padding-left: var(--current-sb-width, 0); /* Offset centering to account for sidebar */
 }
 .srm-overlay.show { opacity: 1; visibility: visible; }
 
@@ -296,7 +297,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 12px 16px;
+    padding: 10px 20px; /* More compact and consistent padding */
     border-bottom: 1px solid var(--border-subtle);
     background: var(--bg-app);
     cursor: pointer;
@@ -409,7 +410,7 @@
 
 .filter-panel-body {
     display: none;
-    padding: 24px; /* Increased internal padding */
+    padding: 16px 24px; /* More compact vertical padding */
 }
 
 .filter-panel-body.open {
@@ -419,12 +420,12 @@
 .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 12px;
+    gap: 10px;
 }
 
 .filter-field label {
     display: block;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -1050,6 +1051,7 @@ input[type="password"]::-ms-clear { display: none; }
     margin: 0 !important;
 }
 
+.filter-header-search {
     margin-left: 12px;
 }
 
@@ -1250,3 +1252,167 @@ input[type="password"]::-ms-clear { display: none; }
 }
 
 
+/* --- Modern UI Utilities for Salary Modal --- */
+.input-group-modern {
+    display: flex;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+    background: white;
+}
+.input-group-modern:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px var(--primary-soft);
+}
+.input-group-modern .input-group-text {
+    border: none;
+    background: #f8fafc;
+    color: #64748b;
+    padding-left: 14px;
+    padding-right: 14px;
+}
+.input-group-modern .form-control,
+.input-group-modern .form-select {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-weight: 500;
+}
+
+.shadow-sm-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.shadow-sm-hover:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.shadow-md {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.extra-small {
+    font-size: 0.72rem !important;
+}
+
+.fw-black {
+    font-weight: 900;
+}
+
+.rounded-4 {
+    border-radius: 1.25rem !important;
+}
+
+/* --- Shared Engine UI (Salary + Incentives) --- */
+.calc-header-icon {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--primary), #4338ca);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.4);
+}
+
+.calc-step-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 2px;
+    display: block;
+}
+
+.calc-input-card {
+    background: var(--bg-app);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.peek-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.peek-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
+}
+
+/* --- Professional Modal & Mode Selector --- */
+.modal-scrollable-body {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+}
+.modal-scrollable-body::-webkit-scrollbar {
+    width: 6px;
+}
+.modal-scrollable-body::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border-radius: 10px;
+}
+
+.calc-mode-selector {
+    display: flex;
+    background: var(--bg-app);
+    padding: 6px;
+    border-radius: 14px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+}
+
+.mode-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-radius: 10px;
+    color: var(--text-muted);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.mode-btn.active {
+    background: white;
+    color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.mode-btn i {
+    font-size: 1rem;
+}
+
+.info-alert-blue {
+    background: rgba(79, 70, 229, 0.06);
+    border: 1px solid rgba(79, 70, 229, 0.1);
+    color: var(--primary);
+    border-radius: 16px;
+    padding: 16px 20px;
+}
+
+/* Fix for Button Icons */
+.btn i {
+    line-height: 0;
+    display: inline-block;
+    vertical-align: middle;
+}

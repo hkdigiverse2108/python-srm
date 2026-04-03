@@ -839,8 +839,7 @@
         };
 
         window.smartSubmitSchedule = async () => {
-            // 🚀 CRITICAL FIX: Convert the string from the input into an actual Integer!
-            const shopId = parseInt(document.getElementById('smart-sched-shop-id').value, 10);
+            const shopId = document.getElementById('smart-sched-shop-id').value;
             const pmId = document.getElementById('smart-pm-select').value;
             const date = document.getElementById('smart-demo-date').value;
             const time = document.getElementById('smart-selected-time').value;
@@ -864,7 +863,7 @@
 
                 await window.ApiClient.request(`/shops/${shopId}/assign-pm`, {
                     method: 'POST',
-                    body: { pm_id: parseInt(pmId), demo_scheduled_at: scheduledAt }
+                    body: { pm_id: pmId, demo_scheduled_at: scheduledAt }
                 });
 
                 const modalEl = document.getElementById('smartScheduleModal');

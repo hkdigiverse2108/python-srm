@@ -346,7 +346,7 @@
                     </div>
                 </div>
 
-                <div id="filter-wrapper" class="mb-4"></div>
+                <div id="filter-wrapper" class="mb-3"></div>
 
                 <!-- ── Invoice Table ─────────────────────────────────── -->
                 <div class="grid-card">
@@ -857,16 +857,16 @@
         async function loadBills() {
             document.getElementById('inv-tbody').innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading invoices...</td></tr>`;
             try {
-                const statusVal = currentFilters['inv-status-filter'] || 'ALL';
+                const statusVal = currentFilters['inv-status'] || 'ALL';
                 const archivedMode = statusVal === 'ARCHIVED' ? 'ARCHIVED' : 'ACTIVE';
                 const statusFilter = statusVal === 'ARCHIVED' ? 'ALL' : statusVal;
                 
                 allBills = await ApiClient.getBills({
                     status_filter: statusFilter, 
                     archived: archivedMode,
-                    payment_type: currentFilters['payment-type-filter'] || 'ALL',
-                    gst_type: currentFilters['gst-type-filter'] || 'ALL',
-                    search: currentFilters['inv-search'] || '',
+                    payment_type: currentFilters['payment-type'] || 'ALL',
+                    gst_type: currentFilters['gst-type'] || 'ALL',
+                    search: currentFilters['search'] || '',
                     skip: 0, 
                     limit: 200,
                 });
@@ -887,7 +887,7 @@
 
         function updateBulkActionButtons() {
             const count = selectedBillIds.size;
-            const statusVal = currentFilters['inv-status-filter'] || 'ALL';
+            const statusVal = currentFilters['inv-status'] || 'ALL';
             const isArchiveView = statusVal === 'ARCHIVED';
             const archiveBtn = document.getElementById('archive-selected-btn');
             const deleteBtn = document.getElementById('delete-selected-btn');
@@ -930,7 +930,7 @@
         function renderTable() {
             const tbody = document.getElementById('inv-tbody');
             const list = allBills;
-            const statusVal = currentFilters['inv-status-filter'] || 'ALL';
+            const statusVal = currentFilters['inv-status'] || 'ALL';
             const isArchiveView = statusVal === 'ARCHIVED';
             document.getElementById('billing-filter-summary').textContent = list.length + (isArchiveView ? ' archived invoice' : ' invoice') + (list.length === 1 ? '' : 's');
             if (!list.length) {
@@ -991,13 +991,13 @@
                     {
                         type: 'text',
                         label: 'Search',
-                        id: 'inv-search',
+                        id: 'filter-search',
                         placeholder: 'Search invoice or client...'
                     },
                     {
                         type: 'select',
                         label: 'Status',
-                        id: 'inv-status-filter',
+                        id: 'filter-inv-status',
                         options: [
                             { value: 'ALL', label: 'All Invoices' },
                             { value: 'PENDING_VERIFICATION', label: 'Pending' },
@@ -1010,7 +1010,7 @@
                     {
                         type: 'select',
                         label: 'Payment Type',
-                        id: 'payment-type-filter',
+                        id: 'filter-payment-type',
                         options: [
                             { value: 'ALL', label: 'All Payment Types' },
                             { value: 'BUSINESS_ACCOUNT', label: 'Business Bank Account' },
@@ -1021,7 +1021,7 @@
                     {
                         type: 'select',
                         label: 'GST Type',
-                        id: 'gst-type-filter',
+                        id: 'filter-gst-type',
                         options: [
                             { value: 'ALL', label: 'All GST' },
                             { value: 'WITH_GST', label: 'With GST (18%)' },

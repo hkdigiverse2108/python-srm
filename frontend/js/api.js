@@ -256,6 +256,15 @@ class ApiClient {
         return this.request('/reports/dashboard');
     }
 
+    // ─── Employee Code ───────────────────────────────────────
+    static async getEmployeeCodeSettings() {
+        return this.request('/users/config/employee-code');
+    }
+
+    static async updateEmployeeCodeSettings(data) {
+        return this.request('/users/config/employee-code', { method: 'PUT', body: data });
+    }
+
     // ─── Attendance ──────────────────────────────────────────
     static async getPunchStatus() {
         return this.request('/attendance/punch-status');
@@ -480,6 +489,12 @@ class ApiClient {
     }
     static async generateSalary(data) {
         return this.request('/hrm/salary/generate', { method: 'POST', body: data });
+    }
+    static async generateSalaryBulk(month) {
+        return this.request('/hrm/salary/generate-bulk', { 
+            method: 'POST', 
+            body: { month, extra_deduction_default: 0 } 
+        });
     }
     static async regenerateSalarySlip(data) {
         return this.request('/hrm/salary/regenerate', { method: 'POST', body: data });
