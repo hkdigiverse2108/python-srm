@@ -1,5 +1,5 @@
 # backend/app/modules/areas/router.py
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi import APIRouter, Depends, status
 from beanie import PydanticObjectId
 from app.core.dependencies import RoleChecker

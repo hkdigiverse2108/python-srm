@@ -1,6 +1,6 @@
 # backend/app/modules/activity_logs/router.py
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Any
+from typing import List, Any, Optional
 from app.core.dependencies import get_current_active_user
 from app.modules.activity_logs.service import ActivityLogger
 from app.modules.users.models import User, UserRole

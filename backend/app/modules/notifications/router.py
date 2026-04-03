@@ -1,5 +1,5 @@
 # backend/app/modules/notifications/router.py
-from typing import List, Any
+from typing import List, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from beanie import PydanticObjectId
 from app.core.dependencies import get_current_user
