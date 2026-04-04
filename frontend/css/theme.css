@@ -1539,8 +1539,8 @@ h6 {
     /* More rounded premium feel */
     padding: 32px 40px;
     /* Slightly adjusted padding */
-    margin-bottom: 40px !important;
-    /* More space below header */
+    margin-bottom: 1.5rem !important;
+    /* Gap above filter: 1.5rem + filter margin-top 2rem = 3.5rem total (matches gap below) */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -2667,11 +2667,12 @@ label {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    margin-top: 2rem;
-    margin-bottom: 22px;
+    margin-top: 2.0rem;
+    margin-bottom: 3.5rem;
     box-shadow: var(--shadow-xs);
     overflow: visible;
 }
+
 
 .filter-panel-head {
     display: flex;

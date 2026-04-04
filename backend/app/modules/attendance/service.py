@@ -1,6 +1,6 @@
 # backend/app/modules/attendance/service.py
 import json
-from datetime import datetime, date, timedelta, time, UTC
+from datetime import datetime, date, timedelta, time, UTC, timezone
 from typing import List, Optional, Dict, Any
 from app.modules.attendance.models import Attendance
 from app.modules.salary.models import LeaveStatus, LeaveRecord
@@ -78,10 +78,19 @@ class AttendanceService:
                     end_time = p_out
                 else:
                     missing_punch_out = True
-                    if day < datetime.now(UTC).date():
+                    # Compare day with current IST date
+                    ist_now = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+                    if day < ist_now.date():
                         end_time = datetime.combine(day, time(23, 59, 59), tzinfo=UTC)
                     else:
                         end_time = datetime.now(UTC)
+                
+                # Ensure p_in and end_time are BOTH UTC-aware
+                if p_in.tzinfo is None:
+                    p_in = p_in.replace(tzinfo=UTC)
+                if end_time.tzinfo is None:
+                    end_time = end_time.replace(tzinfo=UTC)
+                    
                 duration = max(0.0, (end_time - p_in).total_seconds() / 3600)
                 total_hours += duration
 
@@ -100,7 +109,7 @@ class AttendanceService:
 
     @staticmethod
     async def ensure_auto_leaves(user: User, start_date: date, end_date: date, settings: dict):
-        today = datetime.now(UTC).date()
+        today = AttendanceService.get_ist_today()
         
         # Batch checks
         att_coll = Attendance.get_pymongo_collection()
@@ -152,8 +161,51 @@ class AttendanceService:
             day += timedelta(days=1)
 
     @staticmethod
+    def get_ist_today() -> date:
+        return datetime.now(timezone(timedelta(hours=5, minutes=30))).date()
+
+    @staticmethod
+    async def punch_in_out(current_user: User):
+        # Implementation of punch-in / punch-out logic
+        # 1. Get today's date in IST for midnight reset consistency
+        today = AttendanceService.get_ist_today()
+        now = datetime.now(UTC)
+        
+        # 2. Check for an active (non-completed) punch record for this user today
+        # We sort by punch_in descending to get the most recent one first
+        last_record = await Attendance.find(
+            Attendance.user_id == current_user.id,
+            Attendance.date == today,
+            Attendance.is_deleted == False
+        ).sort("-punch_in").first_or_none()
+        
+        # 3. IF the last record has NO punch_out, we treat this as a PUNCH OUT
+        if last_record and last_record.punch_out is None:
+            last_record.punch_out = now
+            # Handle potential naive datetime from DB
+            p_in = last_record.punch_in
+            if p_in and p_in.tzinfo is None:
+                p_in = p_in.replace(tzinfo=UTC)
+            # Calculate duration in hours
+            diff = now - p_in
+            last_record.total_hours = max(0.0, diff.total_seconds() / 3600.0)
+            await last_record.save()
+            return last_record
+            
+        # 4. OTHERWISE, we treat this as a NEW PUNCH IN
+        new_record = Attendance(
+            user_id=current_user.id,
+            date=today,
+            punch_in=now,
+            punch_out=None,
+            total_hours=0.0
+        )
+        await new_record.insert()
+        return new_record
+
+    @staticmethod
     async def get_punch_status(current_user: User):
-        today = datetime.now(UTC).date()
+        today = AttendanceService.get_ist_today()
         now = datetime.now(UTC)
         
         last_record = await Attendance.find(
@@ -205,7 +257,10 @@ class AttendanceService:
         
         completed_hours_secs = round(today_hours * 3600)
         if is_punched_in and last_record:
-            ongoing_secs = (now - last_record.punch_in).total_seconds()
+            p_in = last_record.punch_in
+            if p_in and p_in.tzinfo is None:
+                p_in = p_in.replace(tzinfo=UTC)
+            ongoing_secs = (now - p_in).total_seconds()
             today_hours += (ongoing_secs / 3600)
 
         return {
@@ -233,7 +288,7 @@ class AttendanceService:
     @staticmethod
     async def get_attendance_summary(target_user: User | None, start_date: Optional[date], end_date: Optional[date], reconcile: bool, current_user: User):
         if not end_date:
-            end_date = datetime.now(UTC).date()
+            end_date = AttendanceService.get_ist_today()
         if not start_date:
             start_date = end_date - timedelta(days=30)
             

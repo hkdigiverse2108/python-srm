@@ -23,6 +23,56 @@
 .badge-success   { background-color: var(--badge-success-bg); color: var(--badge-success-text); }
 .badge-danger    { background-color: var(--badge-danger-bg); color: var(--badge-danger-text); }
 
+/* ── Stat Cards (Premium Analytics Cards) ── */
+.stat-card {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+    position: relative;
+    overflow: hidden;
+    padding: 24px 20px !important; /* Added more vertical space */
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    border-radius: 16px 16px 0 0;
+}
+
+.stat-card.card-primary::before { background: var(--primary); }
+.stat-card.card-success::before { background: var(--success); }
+.stat-card.card-warning::before { background: var(--warning); }
+.stat-card.card-danger::before  { background: var(--danger);  }
+.stat-card.card-info::before    { background: var(--info);    }
+.stat-card.card-purple::before  { background: #8b5cf6; }
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.06) !important;
+    border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 /* ── Table Section Header ── */
 .table-section-header {
     display: flex;
@@ -45,11 +95,14 @@
 }
 
 /* â”€â”€ Page Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+.page-header-glass {
+    margin-bottom: 1.5rem !important;
+}
 .page-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 24px; /* Reduced from 32px for tighter layout */
+    margin-bottom: 1.5rem !important;
     flex-wrap: wrap;
     gap: 16px;
 }
@@ -216,7 +269,7 @@
     to   { opacity: 1; transform: translateY(0);    }
 }
 
-/* â”€â”€ Toast Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Toast Notifications ────────────────────────────────────── */
 .toast-container {
     position: fixed;
     bottom: 24px;
@@ -282,13 +335,27 @@
 }
 .search-filter-bar .form-control { max-width: 300px; }
 
-/* â”€â”€ Shared Filter Panel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ── Shared Filter Panel ────────────────────────────────────────── */
 .filter-panel {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-xs);
+    margin-bottom: 3.5rem;
     overflow: hidden;
+}
+
+/* When filter-panel lives inside a named filter-wrapper div,
+   let the WRAPPER control the bottom gap exclusively. */
+[id$="filter-wrapper"] .filter-panel,
+[id*="filter-wrapper"] .filter-panel {
+    margin-bottom: 0 !important;
+}
+
+/* All filter-wrapper containers -> standardise bottom gap to 3.5rem */
+[id$="filter-wrapper"],
+[id*="filter-wrapper"] {
+    margin-bottom: 3.5rem !important;
 }
 
 .filter-panel-head {
@@ -515,8 +582,11 @@
     }
 }
 
-/* â”€â”€ Kanban Card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-.kanban-card { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+/* ── Kanban Card ────────────────────────────────────────── */
+.kanban-card { 
+    transition: transform 0.18s ease, box-shadow 0.18s ease; 
+    padding: 20px 16px; /* Added more vertical space */
+}
 .kanban-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md) !important;

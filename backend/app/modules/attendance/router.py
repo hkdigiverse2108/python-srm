@@ -1,7 +1,7 @@
 # backend/app/modules/attendance/router.py
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
-from datetime import date as dt_date
+from datetime import date as dt_date, timedelta
 from beanie import PydanticObjectId
 
 from app.core.dependencies import get_current_active_user
@@ -51,6 +51,12 @@ async def get_attendance_summary(
         target_user = await User.get(user_id)
         if not target_user:
             raise HTTPException(status_code=404, detail="User not found")
+
+    # Ensure dates are defaulted before background tasks or service calls
+    if not end_date:
+        end_date = AttendanceService.get_ist_today()
+    if not start_date:
+        start_date = end_date - timedelta(days=30)
 
     # Optimization: Move reconcile to background if it's broad
     if reconcile:

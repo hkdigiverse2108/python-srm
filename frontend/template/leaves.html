@@ -68,74 +68,58 @@
                 </div>
 
                 <!-- Summary Cards (admin view) -->
-                <div id="leave-summary-bar" class="row g-3 mb-4" style="display:none;">
+                <div id="leave-summary-bar" class="row g-3 mb-2" style="display:none;">
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--warning);">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:40px;height:40px;background:var(--warning-light);">
-                                    <i class="bi bi-hourglass-split" style="color:var(--warning-text);"></i>
+                        <div class="card stat-card card-warning h-100 p-3">
+                            <div class="stat-label mb-2">Pending</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-warning-light text-warning rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-hourglass-split fs-5"></i>
                                 </div>
-                                <div>
-                                    <div class="text-muted small fw-semibold mb-0"
-                                        style="font-size:0.78rem;letter-spacing:0.3px;">PENDING</div>
-                                    <div class="fw-bold" style="color:var(--warning-text);font-size:1.5rem;line-height:1;"
-                                        id="sum-pending">0</div>
-                                </div>
+                                <div class="stat-value" id="sum-pending">0</div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--success);">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:40px;height:40px;background:var(--success-light);">
-                                    <i class="bi bi-check-circle" style="color:var(--success-text);"></i>
+                        <div class="card stat-card card-success h-100 p-3">
+                            <div class="stat-label mb-2">Approved</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-success-light text-success rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-check-circle fs-5"></i>
                                 </div>
-                                <div>
-                                    <div class="text-muted small fw-semibold mb-0"
-                                        style="font-size:0.78rem;letter-spacing:0.3px;">APPROVED</div>
-                                    <div class="fw-bold" style="color:var(--success-text);font-size:1.5rem;line-height:1;"
-                                        id="sum-approved">0</div>
-                                </div>
+                                <div class="stat-value" id="sum-approved">0</div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--danger);">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:40px;height:40px;background:var(--danger-light);">
-                                    <i class="bi bi-x-circle" style="color:var(--danger-text);"></i>
+                        <div class="card stat-card card-danger h-100 p-3">
+                            <div class="stat-label mb-2">Rejected</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-danger-light text-danger rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-x-circle fs-5"></i>
                                 </div>
-                                <div>
-                                    <div class="text-muted small fw-semibold mb-0"
-                                        style="font-size:0.78rem;letter-spacing:0.3px;">REJECTED</div>
-                                    <div class="fw-bold" style="color:var(--danger-text);font-size:1.5rem;line-height:1;"
-                                        id="sum-rejected">0</div>
-                                </div>
+                                <div class="stat-value" id="sum-rejected">0</div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--primary);">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:40px;height:40px;background:var(--primary-soft);">
-                                    <i class="bi bi-calendar-check" style="color:var(--primary);"></i>
+                        <div class="card stat-card card-primary h-100 p-3">
+                            <div class="stat-label mb-2">Total Days</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="bg-primary-soft text-primary rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width:38px; height:38px;">
+                                    <i class="bi bi-calendar-check fs-5"></i>
                                 </div>
-                                <div>
-                                    <div class="text-muted small fw-semibold mb-0"
-                                        style="font-size:0.78rem;letter-spacing:0.3px;">TOTAL DAYS</div>
-                                    <div class="fw-bold" style="color:var(--primary);font-size:1.5rem;line-height:1;"
-                                        id="sum-total">0</div>
-                                </div>
+                                <div class="stat-value" id="sum-total">0</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="filter-wrapper" style="display:none;" class="mb-2"></div>
+                <div id="filter-wrapper" style="display:none;" class="mb-3"></div>
 
                 <!-- My Attendance Table Removed -->
 

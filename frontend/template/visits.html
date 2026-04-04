@@ -34,8 +34,10 @@
         /* ── Mobile KPI stat cards ─────────────── */
         .stat-card-mobile {
             border-radius: 12px;
-            flex-shrink: 1; /* Allow shrinking if needed */
-            min-width: 120px; /* Safer min-width for 320px screens */
+            flex-shrink: 1;
+            /* Allow shrinking if needed */
+            min-width: 120px;
+            /* Safer min-width for 320px screens */
         }
 
         /* ── Mobile visit cards ─────────────────── */
@@ -89,7 +91,7 @@
                 </div>
 
                 <!-- ── KPI Stats (Fully Responsive Grid) ───────────────── -->
-                <div class="row g-2 g-md-3 mb-4">
+                <div class="row g-2 g-md-3 mb-3">
                     <div class="col-6 col-md-4 col-xl-2">
                         <div
                             class="stat-card-mobile card border-0 shadow-sm bg-primary-subtle p-2 p-md-3 d-flex flex-row align-items-center gap-2 h-100 w-100">
@@ -161,7 +163,7 @@
                     </div>
                 </div>
 
-                <div id="filter-wrapper" class="">
+                <div id="filter-wrapper" class="mb-4">
                     <div class="filter-panel">
                         <div class="filter-panel-head"
                             onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.filter-toggle-btn').classList.toggle('open');">
@@ -757,7 +759,7 @@
                     'MAINTENANCE': { class: 'bg-primary-subtle text-primary', label: 'MAINTENANCE', icon: 'bi-tools' },
                 };
                 const stage = pipelineMap[v.shop_status] || { class: 'bg-light text-dark', label: v.shop_status || 'UNKNOWN', icon: 'bi-circle' };
-                
+
                 // --- Mobile Optimized Badge & PM Info ---
                 const badgeHtml = `
                     <div class="text-end">

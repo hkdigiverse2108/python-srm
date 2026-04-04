@@ -285,6 +285,27 @@ class BillingService:
         if not await self._can_create_invoice(current_user):
             raise HTTPException(status_code=403, detail="Permission Denied")
 
+        # ─── Strict Payment Gateway Verification ───
+        if bill_in.payment_type == "BUSINESS_ACCOUNT":
+            if not bill_in.transaction_id:
+                raise HTTPException(status_code=400, detail="Transaction ID is required for Business Account payments")
+            
+            # Re-verify with PhonePe Server-to-Server
+            try:
+                pp_status = await self.check_phonepe_payment_status(bill_in.transaction_id, current_user)
+                if pp_status.get("code") != "PAYMENT_SUCCESS":
+                    # Strictly block creation if payment is not confirmed
+                    raise HTTPException(
+                        status_code=402, 
+                        detail=f"Payment for transaction {bill_in.transaction_id} is {pp_status.get('state', 'FAILED')}. Invoice cannot be created."
+                    )
+                # Success - we can proceed to record it
+            except HTTPException:
+                raise # Re-raise if it's already an HTTPException
+            except Exception as e:
+                print(f"[Strict Verify Error] {e}")
+                raise HTTPException(status_code=502, detail="Failed to verify payment status with provider. Please try again.")
+
         resolved = await self.resolve_workflow(
             BillingWorkflowResolveRequest(payment_type=bill_in.payment_type, gst_type=bill_in.gst_type, amount=bill_in.amount)
         )
@@ -309,10 +330,10 @@ class BillingService:
             service_description=bill_in.service_description,
             billing_month=bill_in.billing_month,
             invoice_number=invoice_number,
-            invoice_status="PENDING_VERIFICATION",
-            status="PENDING",
+            invoice_status="VERIFIED" if bill_in.payment_type == "BUSINESS_ACCOUNT" else "PENDING_VERIFICATION",
+            status="SUCCESS" if bill_in.payment_type == "BUSINESS_ACCOUNT" else "PENDING",
             transaction_id=bill_in.transaction_id,
-            payment_gateway_status=bill_in.payment_gateway_status,
+            payment_gateway_status="SUCCESS" if bill_in.payment_type == "BUSINESS_ACCOUNT" else bill_in.payment_gateway_status,
             created_by_id=current_user.id,
         )
         await db_bill.insert()
@@ -486,7 +507,8 @@ class BillingService:
                 "redirectMode": "REDIRECT",
                 "callbackUrl": dummy_callback,
                 "mobileNumber": phone[-10:],
-                "expiresIn": 180,
+                "expiresIn": 200,
+
                 "paymentInstrument": {"type": "PAY_PAGE"}
             }
             

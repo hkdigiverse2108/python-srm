@@ -269,7 +269,7 @@
         <div class="flex-grow-1 main-wrapper">
             <div class="page-content-standard">
                 <!-- Header Section -->
-                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="min-w-0">
                         <h2 class="page-section-title fw-bold mb-1">Employees Directory</h2>
                         <p class="text-muted mb-0 small">Directory, department management and attendance tracking.</p>
@@ -277,7 +277,7 @@
                 </div>
 
                 <!-- Standard Filter Wrapper (Directory) -->
-                <div id="filter-wrapper"></div>
+                <div id="filter-wrapper" class="mb-4"></div>
 
                 <!-- Employees Table -->
                 <div class="card shadow-sm grid-card">
@@ -320,7 +320,7 @@
                 </div>
 
                 <!-- Attendance Filter Wrapper (Admin) -->
-                <div id="attendance-filter-wrapper" class="mt-5 mb-3" style="display:none;"></div>
+                <div id="attendance-filter-wrapper" class="mb-4" style="display:none;"></div>
 
                 <div class="card shadow-sm grid-card mt-2" id="attendance-admin-card" style="display:none;">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
@@ -1105,7 +1105,7 @@
         }
 
         async function batchDeleteEmployees() {
-            const selectedIds = Array.from(document.querySelectorAll('.emp-checkbox:checked')).map(cb => parseInt(cb.value));
+            const selectedIds = Array.from(document.querySelectorAll('.emp-checkbox:checked')).map(cb => cb.value);
             if (!selectedIds.length) return;
 
             if (!canManageEmployees) {

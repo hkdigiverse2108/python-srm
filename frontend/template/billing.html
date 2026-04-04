@@ -307,7 +307,7 @@
             </div>
 
                 <!-- ── Stats ────────────────────────────────────────── -->
-                <div class="row g-3 mb-3">
+                <div class="row g-3 mb-2">
                     <div class="col-6 col-md-3">
                         <div class="stat-card">
                             <div class="stat-content-left">
@@ -471,13 +471,6 @@
                 <div class="mb-3">
                     <div class="field-label">Service Description</div>
                     <input type="text" id="c-desc" class="field-input" placeholder="e.g. SRM AI SETU – Annual Subscription" value="SRM AI SETU Software – Annual Subscription">
-                </div>
-                <div class="mb-3">
-                    <div class="field-label">Billing Month <span class="required-star">*</span></div>
-                    <select id="c-billing-month" class="field-input">
-                        <!-- Populated via JS -->
-                    </select>
-                    <div class="small text-muted mt-1">Invoices can only be generated for past completed months.</div>
                 </div>
                 <div class="field-row2 mb-3">
                     <div>
@@ -714,23 +707,6 @@
         // QR Caching to prevent PhonePe rate limiting during wizard navigation
         let lastQRParams = null; 
         let wizardQRData = null;  
-        function initBillingMonthDropdown() {
-            const select = document.getElementById('c-billing-month');
-            if (!select) return;
-            const now = new Date();
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            
-            select.innerHTML = '';
-            // Go back 1 to 6 months
-            for (let i = 1; i <= 6; i++) {
-                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-                const val = `${months[d.getMonth()]} ${d.getFullYear()}`;
-                const opt = document.createElement('option');
-                opt.value = val;
-                opt.textContent = val;
-                select.appendChild(opt);
-            }
-        }
         let pendingActionPhone = '';
         let invoiceSettings = {};
         let workflowOptions = null;
@@ -787,13 +763,23 @@
         async function init() {
             const urlParams = new URLSearchParams(window.location.search);
             const landingStatus = urlParams.get('status');
+            
+            // Exit early if in Redirect Landing mode to prevent console errors
+            // handlePaymentRedirect() will take care of the UI for these states
             if (landingStatus === 'success' || landingStatus === 'failed') {
-                console.log('init: Payment landing page detected, skipping authenticated data load.');
+                console.log('init: Redirect Landing mode detected. Skipping dashboard init.');
                 return;
             }
-            
+
             try {
                 currentUser = ApiClient.getCurrentUser();
+                if (!currentUser) {
+                    if (landingStatus) {
+                        // If we are in redirect mode but session is missing, stay on page for auth.js to handle
+                        console.log('init: Pending auth session check...');
+                    }
+                }
+
                 try {
                     const settings = await ApiClient.getInvoiceSettings();
                     invoiceSettings = settings || {};
@@ -801,12 +787,8 @@
                     personalWithoutGstDefaultAmount = settings.personal_without_gst_default_amount || 12000;
                     const amtEl = document.getElementById('c-amount');
                     if (amtEl) amtEl.value = defaultAmount;
-                    
-                    // NEW: Initialize Billing Month
-                    initBillingMonthDropdown();
                 } catch (e) { }
 
-                // Show/hide admin settings
                 const isAdmin = currentUser && (currentUser.role === 'ADMIN' || currentUser.role === 'PM');
                 const settingsBtn = document.getElementById('admin-settings-btn');
                 if (settingsBtn) settingsBtn.style.display = isAdmin ? 'flex' : 'none';
@@ -818,42 +800,34 @@
                     createBtn.disabled = true;
                     createBtn.title = 'You do not have permission to create invoices';
                 }
-                // ... existing init code ...
+
                 initFilters();
                 await loadBills();
 
-                // --- NEW: The Catch Logic ---
-                const urlParams = new URLSearchParams(window.location.search);
+                // Check for other standard landing cases (e.g. shop conversion)
                 const shopIdParam = urlParams.get('close_shop_id');
-
                 if (shopIdParam) {
                     autoConvertShopId = shopIdParam;
                     openCreateModal();
-
-                    // Fetch the shop details to autofill the form
                     try {
-                        // Assuming you have a standard GET /shops/{id} endpoint
                         const shopData = await ApiClient.request(`/shops/${autoConvertShopId}`);
                         if (shopData) {
                             document.getElementById('c-name').value = shopData.contact_person || '';
                             document.getElementById('c-phone').value = shopData.phone || '';
                             document.getElementById('c-org').value = shopData.name || '';
-                            document.getElementById('c-address').value = shopData.area_name || ''; // Or full address if available
+                            document.getElementById('c-address').value = shopData.area_name || '';
                             document.getElementById('autofill-note').textContent = '✓ Auto-filled from Performance Hub';
                         }
-                    } catch (err) {
-                        console.log("Could not auto-fetch shop details:", err);
-                    }
-
-                    // Clean the URL so if they refresh, it doesn't pop up again
+                    } catch (err) { console.log("Could not auto-fetch shop details:", err); }
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
 
             } catch (e) {
-                // ... existing catch block ...
+                console.error('init error:', e);
                 showToast('Failed to load page: ' + e.message, 'error');
             }
         }
+
 
         async function loadBills() {
             document.getElementById('inv-tbody').innerHTML = `<tr><td colspan="9" class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading invoices...</td></tr>`;
@@ -1052,10 +1026,77 @@
             });
         }
 
-        function openCreateModal() {
-            // Grab the logged-in user's name directly from the session
-            const loggedInName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : 'System';
+        // ── Wizard: draft persistence & resume ────────────────────────────────────────
+        function saveInvoiceWizardDraft() {
+            const draft = {
+                name: document.getElementById('c-name').value,
+                phone: document.getElementById('c-phone').value,
+                email: document.getElementById('c-email').value,
+                org: document.getElementById('c-org').value,
+                address: document.getElementById('c-address').value,
+                amount: document.getElementById('c-amount').value,
+                payment_type: document.getElementById('c-payment-type').value,
+                gst_type: document.getElementById('c-gst-type').value,
+                description: document.getElementById('c-desc').value,
+                qr_data: wizardQRData, // Capture payment transaction details
+                timestamp: Date.now()
+            };
+            localStorage.setItem('invoice_wizard_draft', JSON.stringify(draft));
+        }
+
+        async function resumeInvoiceAfterPayment(status, txnId) {
+            console.log('resumeInvoiceAfterPayment: Resuming wizard...', { status, txnId });
             
+            const draftStr = localStorage.getItem('invoice_wizard_draft');
+            if (draftStr) {
+                try {
+                    const draft = JSON.parse(draftStr);
+                    // 1. Open modal & restore draft data
+                    openCreateModal(true, draft);
+                    
+                    if (status === 'success') {
+                        // 2a. Jump to Step 3 for review & generate
+                        _setWizardStep(3);
+                        // Trigger verification check automatically
+                        if (typeof manualCheckStatus === 'function') {
+                            manualCheckStatus(txnId);
+                        }
+                    } else {
+                        // 2b. Jump to Step 2 for retry/status check
+                        _setWizardStep(2);
+                        // Show visible failure notice in Step 2 zone
+                        const monitor = document.getElementById('payment-status-monitor');
+                        const errorZone = document.getElementById('p2-error-zone');
+                        if (errorZone) {
+                            errorZone.style.display = 'block';
+                            errorZone.innerHTML = `
+                                <div class="alert alert-danger border-0 rounded-4 py-3 px-3 small">
+                                    <div class="d-flex align-items-center mb-2">
+                                        <i class="bi bi-exclamation-triangle-fill me-2" style="font-size:1.2rem;"></i>
+                                        <strong class="text-uppercase" style="letter-spacing:0.05em;">Payment Verification Failed</strong>
+                                    </div>
+                                    <div class="mb-3 opacity-75">We couldn't confirm your transaction (ID: <code>${txnId}</code>). If you paid already, please check status manually.</div>
+                                    <button onclick="manualCheckStatus('${txnId}')" class="btn btn-sm btn-danger w-100" style="border-radius:10px; font-weight:700; padding:8px;">
+                                        <i class="bi bi-arrow-clockwise me-1"></i> Check Status Again
+                                    </button>
+                                </div>
+                            `;
+                        }
+                        if (monitor) monitor.style.opacity = '0.5';
+                    }
+                    
+                    const cleanUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                } catch (e) {
+                    console.error('Failed to parse draft for resume:', e);
+                }
+            } else {
+                console.warn('No draft found to resume.');
+            }
+        }
+
+        function openCreateModal(isResume = false, draftData = null) {
+            const loggedInName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : 'System';
             const nameSpan = document.getElementById('modal-generator-name');
             if (nameSpan) nameSpan.innerText = loggedInName;
             
@@ -1063,40 +1104,66 @@
                 showToast('You do not have permission to create invoices', 'error');
                 return;
             }
-            // Always reset _everything_ so old data never leaks
+
             wizardQRData = null;
-            
-            // Clear validation state
             const wizardBox = document.querySelector('#createModal .modal-box');
             if (wizardBox) {
                 wizardBox.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
                 wizardBox.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
             }
 
-            ['c-name', 'c-phone', 'c-email', 'c-org', 'c-address'].forEach(id => {
-                const el = document.getElementById(id); if (el) el.value = '';
-            });
-            document.getElementById('c-desc').value = 'SRM AI SETU Software – Annual Subscription';
-            document.getElementById('c-payment-type').value = '';
-            document.getElementById('c-gst-type').value = '';
-            const amtEl = document.getElementById('c-amount');
-            if (amtEl) { amtEl.value = defaultAmount; amtEl.disabled = false; }
+            if (isResume && draftData) {
+                // Populate from draft
+                document.getElementById('c-name').value = draftData.name || '';
+                document.getElementById('c-phone').value = draftData.phone || '';
+                document.getElementById('c-email').value = draftData.email || '';
+                document.getElementById('c-org').value = draftData.org || '';
+                document.getElementById('c-address').value = draftData.address || '';
+                document.getElementById('c-amount').value = draftData.amount || defaultAmount;
+                document.getElementById('c-payment-type').value = draftData.payment_type || '';
+                document.getElementById('c-gst-type').value = draftData.gst_type || '';
+                document.getElementById('c-desc').value = draftData.description || 'SRM AI SETU Software – Annual Subscription';
+                
+                // Restore the payment transaction context
+                if (draftData.qr_data) {
+                    wizardQRData = draftData.qr_data;
+                }
+            } else {
+                // Standard reset
+                ['c-name', 'c-phone', 'c-email', 'c-org', 'c-address'].forEach(id => {
+                    const el = document.getElementById(id); if (el) el.value = '';
+                });
+                document.getElementById('c-desc').value = 'SRM AI SETU Software – Annual Subscription';
+                document.getElementById('c-payment-type').value = '';
+                document.getElementById('c-gst-type').value = '';
+                const amtEl = document.getElementById('c-amount');
+                if (amtEl) { amtEl.value = defaultAmount; amtEl.disabled = false; }
+            }
+
             document.getElementById('default-amount-chip').textContent = '₹' + Number(defaultAmount).toLocaleString('en-IN');
-            document.getElementById('autofill-note').textContent = '';
+            document.getElementById('autofill-note').textContent = isResume ? '✓ Resumed from payment redirect' : '';
+            
             _setWizardStep(1);
             document.getElementById('createModal').querySelector('.modal-box').style.width = '680px';
             document.getElementById('createModal').classList.remove('d-none');
         }
+
         function closeCreateModal() {
             document.getElementById('createModal').classList.add('d-none');
             wizardQRData = null;
+            // Clear draft when manually closed or completed
+            localStorage.removeItem('invoice_wizard_draft');
         }
 
         let amountPreviewTimer = null;
         function updateAmountPreview(val) {
             clearTimeout(amountPreviewTimer);
-            amountPreviewTimer = setTimeout(() => onPaymentModeChanged(), 400);
+            amountPreviewTimer = setTimeout(() => {
+                onPaymentModeChanged();
+                saveInvoiceWizardDraft(); // Auto-save on amount change
+            }, 400);
         }
+
 
         function setGstTypeOptions(paymentType) {
             const gstSelect = document.getElementById('c-gst-type');
@@ -1175,7 +1242,10 @@
                 return;
             }
 
+            // Save draft before moving to Step 2
+            saveInvoiceWizardDraft();
             _setWizardStep(2);
+
 
             // Show amount breakdown
             const isCash = (pt === 'CASH');
@@ -1251,7 +1321,7 @@
                                 <p class="text-muted small mb-5 px-3">Share this link with your client or complete the payment directly from this device.</p>
                                 
                                 <div class="d-grid gap-3 mb-5">
-                                    <a href="${qr.pay_url}" target="_blank" class="btn btn-pay-now btn-lg py-3 d-flex align-items-center justify-content-center" style="border-radius: 14px; font-size: 1.1rem;">
+                                    <a href="${qr.pay_url}" onclick="saveInvoiceWizardDraft()" target="_blank" class="btn btn-pay-now btn-lg py-3 d-flex align-items-center justify-content-center" style="border-radius: 14px; font-size: 1.1rem;">
                                         <i class="bi bi-wallet2 me-2"></i> Pay Now
                                     </a>
                                     
@@ -1325,7 +1395,7 @@
                                 </div>
 
                                 <div class="d-grid gap-3">
-                                    <a href="${qr.dynamic_upi_link}" target="_blank" class="btn btn-pay-now btn-lg py-3 rounded-4 shadow-sm" style="font-size:1rem;">
+                                    <a href="${qr.dynamic_upi_link}" onclick="saveInvoiceWizardDraft()" target="_blank" class="btn btn-pay-now btn-lg py-3 rounded-4 shadow-sm" style="font-size:1rem;">
                                         <i class="bi bi-phone me-2"></i> Pay via Mobile App
                                     </a>
                                     <div class="row g-2">
@@ -1471,10 +1541,11 @@
         }
         
         // ── Payment Redirect Handler ───────────────────────────────────────────────────
+        // ── Payment Redirect Handler ───────────────────────────────────────────────────
         (function handlePaymentRedirect() {
             const params = new URLSearchParams(window.location.search);
             const status = params.get('status');
-            const txnId = params.get('txnId');
+            const txnId = params.get('txnId') || params.get('txnid'); // Support both case styles
 
             if (status === 'success' || status === 'failed') {
                 const isSuccess = status === 'success';
@@ -1497,10 +1568,10 @@
                             <p style="color:#64748b; font-size:1rem; line-height:1.6; margin-bottom:32px; font-weight:500;">${msg}</p>
                             
                             <div class="d-grid gap-2">
-                                <button onclick="window.close()" id="return-btn" style="padding:14px 28px; background:${isSuccess ? '#10b981' : '#1e293b'}; color:#fff; border:none; border-radius:14px; font-weight:700; font-size:15px; cursor:pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
-                                    ${isSuccess ? '<i class="bi bi-x-circle me-2"></i>Close Window' : '<i class="bi bi-arrow-left me-2"></i>Back to Billing'}
+                                <button onclick="if('${isSuccess}' === 'true') { try { window.close(); } catch(e) {} setTimeout(() => { window.location.href='billing.html?status=${status}&txnId=${txnId}'; }, 200); } else { window.location.href='billing.html?status=${status}&txnId=${txnId}'; }" id="return-btn" style="padding:14px 28px; background:${isSuccess ? '#10b981' : '#1e293b'}; color:#fff; border:none; border-radius:14px; font-weight:700; font-size:15px; cursor:pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">
+                                    ${isSuccess ? '<i class="bi bi-patch-check me-2"></i>Confirm & Return' : '<i class="bi bi-arrow-left me-2"></i>Back to Retry'}
                                 </button>
-                                <a href="billing.html" style="font-size:13px; color:#94a3b8; text-decoration:none; margin-top:10px; font-weight:600;">Not closing? Click here</a>
+                                <a href="billing.html?status=${status}&txnId=${txnId}" onclick="window.location.href='billing.html?status=${status}&txnId=${txnId}'; return false;" style="font-size:13px; color:#94a3b8; text-decoration:none; margin-top:10px; font-weight:600;">Not closing? Click here</a>
                             </div>
 
                             <div id="status-tag" style="margin-top:32px; font-size:11px; color:${themeColor}; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; background:${themeBg}; padding:6px 16px; border-radius:100px; display:inline-block;">
@@ -1589,7 +1660,7 @@
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Phone</div><div style="font-size:0.95rem;">${phone}</div>${email ? `<div class="small text-muted">${email}</div>` : ''}</div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Address</div><div class="small">${addr}</div></div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Payment Type</div><div class="small">${ptLabel} · ${gtLabel}</div></div>
-            <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Billing For</div><div class="small fw-bold text-primary">${document.getElementById('c-billing-month').value}</div></div>
+            <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Billing For</div><div class="small fw-bold text-primary">${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</div></div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Total Payable</div><div style="font-size:1.2rem;font-weight:900;color:#2e5b82;">₹${fmtMoney(total)}</div></div>
         </div>`;
             _setWizardStep(3);
@@ -1617,7 +1688,7 @@
                     invoice_client_org: org || null,
                     invoice_client_address: addr || null,
                     service_description: desc || null,
-                    billing_month: document.getElementById('c-billing-month').value,
+                    billing_month: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
                     payment_type: pt,
                     gst_type: gt,
                     amount: amt,
@@ -1631,7 +1702,21 @@
                 closeCreateModal();
                 await loadBills();
             } catch (e) {
-                showToast(e.data?.detail || e.message || 'Failed to create invoice', 'error');
+                const errorMsg = e.data?.detail || e.message || 'Failed to create invoice';
+                showToast(errorMsg, 'error');
+                
+                // If it's a strict payment verification failure, jump back to Step 2
+                if (e.status === 402) {
+                    _setWizardStep(2);
+                    if (wizardQRData) {
+                        wizardQRData.payment_gateway_status = 'PENDING';
+                    }
+                    const errorZone = document.getElementById('p2-error-zone');
+                    if (errorZone) {
+                        errorZone.style.display = 'block';
+                        errorZone.querySelector('span').textContent = errorMsg;
+                    }
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bi bi-receipt me-2"></i>Confirm & Generate Invoice';
