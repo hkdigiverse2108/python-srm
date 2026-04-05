@@ -2416,3 +2416,65 @@ async function renderDashboard() {
             renderTimetable();
         }, "Schedule");
     };
+};
+
+// ─── STANDARDIZED FILTER BEHAVIOR ─────────────────────────────────────
+// 1. Auto-filter on input change
+// 2. Closed by default (except Overview page)
+(function initGlobalFilterBehaviors() {
+    function applyStandardBehavior(container) {
+        if (!container) return;
+        
+        // 1. Close filter panels by default
+        // Skip if this is the dashboard/overview page
+        const isDashboard = document.title.includes('Overview') || 
+                           window.location.pathname.includes('dashboard.html');
+                           
+        if (!isDashboard) {
+            container.querySelectorAll('.filter-panel-body').forEach(body => {
+                body.classList.remove('open');
+            });
+            container.querySelectorAll('.filter-toggle-btn').forEach(btn => {
+                btn.classList.remove('open');
+            });
+        }
+
+        // 2. Auto-trigger 'Apply' on change
+        container.querySelectorAll('.filter-panel').forEach(panel => {
+            const inputs = panel.querySelectorAll('select, input[type="date"], input[type="text"]');
+            inputs.forEach(input => {
+                if (input.dataset.autoFilterInit) return;
+                input.addEventListener('change', () => {
+                    const applyBtn = panel.querySelector('.btn-filter-apply');
+                    if (applyBtn) {
+                        applyBtn.click();
+                    }
+                });
+                input.dataset.autoFilterInit = "true";
+            });
+        });
+    }
+
+    // Run on initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        applyStandardBehavior(document);
+    });
+
+    // Hook into SPA view loading
+    const originalLoadView = window.loadView;
+    if (typeof originalLoadView === 'function') {
+        window.loadView = async function(viewName) {
+            if (originalLoadView && originalLoadView.constructor && originalLoadView.constructor.name === 'AsyncFunction') {
+                await originalLoadView(viewName);
+            } else if (originalLoadView) {
+                originalLoadView(viewName);
+            }
+            // Delay slightly to ensure DOM is settled
+            setTimeout(() => {
+                const mainContent = document.getElementById('main-content') || document.body;
+                applyStandardBehavior(mainContent);
+            }, 100);
+        };
+    }
+})();
+

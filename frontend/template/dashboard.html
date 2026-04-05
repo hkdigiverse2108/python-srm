@@ -1146,7 +1146,7 @@
             border-radius: 20px;
             padding: 1px;
             background: var(--header-outer-bg);
-            margin-bottom: 1.5rem;
+            margin-bottom: 0;
             margin-top: 0;
             /* Reduced from 1rem */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
@@ -1611,7 +1611,7 @@
                 </div>
 
                 <!-- KPI Cards -->
-                <div class="row g-2 g-md-3 mb-4" id="admin-kpis">
+                <div class="row g-2 g-md-3" id="admin-kpis">
                     <div class="col-6 col-sm-6 col-xl-3" data-widget-id="kpi-visits">
                         <a href="visits.html" class="text-decoration-none d-block h-100">
                             <div class="kpi-card kpi-visits h-100">
@@ -2510,17 +2510,35 @@
 
         async function loadDashboardPipelineChart() {
             try {
+                console.log("PM Pipeline: Fetching data...");
                 const data = await apiGet('/shops/analytics/pm-pipeline');
-                if (!data || !data.length) return;
+                console.log("PM Pipeline: Data received:", data);
+                
+                if (!data || !data.length) {
+                    console.log("PM Pipeline: No data available for chart.");
+                    return;
+                }
 
-                const labels = data.map(item => item.pm_name);
-                const inDemoData = data.map(item => item.in_demo);
-                const meetingSetData = data.map(item => item.meeting_set);
-                const convertedData = data.map(item => item.converted);
+                const labels = data.map(item => item.pm_name || 'Unknown PM');
+                const inDemoData = data.map(item => item.in_demo || 0);
+                const meetingSetData = data.map(item => item.meeting_set || 0);
+                const convertedData = data.map(item => item.converted || 0);
 
-                const ctx = document.getElementById('dashboardPmPipelineChart').getContext('2d');
+                const canvas = document.getElementById('dashboardPmPipelineChart');
+                if (!canvas) {
+                    console.error("PM Pipeline: Canvas element 'dashboardPmPipelineChart' not found!");
+                    return;
+                }
+                const ctx = canvas.getContext('2d');
 
-                if (window._dashPmChart) window._dashPmChart.destroy();
+                if (window._dashPmChart) {
+                    window._dashPmChart.destroy();
+                }
+
+                if (typeof Chart === 'undefined') {
+                    console.error("PM Pipeline: Chart.js library is not loaded!");
+                    return;
+                }
 
                 window._dashPmChart = new Chart(ctx, {
                     type: 'bar',
@@ -2558,7 +2576,11 @@
                             y: {
                                 stacked: true,
                                 beginAtZero: true,
-                                ticks: { stepSize: 1 },
+                                min: 0,
+                                ticks: { 
+                                    stepSize: 1,
+                                    precision: 0
+                                },
                                 grid: { borderDash: [5, 5] }
                             }
                         },
@@ -2566,10 +2588,15 @@
                             legend: {
                                 position: 'bottom',
                                 labels: { usePointStyle: true, padding: 20 }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
                             }
                         }
                     }
                 });
+                console.log("PM Pipeline: Chart successfully initialized.");
             } catch (e) {
                 console.error("Error loading dashboard pipeline chart:", e);
             }
