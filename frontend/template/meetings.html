@@ -237,7 +237,7 @@
                                     placeholder="e.g. Sales Review or Onboarding Stage 2">
                             </div>
 
-                            <div id="filter-wrapper" class="mb-4">
+                            <div id="client-select-wrapper" class="mb-4">
                                 <label class="form-label text-muted small text-uppercase fw-bold">Select Client <span
                                         class="text-danger">*</span></label>
                                 <select id="m-client" class="form-select border-2"></select>
@@ -561,7 +561,7 @@
         window.switchMeetCategory = (cat) => {
             currentCategory = cat;
             const isClient = cat === 'CLIENT';
-            document.getElementById('client-select-wrapper').style.display = isClient ? 'block' : 'none';
+            document.getElementById('filter-wrapper').style.display = isClient ? 'block' : 'none';
             document.getElementById('internal-scope-wrapper').style.display = isClient ? 'none' : 'block';
             if (isClient) {
                 document.getElementById('role-select-wrapper').style.display = 'none';
@@ -608,7 +608,7 @@
                 });
 
                 grid.innerHTML = res.slots.map(s => `
-                    <div class="slot-pill ${s.is_available ? '' : 'disabled'}" onclick="'${s.is_available ? `selectSlot('${s.time}')` : ''}">
+                    <div class="slot-pill ${s.is_available ? '' : 'disabled'}" onclick="${s.is_available ? `selectSlot('${s.time}')` : ''}">
                         ${s.time}
                     </div>
                 `).join('');
@@ -696,7 +696,7 @@
                 const res = await apiPost('/users/availability/group', { user_ids: userIds, date: date });
 
                 container.innerHTML = res.slots.map(s => `
-                    <div class="slot-pill res-slot ${s.is_available ? '' : 'disabled'}" onclick="'${s.is_available ? `selectResSlot('${s.time}')` : ''}">
+                    <div class="slot-pill res-slot ${s.is_available ? '' : 'disabled'}" onclick="${s.is_available ? `selectResSlot('${s.time}')` : ''}">
                         ${s.time}
                     </div>
                 `).join('') || '<div class="text-muted small w-100 text-center">No slots available</div>';

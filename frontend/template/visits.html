@@ -1137,7 +1137,7 @@
             if (selfiePhoto) fd.append('selfie_photo', selfiePhoto);
 
             try {
-                const token = sessionStorage.getItem('token') || sessionStorage.getItem('access_token');
+                const token = localStorage.getItem('access_token');
                 const res = await fetch('/api/visits/', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },

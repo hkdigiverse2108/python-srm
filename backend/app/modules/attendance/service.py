@@ -261,7 +261,7 @@ class AttendanceService:
         # Sum all completed (punched-out) sessions only
         today_hours = sum(r.total_hours for r in today_records if r.total_hours)
 
-        # FIX 2: get_motor_collection for aggregates
+        # FIX 2: get_pymongo_collection for aggregates
         coll = Attendance.get_pymongo_collection()
 
         week_ago = today - timedelta(days=7)
@@ -345,7 +345,7 @@ class AttendanceService:
 
         user_ids = [u.id for u in users_to_report]
 
-        # FIX 2: get_motor_collection
+        # FIX 2: get_pymongo_collection
         att_coll   = Attendance.get_pymongo_collection()
         leave_coll = LeaveRecord.get_pymongo_collection()
 

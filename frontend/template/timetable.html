@@ -2561,7 +2561,7 @@
                 const title = document.getElementById('ev-title').value.trim();
                 const user = isTimetableAdmin() ? document.getElementById('ev-user').value : getCurrentUserLabel();
                 const priority = document.getElementById('td-priority').value;
-                //let due = document.getElementById('ev-date').value;
+                let due = document.getElementById('td-start').value || document.getElementById('ev-date').value;
                 const startStr = document.getElementById('td-start').value;
                 const endStr = document.getElementById('td-end').value;
                 const related = document.getElementById('td-related').value.trim();
@@ -2585,7 +2585,7 @@
 
                 let usersToAssign = [];
                 if (selectedValues.includes('All Employees')) {
-                    usersToAssign = ALL_USERS_LIST.map(e => e.name || e.email);
+                    usersToAssign = ['All Employees'];
                 } else {
                     usersToAssign = selectedValues.length > 0 ? selectedValues : [null];
                 }

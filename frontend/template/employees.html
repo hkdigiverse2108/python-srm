@@ -755,6 +755,7 @@
                 label: 'Quick Range', 
                 id: 'att-quick', 
                 options: [
+                    { value: 'ALL', label: 'All Records' },
                     { value: 'custom', label: 'Custom Range' },
                     { value: 'today', label: 'Today' },
                     { value: 'yesterday', label: 'Yesterday' },
@@ -782,17 +783,10 @@
                     const fromInp = document.getElementById('att-from');
                     const toInp = document.getElementById('att-to');
                     const quickSel = document.getElementById('att-quick');
-                    if (fromInp && toInp && quickSel) {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(end.getDate() - 6);
-                        fromInp.value = start.toISOString().slice(0, 10);
-                        toInp.value = end.toISOString().slice(0, 10);
-                        quickSel.value = 'last_7_days';
-                        attendanceFilters['att-from'] = fromInp.value;
-                        attendanceFilters['att-to'] = toInp.value;
-                        attendanceFilters['att-quick'] = 'last_7_days';
-                    }
+                    if (fromInp) fromInp.value = '';
+                    if (toInp) toInp.value = '';
+                    if (quickSel) quickSel.value = 'ALL';
+                    
                     if (isAdmin) loadAttendanceSummary();
                     else loadSelfAttendance();
                 }

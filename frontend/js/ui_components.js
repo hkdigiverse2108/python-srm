@@ -1051,8 +1051,10 @@ window.renderFilterPanel = function (config) {
 
         return `
             <div class="filter-field">
-                <label for="${f.id}">${f.label}</label>
-                ${inputHtml}
+                <label for="${f.id}" class="filter-label">${f.label}</label>
+                <div class="filter-input-wrapper">
+                    ${inputHtml}
+                </div>
             </div>`;
     }).join('');
 
@@ -1070,7 +1072,7 @@ window.renderFilterPanel = function (config) {
                 </div>
                 ${headerContent}
                 <div class="filter-panel-head-meta">
-                    <div class="filter-summary-text" id="${containerId}-summary">No filters active</div>
+                    <span class="filter-summary-text" id="${containerId}-summary">No filters active</span>
                     <button class="filter-toggle-btn">
                         <i class="bi bi-chevron-down"></i>
                     </button>
@@ -1167,7 +1169,12 @@ window.renderFilterPanel = function (config) {
             const el = document.getElementById(f.id);
             if (el) {
                 if (f.type === 'select') {
-                    el.value = f.options[0]?.value || 'ALL';
+                    // Try to find 'ALL' or '' or use first option
+                    const hasAll = f.options.some(o => o.value === 'ALL');
+                    const hasEmpty = f.options.some(o => o.value === '');
+                    if (hasAll) el.value = 'ALL';
+                    else if (hasEmpty) el.value = '';
+                    else el.value = f.options[0]?.value;
                 } else {
                     el.value = '';
                 }

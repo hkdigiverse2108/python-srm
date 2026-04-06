@@ -461,12 +461,16 @@
     justify-content: space-between;
     gap: 12px;
     min-height: 48px;
-    padding: 10px 24px;
+    padding: 0 24px; /* Removed vertical padding to let flex center handle it */
     border-bottom: 1px solid var(--border-subtle);
     background: var(--bg-app);
     cursor: pointer;
     user-select: none;
-    flex-wrap: wrap;
+    transition: background 0.15s;
+}
+
+.filter-panel-head:hover {
+    background: rgba(var(--primary-rgb), 0.05);
 }
 
 .filter-panel-head-main {
@@ -497,20 +501,19 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
-    flex: 0 1 auto;
-    flex-wrap: nowrap;
+    gap: 12px;
+    margin-left: auto; /* Push to the right */
     white-space: nowrap;
 }
 
 .filter-summary-text {
-    font-size: 0.76rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     font-weight: 600;
-    white-space: nowrap;
-    line-height: 1;
-    display: flex;
+    line-height: normal; /* Avoid collapsing issues */
+    display: inline-flex;
     align-items: center;
+    margin: 0;
 }
 
 .filter-active-pills {
@@ -592,23 +595,54 @@
     gap: 10px;
 }
 
-.filter-field label {
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Align inputs to the bottom */
+}
+
+.filter-label {
     display: block;
-    margin-bottom: 4px;
-    font-size: 0.72rem;
-    font-weight: 700;
+    margin-bottom: 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     color: var(--text-muted);
+    min-height: 14px; /* Ensure labels don't collapse if empty */
+    line-height: 1;
+}
+
+.filter-input-wrapper {
+    width: 100%;
 }
 
 .filter-field .form-control,
 .filter-field .form-select {
-    min-height: 38px;
+    height: 42px; /* Increased slightly for better look */
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
     border-radius: 10px;
     border-color: var(--border);
     box-shadow: none;
     font-size: 0.86rem;
+    width: 100%;
+    line-height: 42px; /* Ensures vertical centering for text */
+}
+
+/* Specific fix for selects and date inputs which handle line-height differently */
+.filter-field .form-select {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.filter-field input[type="date"] {
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
 }
 
 .filter-field .form-control:focus,

@@ -440,25 +440,41 @@ class ApiClient {
 
     // ─── Feedback ────────────────────────────────────────────
     static async getClientFeedback(clientId) {
-        return this.request(`/clients/${clientId}/feedback`);
+        return this.request(`/feedback/?client_id=${clientId}`);
     }
     static async getAllClientFeedbacks() {
-        return this.request('/clients/feedbacks/all');
+        return this.request('/feedback/all');
     }
     static async getClientFeedbacks(clientId) {
-        return this.request(`/clients/${clientId}/feedback`);
+        return this.request(`/feedback/?client_id=${clientId}`);
     }
-    static async createFeedback(clientId, data) {
-        return this.request(`/clients/${clientId}/feedback`, { method: 'POST', body: data });
+    static async createFeedback(data) {
+        return this.request('/feedback/', { method: 'POST', body: data });
     }
     static async deleteFeedback(feedbackId) {
         return this.request(`/feedback/${feedbackId}`, { method: 'DELETE' });
     }   
     static async createUserFeedback(data) {
-        return this.request('/clients/user', { method: 'POST', body: data });
+        return this.request('/feedback/', { method: 'POST', body: data });
     }
     static async getUserFeedbacks() {
-        return this.request('/clients/user');
+        return this.request('/feedback/');
+    }
+
+    // ─── ID Cards ────────────────────────────────────────────
+    static async getMyIDCardHtml() {
+        const token = this.getAccessToken();
+        const url = `${this.API_BASE_URL}/idcards/my/html`;
+        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) throw new Error('Failed to fetch ID card');
+        return await r.text();
+    }
+    static async getIDCardHtml(userId) {
+        const token = this.getAccessToken();
+        const url = `${this.API_BASE_URL}/idcards/${userId}/html`;
+        const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (!r.ok) throw new Error('Failed to fetch ID card');
+        return await r.text();
     }
 
     // ─── Employees / HR ──────────────────────────────────────
@@ -653,12 +669,7 @@ class ApiClient {
     static async updateInvoiceSettings(data) {
         return this.request('/billing/settings', { method: 'PUT', body: data });
     }
-    static async getEmployeeCodeSettings() {
-        return this.request('/users/config/employee-code');
-    }
-    static async updateEmployeeCodeSettings(data) {
-        return this.request('/users/config/employee-code', { method: 'PUT', body: data });
-    }
+
 
     static async getInvoiceWorkflowOptions() {
         return this.request('/billing/workflow/options');

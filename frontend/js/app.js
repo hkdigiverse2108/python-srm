@@ -1980,7 +1980,7 @@ async function renderDashboard() {
                                         <div class="text-muted small">Digital identity & verification</div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-primary" onclick="window.open('${window.ApiClient.API_BASE_URL}/idcards/view_own', '_blank')">
+                                <button class="btn btn-sm btn-primary" onclick="window.open('${window.ApiClient.API_BASE_URL}/idcards/my/html', '_blank')">
                                     View Digital ID
                                 </button>
                             </div>
@@ -2416,7 +2416,7 @@ async function renderDashboard() {
             renderTimetable();
         }, "Schedule");
     };
-};
+
 
 // ─── STANDARDIZED FILTER BEHAVIOR ─────────────────────────────────────
 // 1. Auto-filter on input change

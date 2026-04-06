@@ -299,7 +299,10 @@
                     <h2 class="page-section-title fw-bold mb-1">Billing & Invoices</h2>
                     <p class="text-muted mb-0 small">Manage your financial records and invoice status.</p>
                 </div>
-                <div class="flex-shrink-0">
+                <div class="flex-shrink-0 d-flex gap-2">
+                    <button class="btn btn-light d-flex align-items-center gap-2" id="admin-settings-btn" onclick="openSettingsModal()" style="display:none; border:1px solid var(--border);">
+                        <i class="bi bi-gear"></i> <span class="d-none d-md-inline">Settings</span>
+                    </button>
                     <button class="btn btn-primary d-flex align-items-center gap-2" id="new-invoice-btn" onclick="openCreateModal()">
                         <i class="bi bi-plus-lg"></i> <span class="d-none d-md-inline">New Invoice</span><span class="d-inline d-md-none">New</span>
                     </button>
@@ -473,6 +476,10 @@
                     <input type="text" id="c-desc" class="field-input" placeholder="e.g. SRM AI SETU – Annual Subscription" value="SRM AI SETU Software – Annual Subscription">
                 </div>
                 <div class="field-row2 mb-3">
+                    <div>
+                        <div class="field-label">Billing Month</div>
+                        <input type="month" id="c-billing-month" class="field-input">
+                    </div>
                     <div>
                         <div class="field-label">Payment Type <span class="required-star">*</span></div>
                         <select id="c-payment-type" class="field-input" onchange="onPaymentModeChanged()">
@@ -682,7 +689,32 @@
         </div>
         <div style="position:absolute;inset:0;z-index:-1;" onclick="closeViewModal()"></div>
     </div>
+    </div>
 
+    <!-- BILLING SETTINGS MODAL -->
+    <div class="modal-overlay d-none" id="settingsModal">
+        <div class="modal-box" style="max-width:500px;" onclick="event.stopPropagation()">
+            <div class="modal-header-row" style="margin-bottom:20px;">
+                <div class="modal-title-text"><i class="bi bi-gear text-primary me-2"></i>Invoice Settings</div>
+                <button class="modal-close-x" onclick="closeSettingsModal()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Default Business Invoice Amount (Rs)</label>
+                    <input type="number" id="set-default-amt" class="form-control" placeholder="12000">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold">Default Personal / NO GST Amount (Rs)</label>
+                    <input type="number" id="set-personal-amt" class="form-control" placeholder="12000">
+                    <div class="small text-muted mt-1">This amount will auto-fill when 'Personal Bank' or 'GST 0%' is chosen.</div>
+                </div>
+            </div>
+            <div class="modal-footer px-0 pb-0 pt-3 border-top text-end">
+                <button class="btn btn-secondary me-2" onclick="closeSettingsModal()">Cancel</button>
+                <button class="btn btn-primary" id="save-settings-btn" onclick="submitSaveSettings()">Save Settings</button>
+            </div>
+        </div>
+    </div>
 
     <script src="/static/js/utils.js?v=20260403"></script>
     <script src="/static/js/api.js?v=20260403"></script>
@@ -972,7 +1004,7 @@
                     {
                         type: 'select',
                         label: 'Status',
-                        id: 'filter-inv-status',
+                        id: 'inv-status',
                         options: [
                             { value: 'ALL', label: 'All Invoices' },
                             { value: 'PENDING_VERIFICATION', label: 'Pending' },
@@ -1095,7 +1127,27 @@
             }
         }
 
+        function getBillingMonthFormatted() {
+            let bmRaw = document.getElementById('c-billing-month').value;
+            if (bmRaw) {
+                const [yyyy, mm] = bmRaw.split('-');
+                return new Date(parseInt(yyyy), parseInt(mm) - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+            }
+            return new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+        }
+
+        function initBillingMonthDropdown() {
+            const el = document.getElementById('c-billing-month');
+            if (el && !el.value) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                el.value = `${yyyy}-${mm}`;
+            }
+        }
+
         function openCreateModal(isResume = false, draftData = null) {
+            initBillingMonthDropdown();
             const loggedInName = (typeof currentUser !== 'undefined' && currentUser && currentUser.name) ? currentUser.name : 'System';
             const nameSpan = document.getElementById('modal-generator-name');
             if (nameSpan) nameSpan.innerText = loggedInName;
@@ -1660,7 +1712,7 @@
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Phone</div><div style="font-size:0.95rem;">${phone}</div>${email ? `<div class="small text-muted">${email}</div>` : ''}</div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Address</div><div class="small">${addr}</div></div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Payment Type</div><div class="small">${ptLabel} · ${gtLabel}</div></div>
-            <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Billing For</div><div class="small fw-bold text-primary">${new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</div></div>
+            <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Billing For</div><div class="small fw-bold text-primary">${getBillingMonthFormatted()}</div></div>
             <div><div style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Total Payable</div><div style="font-size:1.2rem;font-weight:900;color:#2e5b82;">₹${fmtMoney(total)}</div></div>
         </div>`;
             _setWizardStep(3);
@@ -1688,7 +1740,7 @@
                     invoice_client_org: org || null,
                     invoice_client_address: addr || null,
                     service_description: desc || null,
-                    billing_month: new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
+                    billing_month: getBillingMonthFormatted(),
                     payment_type: pt,
                     gst_type: gt,
                     amount: amt,
@@ -1828,14 +1880,19 @@
         function previewInvoice(billId) {
             const token = ApiClient.getAccessToken();
             const url = `${ApiClient.API_BASE_URL}/billing/${billId}/invoice-html`;
+            const previewBody = document.getElementById('p3-preview-body');
+            previewBody.innerHTML = '<div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading invoice preview...</div>';
+            document.getElementById('viewModal').classList.remove('d-none');
+            
             fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
                 .then(r => r.text())
                 .then(html => {
-                    const blob = new Blob([html], { type: 'text/html' });
-                    const blobUrl = URL.createObjectURL(blob);
-                    window.open(blobUrl, '_blank');
+                    previewBody.innerHTML = html;
                 })
-                .catch(e => showToast('Failed to load invoice: ' + e.message, 'error'));
+                .catch(e => {
+                    showToast('Failed to load invoice: ' + e.message, 'error');
+                    closeViewModal();
+                });
         }
 
         // ── Verify ────────────────────────────────────────────────────────────────────
