@@ -134,13 +134,18 @@ window.renderSidebar = function (active) {
 
     window.__lastSidebarActive = active;
     const roleName = String(role || '').toUpperCase();
-    const effectivePolicy = window.__crmEffectiveAccessPolicy || JSON.parse(sessionStorage.getItem('crm_access_policy') || 'null');
+    const effectivePolicy = window.__crmEffectiveAccessPolicy || JSON.parse(localStorage.getItem('crm_access_policy') || 'null');
 
     const allowedPages = Array.isArray(effectivePolicy?.allowed_pages)
         ? effectivePolicy.allowed_pages
         : (effectivePolicy?.policy?.page_access?.[roleName] || []);
 
     const allowAllPages = roleName === 'ADMIN' || allowedPages.includes('*');
+
+    // The "Settings" link is compulsory for all Staff (non-ADMIN, non-CLIENT).
+    // ADMIN has full access anyway.
+    const isStaff = (roleName !== 'CLIENT' && roleName !== 'ADMIN');
+    const showSettings = isStaff || (roleName === 'ADMIN');
 
     const canShowPage = (href) => {
         const page = String(href || '').split('?')[0];
@@ -236,9 +241,10 @@ window.renderSidebar = function (active) {
             <a href="#" class="sb-bottom-link logout" onclick="logout();return false;" title="Logout">
                 <i class="bi bi-box-arrow-right"></i> <span>Logout</span>
             </a>
+            ${showSettings ? `
             <a href="settings.html" class="sb-bottom-link ${active === 'settings' ? 'active' : ''}" title="Settings">
                 <i class="bi bi-gear"></i> <span>Settings</span>
-            </a>
+            </a>` : ''}
         </div>
     </div>
     <div id="sb-overlay" class="sidebar-overlay" onclick="toggleMobileSidebar()"></div>

@@ -129,7 +129,7 @@ class AttendanceService:
     async def ensure_auto_leaves(user: User, start_date: date, end_date: date, settings: dict):
         today = AttendanceService.get_ist_today()
 
-        # FIX 2: get_motor_collection
+        # Restore get_pymongo_collection() - valid on these models
         att_coll   = Attendance.get_pymongo_collection()
         leave_coll = LeaveRecord.get_pymongo_collection()
 
@@ -264,7 +264,7 @@ class AttendanceService:
         # Sum all completed (punched-out) sessions only
         today_hours = sum(r.total_hours for r in today_records if r.total_hours)
 
-        # FIX 2: get_pymongo_collection for aggregates
+        # Restore get_pymongo_collection for aggregates
         coll = Attendance.get_pymongo_collection()
 
         week_ago = today - timedelta(days=7)
@@ -348,7 +348,7 @@ class AttendanceService:
 
         user_ids = [u.id for u in users_to_report]
 
-        # FIX 2: get_pymongo_collection
+        # Restore get_pymongo_collection
         att_coll   = Attendance.get_pymongo_collection()
         leave_coll = LeaveRecord.get_pymongo_collection()
 
@@ -370,12 +370,16 @@ class AttendanceService:
 
         att_map = {}
         for a in all_att:
-            d = AttendanceService._to_date(a["date"])           # FIX — normalize
-            att_map.setdefault((a["user_id"], d), []).append(a)
+            d = AttendanceService._to_date(a["date"])
+            # Normalize ID to string for reliable dict lookup
+            uid = str(a["user_id"])
+            att_map.setdefault((uid, d), []).append(a)
 
         leave_map = {}
         for l in all_leaves:
-            leave_map.setdefault(l["user_id"], []).append(l)
+            # Normalize ID to string
+            uid = str(l["user_id"])
+            leave_map.setdefault(uid, []).append(l)
 
         records     = []
         total_hours = 0.0
@@ -383,7 +387,8 @@ class AttendanceService:
         day = start_date
         while day <= end_date:
             for u in users_to_report:
-                day_att = att_map.get((u.id, day), [])
+                uid_str = str(u.id)
+                day_att = att_map.get((uid_str, day), [])
                 summary = AttendanceService.compute_daily_summary(day_att, day)
 
                 day_status = "PRESENT"
@@ -395,9 +400,9 @@ class AttendanceService:
                     day_status = "HALF"
 
                 day_leave_status = None
-                for l in leave_map.get(u.id, []):
-                    sd = AttendanceService._to_date(l["start_date"])  # FIX — normalize
-                    ed = AttendanceService._to_date(l["end_date"])    # FIX — normalize
+                for l in leave_map.get(uid_str, []):
+                    sd = AttendanceService._to_date(l["start_date"])
+                    ed = AttendanceService._to_date(l["end_date"])
                     if sd <= day <= ed:
                         day_leave_status = l.get("status")
                         break

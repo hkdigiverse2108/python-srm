@@ -438,21 +438,8 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-xs);
-    margin: 1.25rem 0;
     overflow: hidden;
-}
-
-/* When filter-panel lives inside a named filter-wrapper div,
-   let the WRAPPER control the bottom gap exclusively. */
-[id$="filter-wrapper"] .filter-panel,
-[id*="filter-wrapper"] .filter-panel {
-    margin-bottom: 0 !important;
-}
-
-/* All filter-wrapper containers -> standardise bottom gap to 3.5rem */
-[id$="filter-wrapper"],
-[id*="filter-wrapper"] {
-    margin-bottom: 1.25rem !important;
+    margin-bottom: 24px;
 }
 
 .filter-panel-head {
@@ -460,8 +447,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    min-height: 48px;
-    padding: 0 24px; /* Removed vertical padding to let flex center handle it */
+    padding: 12px 16px;
     border-bottom: 1px solid var(--border-subtle);
     background: var(--bg-app);
     cursor: pointer;
@@ -479,7 +465,7 @@
     gap: 10px;
     min-width: 0;
     flex: 1 1 280px;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .filter-panel-head-left {
@@ -503,7 +489,7 @@
     justify-content: flex-end;
     gap: 12px;
     margin-left: auto; /* Push to the right */
-    white-space: nowrap;
+    flex-wrap: wrap;
 }
 
 .filter-summary-text {

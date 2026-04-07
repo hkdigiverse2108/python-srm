@@ -52,24 +52,22 @@ async def get_attendance_summary(
         if not target_user:
             raise HTTPException(status_code=404, detail="User not found")
 
-    # Ensure dates are defaulted before background tasks or service calls
+    # Use AttendanceService method to get defaulted end_date (IST)
     if not end_date:
         end_date = AttendanceService.get_ist_today()
+    
+    # Use global timedelta (imported at top of file)
     if not start_date:
         start_date = end_date - timedelta(days=30)
 
-    # Optimization: Move reconcile to background if it's broad
+    # Optimization: Move reconcile to background if requested
     if reconcile:
-        from datetime import datetime, timezone, timedelta
-        # Resolve defaults here — background tasks receive raw values, not the service's defaults
-        resolved_end = end_date or datetime.now(timezone.utc).date()
-        resolved_start = start_date or (resolved_end - timedelta(days=30))
         settings = await AttendanceService.load_attendance_settings()
         if target_user:
-            background_tasks.add_task(AttendanceService.ensure_auto_leaves, target_user, resolved_start, resolved_end, settings)
+            background_tasks.add_task(AttendanceService.ensure_auto_leaves, target_user, start_date, end_date, settings)
         else:
             # Multi-user reconciliation in background
-            background_tasks.add_task(AttendanceService.reconcile_all_users, resolved_start, resolved_end, settings)
+            background_tasks.add_task(AttendanceService.reconcile_all_users, start_date, end_date, settings)
 
     return await AttendanceService.get_attendance_summary(
         target_user, start_date, end_date, False, current_user

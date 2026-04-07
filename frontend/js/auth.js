@@ -160,19 +160,15 @@ window.requireAuth = function() {
         const roleName = (role || '').toUpperCase();
         const effective = window.__crmEffectiveAccessPolicy;
         
-        // 1. Try memory cache first
-        if (effective && Array.isArray(effective.allowed_pages)) {
-            return effective.allowed_pages;
+        // 1. Try memory
+        if (window.__crmEffectiveAccessPolicy) return window.__crmEffectiveAccessPolicy.allowed_pages || [];
+
+        // 2. Try localStorage (unified cache)
+        const cached = JSON.parse(localStorage.getItem('crm_access_policy') || 'null');
+        if (cached && (cached.allowed_pages || cached.page_access)) {
+            window.__crmEffectiveAccessPolicy = cached;
+            return cached.allowed_pages || (cached.page_access ? (cached.page_access[role] || []) : []);
         }
-
-        // 2. Try localStorage cache (shared across all tabs)
-        try {
-            const cachedPolicy = JSON.parse(localStorage.getItem('crm_access_policy'));
-            if (cachedPolicy && Array.isArray(cachedPolicy.allowed_pages)) {
-                return cachedPolicy.allowed_pages;
-            }
-        } catch (e) {}
-
         // 3. Fallback to basic pages only if nothing else is available
         // This ensures the system remains functional during initial load
         return ['dashboard.html', 'profile.html', 'notifications.html', 'search.html', 'index.html', 'login.html'];
@@ -339,15 +335,33 @@ async function syncAccessControl(isInitial = false) {
             if (roleChanged || policyChanged) {
                 console.log('Access control update detected, refreshing permissions...');
                 
-                // Refetch full profile and policy
-                const profile = await window.ApiClient.getProfile();
-                const userData = { id: profile.id, name: profile.name || profile.email, email: profile.email, role: profile.role };
-                localStorage.setItem('srm_user', JSON.stringify(userData));
-
+                // Try to fetch profile to get roles and preferences
+                const profile = await window.ApiClient.getProfile().catch(() => null);
+                if (profile) {
+                    const userData = {
+                        id: profile.id,
+                        name: profile.name || profile.email,
+                        email: profile.email,
+                        role: profile.role
+                    };
+                    
+                    // Store user data in both
+                    localStorage.setItem('srm_user', JSON.stringify(userData));
+                    sessionStorage.setItem('srm_user', JSON.stringify(userData));
+                    
+                    // If profile includes latest policy, sync it to localStorage cache
+                    if (profile.access_policy) {
+                        localStorage.setItem('crm_access_policy', JSON.stringify(profile.access_policy));
+                        window.__crmEffectiveAccessPolicy = profile.access_policy;
+                    }
+                }
+                
                 if (window.ApiClient && window.ApiClient.getEffectiveAccessPolicy) {
-                    const effective = await window.ApiClient.getEffectiveAccessPolicy();
-                    window.__crmEffectiveAccessPolicy = effective;
-                    localStorage.setItem('crm_access_policy', JSON.stringify(effective));
+                    const effective = await window.ApiClient.getEffectiveAccessPolicy().catch(() => null);
+                    if (effective) {
+                        window.__crmEffectiveAccessPolicy = effective;
+                        localStorage.setItem('crm_access_policy', JSON.stringify(effective));
+                    }
                 }
 
                 // Update UI: Dispatch event for SPA components to re-render

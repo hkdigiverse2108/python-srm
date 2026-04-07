@@ -25,12 +25,12 @@
             transition: all 0.3s ease;
         }
 
-        .table > thead {
+        .table>thead {
             background: var(--bg-app);
             border-bottom: 1px solid var(--border);
         }
 
-        .table > thead th {
+        .table>thead th {
             font-size: 0.75rem;
             font-weight: 700;
             color: #64748b;
@@ -39,18 +39,18 @@
             border: none;
         }
 
-        .table > tbody td {
+        .table>tbody td {
             padding: 1rem 0.75rem;
             border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
             transition: background 0.2s ease;
         }
 
-        .table-hover > tbody > tr:hover {
+        .table-hover>tbody>tr:hover {
             background-color: var(--primary-light) !important;
         }
 
-        .table-hover > tbody > tr:hover td {
+        .table-hover>tbody>tr:hover td {
             color: var(--primary);
         }
 
@@ -66,12 +66,41 @@
             align-items: center;
         }
 
-        .role-ADMIN { background: #eef2ff; color: #4338ca; border: 1px solid #e0e7ff; }
-        .role-SALES { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
-        .role-TELESALES { background: #fdf2f8; color: #be185d; border: 1px solid #fce7f3; }
-        .role-PROJECT_MANAGER { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
-        .role-PROJECT_MANAGER_AND_SALES { background: #f5f3ff; color: #6d28d9; border: 1px solid #ede9fe; }
-        .role-CLIENT { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .role-ADMIN {
+            background: #eef2ff;
+            color: #4338ca;
+            border: 1px solid #e0e7ff;
+        }
+
+        .role-SALES {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #d1fae5;
+        }
+
+        .role-TELESALES {
+            background: #fdf2f8;
+            color: #be185d;
+            border: 1px solid #fce7f3;
+        }
+
+        .role-PROJECT_MANAGER {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #ffedd5;
+        }
+
+        .role-PROJECT_MANAGER_AND_SALES {
+            background: #f5f3ff;
+            color: #6d28d9;
+            border: 1px solid #ede9fe;
+        }
+
+        .role-CLIENT {
+            background: #f8fafc;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+        }
 
         .status-badge {
             font-size: 0.7rem;
@@ -89,6 +118,7 @@
             color: #10b981;
             border: 1px solid #d1fae5;
         }
+
         .status-inactive {
             background: #fef2f2;
             color: #ef4444;
@@ -96,14 +126,47 @@
         }
 
         /* Attendance Statuses */
-        .att-status-PRESENT { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
-        .att-status-HALF { background: #fffbeb; color: #f59e0b; border: 1px solid #fef3c7; }
-        .att-status-ABSENT { background: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; }
-        .att-status-OFF { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+        .att-status-PRESENT {
+            background: #ecfdf5;
+            color: #10b981;
+            border: 1px solid #d1fae5;
+        }
 
-        .leave-status-PENDING { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
-        .leave-status-APPROVED { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
-        .leave-status-REJECTED { background: #fff1f2; color: #e11d48; border: 1px solid #ffe4e6; }
+        .att-status-HALF {
+            background: #fffbeb;
+            color: #f59e0b;
+            border: 1px solid #fef3c7;
+        }
+
+        .att-status-ABSENT {
+            background: #fef2f2;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+        }
+
+        .att-status-OFF {
+            background: #f8fafc;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+        }
+
+        .leave-status-PENDING {
+            background: #fff7ed;
+            color: #ea580c;
+            border: 1px solid #ffedd5;
+        }
+
+        .leave-status-APPROVED {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #dcfce7;
+        }
+
+        .leave-status-REJECTED {
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #ffe4e6;
+        }
 
         /* Action Buttons */
         .btn-action {
@@ -119,12 +182,14 @@
             border: 1px solid var(--border);
             color: var(--text-muted);
         }
+
         .btn-action:hover {
             background: var(--primary-light);
             color: var(--primary);
             border-color: var(--primary);
             transform: translateY(-1px);
         }
+
         .btn-action-danger:hover {
             color: #ef4444;
             border-color: #ef4444;
@@ -145,9 +210,15 @@
         }
 
         @keyframes rotate-ring-emp {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .emp-ring-active {
             opacity: 1 !important;
             animation: rotate-ring-emp 3s linear infinite;
@@ -158,7 +229,7 @@
             background: linear-gradient(135deg, #0d1f5c 0%, #102272 40%, #0f1e6a 70%, #0a1550 100%);
             border-radius: 16px;
             border: 1px solid rgba(99, 102, 241, 0.25);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255,255,255,0.04) inset;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
             padding: 22px 24px;
             display: flex;
             align-items: center;
@@ -169,63 +240,347 @@
             position: relative;
             overflow: hidden;
         }
+
         .pro-att-widget::before {
             content: '';
             position: absolute;
-            top: -40px; left: -40px;
-            width: 180px; height: 180px;
-            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+            top: -40px;
+            left: -40px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
             pointer-events: none;
         }
+
         .pro-att-widget::after {
             content: '';
             position: absolute;
-            bottom: -40px; right: -40px;
-            width: 160px; height: 160px;
-            background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+            bottom: -40px;
+            right: -40px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
             pointer-events: none;
         }
-        .pro-att-left { flex: 1; padding-right: 24px; min-width: 0; }
-        .pro-att-date { font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.32); margin-bottom: 6px; }
-        .pro-att-greeting-line { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.70); line-height: 1; margin-bottom: 2px; }
-        .pro-att-name { font-size: 22px; font-weight: 800; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pro-att-name.punched-in { background: linear-gradient(90deg, #c7d7ff, #a5b8ff, #e0e7ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .pro-att-name.punched-out { color: rgba(255,255,255,0.42); -webkit-text-fill-color: rgba(255,255,255,0.42); }
-        .pro-att-live-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-        .pro-att-live-badge.live { background: rgba(74, 222, 128, 0.08); border: 1px solid rgba(74, 222, 128, 0.22); color: #4ade80; }
-        .pro-att-live-badge.offline { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.35); }
-        .pro-att-pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 0 rgba(74,222,128,0.5); animation: attPulse 2s ease-in-out infinite; flex-shrink: 0; }
-        @keyframes attPulse { 0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); } 60% { box-shadow: 0 0 0 5px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
-        .pro-att-sep { width: 1px; align-self: stretch; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.10) 20%, rgba(255,255,255,0.10) 80%, transparent); flex-shrink: 0; margin: 0 4px; }
-        .pro-att-right { padding-left: 24px; display: flex; flex-direction: column; gap: 12px; min-width: 260px; max-width: 300px; }
-        .pro-att-user-row { display: flex; align-items: center; gap: 10px; }
-        .pro-att-avatar-wrap { position: relative; flex-shrink: 0; }
-        .pro-att-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b5bdb, #6366f1); border: 2px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; overflow: hidden; }
-        .pro-att-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .pro-att-status-dot { position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #102272; }
-        .pro-att-status-dot.online { background: #4ade80; }
-        .pro-att-status-dot.offline { background: rgba(255,255,255,0.25); }
-        .pro-att-user-info { flex: 1; min-width: 0; }
-        .pro-att-user-name { font-size: 13.5px; font-weight: 700; color: white; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pro-att-punch-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
-        .pro-att-punch-badge.in { background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.20); color: #4ade80; }
-        .pro-att-punch-badge.out { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.40); }
-        .pro-att-bottom-row { display: flex; align-items: stretch; gap: 8px; }
-        .pro-att-info-cells { display: flex; flex: 1; gap: 0; background: rgba(0,0,0,0.25); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
-        .pro-att-info-cell { flex: 1; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
-        .pro-att-info-cell + .pro-att-info-cell { border-left: 1px solid rgba(255,255,255,0.07); }
-        .pro-att-info-label { font-size: 8.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.30); }
-        .pro-att-info-val { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.80); letter-spacing: 0.01em; white-space: nowrap; }
-        .pro-att-timer-val { font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 17px; color: #fff; letter-spacing: 0; display: flex; align-items: center; }
-        .pro-att-timer-val .att-sep { opacity: 1; animation: timerColonBlink 1s step-start infinite; }
-        @keyframes timerColonBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.18; } }
-        .pro-att-btn { width: 72px; flex-shrink: 0; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: white; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; display: flex; align-items: center; justify-content: center; line-height: 1.25; text-align: center; padding: 0; }
-        .pro-att-btn.punch-in { background: linear-gradient(150deg, #15803d, #22c55e); box-shadow: 0 4px 14px rgba(34,197,94,0.35); }
-        .pro-att-btn.punch-out { background: linear-gradient(150deg, #b91c1c, #ef4444); box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
-        .pro-att-btn:hover { transform: translateY(-1px); }
-        .pro-att-btn.punch-in:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.50); }
-        .pro-att-btn.punch-out:hover { box-shadow: 0 6px 18px rgba(239,68,68,0.50); }
-        .pro-att-btn:active { transform: scale(0.97); }
+
+        .pro-att-left {
+            flex: 1;
+            padding-right: 24px;
+            min-width: 0;
+        }
+
+        .pro-att-date {
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.32);
+            margin-bottom: 6px;
+        }
+
+        .pro-att-greeting-line {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.70);
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .pro-att-name {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pro-att-name.punched-in {
+            background: linear-gradient(90deg, #c7d7ff, #a5b8ff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pro-att-name.punched-out {
+            color: rgba(255, 255, 255, 0.42);
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.42);
+        }
+
+        .pro-att-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .pro-att-live-badge.live {
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.22);
+            color: #4ade80;
+        }
+
+        .pro-att-live-badge.offline {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .pro-att-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+            animation: attPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes attPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+            }
+
+            60% {
+                box-shadow: 0 0 0 5px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
+        }
+
+        .pro-att-sep {
+            width: 1px;
+            align-self: stretch;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.10) 20%, rgba(255, 255, 255, 0.10) 80%, transparent);
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+
+        .pro-att-right {
+            padding-left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 260px;
+            max-width: 300px;
+        }
+
+        .pro-att-user-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pro-att-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .pro-att-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b5bdb, #6366f1);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            overflow: hidden;
+        }
+
+        .pro-att-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .pro-att-status-dot {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #102272;
+        }
+
+        .pro-att-status-dot.online {
+            background: #4ade80;
+        }
+
+        .pro-att-status-dot.offline {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .pro-att-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pro-att-user-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pro-att-punch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .pro-att-punch-badge.in {
+            background: rgba(74, 222, 128, 0.10);
+            border: 1px solid rgba(74, 222, 128, 0.20);
+            color: #4ade80;
+        }
+
+        .pro-att-punch-badge.out {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.40);
+        }
+
+        .pro-att-bottom-row {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .pro-att-info-cells {
+            display: flex;
+            flex: 1;
+            gap: 0;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .pro-att-info-cell {
+            flex: 1;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pro-att-info-cell+.pro-att-info-cell {
+            border-left: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .pro-att-info-label {
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.30);
+        }
+
+        .pro-att-info-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.80);
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        .pro-att-timer-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 400;
+            font-size: 17px;
+            color: #fff;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .pro-att-timer-val .att-sep {
+            opacity: 1;
+            animation: timerColonBlink 1s step-start infinite;
+        }
+
+        @keyframes timerColonBlink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.18;
+            }
+        }
+
+        .pro-att-btn {
+            width: 72px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.25;
+            text-align: center;
+            padding: 0;
+        }
+
+        .pro-att-btn.punch-in {
+            background: linear-gradient(150deg, #15803d, #22c55e);
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+        }
+
+        .pro-att-btn.punch-out {
+            background: linear-gradient(150deg, #b91c1c, #ef4444);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+
+        .pro-att-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .pro-att-btn.punch-in:hover {
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.50);
+        }
+
+        .pro-att-btn.punch-out:hover {
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.50);
+        }
+
+        .pro-att-btn:active {
+            transform: scale(0.97);
+        }
 
         @media (max-width: 768px) {
             .pro-att-widget {
@@ -234,36 +589,43 @@
                 padding: 16px;
                 gap: 16px;
             }
+
             .pro-att-left {
                 padding-right: 0;
                 text-align: center;
             }
+
             .pro-att-sep {
                 height: 1px;
                 width: 100%;
                 margin: 4px 0;
             }
+
             .pro-att-right {
                 padding-left: 0;
                 min-width: 0;
                 max-width: 100%;
             }
+
             .pro-att-bottom-row {
                 flex-direction: column;
             }
+
             .pro-att-btn {
                 width: 100%;
                 height: 44px;
             }
-            
+
             /* Responsive Table Columns */
-            .d-mobile-none { display: none !important; }
+            .d-mobile-none {
+                display: none !important;
+            }
+
             .page-header-glass {
                 margin-bottom: 0 !important;
             }
         }
-
-</style>
+    </style>
 </head>
 
 <body>
@@ -284,10 +646,12 @@
 
                 <!-- Employees Table -->
                 <div class="card shadow-sm grid-card">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                         <div class="d-flex align-items-center gap-3">
                             <h6 class="fw-bold mb-0">Employee Management</h6>
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 small" id="employee-count-badge">0 Employees</span>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 small"
+                                id="employee-count-badge">0 Employees</span>
                         </div>
                         <button class="btn btn-sm btn-light border" id="employees-toggle-btn" title="Toggle Visibility">
                             <i class="bi bi-chevron-up"></i>
@@ -302,12 +666,18 @@
                                             <input type="checkbox" class="form-check-input" id="emp-select-all"
                                                 onclick="toggleAllEmployees(this)">
                                         </th>
-                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted" style="min-width: 180px;">Employee</th>
-                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none" style="min-width: 140px;">Dept & Code</th>
-                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none" style="min-width: 100px;">Role</th>
-                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none" style="min-width: 130px;">Contact</th>
-                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted" style="min-width: 80px;">Status</th>
-                                        <th class="py-2 px-3 text-end text-uppercase small fw-bold text-muted" style="min-width: 100px;">Actions</th>
+                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted"
+                                            style="min-width: 180px;">Employee</th>
+                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none"
+                                            style="min-width: 140px;">Dept & Code</th>
+                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none"
+                                            style="min-width: 100px;">Role</th>
+                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted d-mobile-none"
+                                            style="min-width: 130px;">Contact</th>
+                                        <th class="py-2 px-3 text-uppercase small fw-bold text-muted"
+                                            style="min-width: 80px;">Status</th>
+                                        <th class="py-2 px-3 text-end text-uppercase small fw-bold text-muted"
+                                            style="min-width: 100px;">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="employees-tbody">
@@ -326,17 +696,19 @@
                 <div id="attendance-filter-wrapper" style="display:none;"></div>
 
                 <div class="card shadow-sm grid-card mt-2" id="attendance-admin-card" style="display:none;">
-                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
                         <div>
                             <h6 class="fw-bold mb-0">Workforce Attendance Management</h6>
                             <div class="text-muted small">Daily punch logs and total hours</div>
                         </div>
-                        <button class="btn btn-sm btn-light border" id="attendance-toggle-btn" title="Toggle Visibility">
+                        <button class="btn btn-sm btn-light border" id="attendance-toggle-btn"
+                            title="Toggle Visibility">
                             <i class="bi bi-chevron-up"></i>
                         </button>
                     </div>
                     <div class="card-body p-0" id="attendance-admin-body">
-                        
+
                         <div class="px-3 pt-3">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="text-muted small" id="attendance-count">0 record(s)</div>
@@ -368,50 +740,51 @@
                 </div>
 
 
-                    <!-- Attendance History Card -->
-                    <div id="self-attendance-filter-wrapper" style="display:none;"></div>
+                <!-- Attendance History Card -->
+                <div id="self-attendance-filter-wrapper" style="display:none;"></div>
 
-                    <div class="card shadow-sm grid-card mt-4" id="self-attendance-card" style="display:none;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                            <div>
-                                <h6 class="fw-bold mb-0">My Attendance Logs</h6>
-                                <div class="text-muted small">Your punch timing and attendance records</div>
+                <div class="card shadow-sm grid-card mt-4" id="self-attendance-card" style="display:none;">
+                    <div
+                        class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
+                        <div>
+                            <h6 class="fw-bold mb-0">My Attendance Logs</h6>
+                            <div class="text-muted small">Your punch timing and attendance records</div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0" id="employee-self-body">
+
+                        <div class="px-3 pt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="text-muted small" id="self-attendance-count">0 record(s)</div>
+                                <div class="fw-bold text-primary" id="self-attendance-total-hours">Total: 0.00 hrs</div>
                             </div>
                         </div>
-                        <div class="card-body p-0" id="employee-self-body">
-
-                            <div class="px-3 pt-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="text-muted small" id="self-attendance-count">0 record(s)</div>
-                                    <div class="fw-bold text-primary" id="self-attendance-total-hours">Total: 0.00 hrs</div>
-                                </div>
-                            </div>
-                            <div class="table-responsive">
-                                <table class="table table-hover table-professional table-sm align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th class="ps-3" style="white-space:nowrap;">Date</th>
-                                            <th style="white-space:nowrap;" class="d-mobile-none">In</th>
-                                            <th style="white-space:nowrap;" class="d-mobile-none">Out</th>
-                                            <th style="white-space:nowrap;">Hours</th>
-                                            <th style="white-space:nowrap;">Status</th>
-                                            <th style="white-space:nowrap;" class="d-mobile-none">Leave</th>
-                                            <th style="white-space:nowrap; text-align:right;" class="pe-3">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="self-attendance-tbody">
-                                        <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">No data loaded.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover table-professional table-sm align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3" style="white-space:nowrap;">Date</th>
+                                        <th style="white-space:nowrap;" class="d-mobile-none">In</th>
+                                        <th style="white-space:nowrap;" class="d-mobile-none">Out</th>
+                                        <th style="white-space:nowrap;">Hours</th>
+                                        <th style="white-space:nowrap;">Status</th>
+                                        <th style="white-space:nowrap;" class="d-mobile-none">Leave</th>
+                                        <th style="white-space:nowrap; text-align:right;" class="pe-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="self-attendance-tbody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No data loaded.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
             </div>
+
         </div>
+    </div>
     </div>
 
     <!-- ─── Edit Employee Modal ─────────────────────────────────── -->
@@ -616,7 +989,7 @@
                         </div>
                     </td>
                 </tr>`;
-            
+
             const department = (filters['dept'] === 'ALL' ? '' : filters['dept']) || '';
             const role = (filters['role'] === 'ALL' ? '' : filters['role']) || '';
             const status = (filters['status'] === 'ALL' ? '' : filters['status']) || '';
@@ -646,7 +1019,7 @@
                 if (filterWrapper && filterWrapper.innerHTML === '' && isAdmin) {
                     initFilters(departments);
                 }
-                
+
                 populateAttendanceEmployeeFilter();
 
                 tbody.innerHTML = employeesData.map(emp => {
@@ -722,7 +1095,7 @@
                 const elapsed = Math.max(0, (Date.now() - selfPunchStartTime) / 1000);
                 totalSec += elapsed;
             }
-            
+
             const h = Math.floor(totalSec / 3600);
             const m = Math.floor((totalSec % 3600) / 60);
             const s = Math.floor(totalSec % 60);
@@ -740,20 +1113,20 @@
 
         function initAttendanceFilters(isAdmin, employees = [], containerId = 'attendance-filter-wrapper') {
             const filters = [];
-            
+
             if (isAdmin) {
-                filters.push({ 
-                    type: 'select', 
-                    label: 'Employee', 
-                    id: 'att-user', 
-                    options: [{ value: '', label: 'All Employees' }, ...employees.map(e => ({ value: e.id, label: e.name || e.email }))] 
+                filters.push({
+                    type: 'select',
+                    label: 'Employee',
+                    id: 'att-user',
+                    options: [{ value: '', label: 'All Employees' }, ...employees.map(e => ({ value: e.id, label: e.name || e.email }))]
                 });
             }
 
-            filters.push({ 
-                type: 'select', 
-                label: 'Quick Range', 
-                id: 'att-quick', 
+            filters.push({
+                type: 'select',
+                label: 'Quick Range',
+                id: 'att-quick',
                 options: [
                     { value: 'ALL', label: 'All Records' },
                     { value: 'custom', label: 'Custom Range' },
@@ -764,7 +1137,7 @@
                     { value: 'last_7_days', label: 'Last 7 Days' },
                     { value: 'this_month', label: 'This Month' },
                     { value: 'last_month', label: 'Last Month' }
-                ] 
+                ]
             });
 
             filters.push({ type: 'date', label: 'From', id: 'att-from' });
@@ -786,7 +1159,7 @@
                     if (fromInp) fromInp.value = '';
                     if (toInp) toInp.value = '';
                     if (quickSel) quickSel.value = 'ALL';
-                    
+
                     if (isAdmin) loadAttendanceSummary();
                     else loadSelfAttendance();
                 }
@@ -801,7 +1174,7 @@
                 const quickSel = document.getElementById('att-quick');
                 const fromInp = document.getElementById('att-from');
                 const toInp = document.getElementById('att-to');
-                
+
                 if (quickSel && fromInp && toInp) {
                     // Set default range: Last 7 Days
                     const end = new Date();
@@ -854,7 +1227,7 @@
 
         async function loadMyEmployeeInsights() {
             if (canManageEmployees) return;
-            
+
             // Hide admin sections
             const directoryCard = document.querySelector('.grid-card:has(#employees-table-container)');
             if (directoryCard) directoryCard.style.display = 'none';
@@ -877,9 +1250,9 @@
             const tbody = document.getElementById('self-attendance-tbody');
 
             if (!tbody) return;
-            
+
             tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading...</td></tr>';
-            
+
             try {
                 const data = await ApiClient.getAttendanceSummary({
                     start_date: start,
@@ -943,7 +1316,7 @@
             const modal = new bootstrap.Modal(modalEl);
             const tbody = document.getElementById('punch-detail-tbody');
             const titleDate = document.getElementById('punch-detail-date');
-            
+
             titleDate.textContent = new Date(dateStr).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
             tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading logs...</td></tr>';
             modal.show();
@@ -983,7 +1356,7 @@
                     reconcile: true
                 };
                 if (userId) params.user_id = userId;
-                
+
                 const data = await ApiClient.getAttendanceSummary(params);
                 const records = (data.records || []).sort((a, b) => new Date(b.date) - new Date(a.date));
                 document.getElementById('attendance-count').textContent = `${records.length} record(s)`;
@@ -1103,7 +1476,7 @@
             const modal = new bootstrap.Modal(modalEl);
             const tbody = document.getElementById('att-hist-tbody');
             const titleName = document.getElementById('att-hist-user-name');
-            
+
             titleName.textContent = userName;
             tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</td></tr>';
             modal.show();
@@ -1113,14 +1486,14 @@
                 const end = new Date();
                 const start = new Date();
                 start.setDate(end.getDate() - 29);
-                
+
                 const data = await ApiClient.getAttendanceSummary({
                     user_id: userId,
                     start_date: start.toISOString().split('T')[0],
                     end_date: end.toISOString().split('T')[0],
                     reconcile: true
                 });
-                
+
                 const records = (data.records || []).sort((a, b) => new Date(b.date) - new Date(a.date));
                 if (!records.length) {
                     tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No attendance records found for the last 30 days.</td></tr>';
@@ -1184,7 +1557,7 @@
             if (!canManageEmployees) {
                 const globalFilterPanel = document.getElementById('global-filter-panel');
                 if (globalFilterPanel) globalFilterPanel.style.display = 'none';
-                
+
                 const directoryCard = document.querySelector('.grid-card:has(#employees-table-container)');
                 if (directoryCard) directoryCard.style.display = 'none';
             }
@@ -1248,7 +1621,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-primary fw-semibold w-100" data-bs-dismiss="modal" style="border-radius:10px;">Done</button>
+                    <button type="button" class="btn btn-primary fw-semibold w-100" data-bs-dismiss="modal"
+                        style="border-radius:10px;">Done</button>
                 </div>
             </div>
         </div>
@@ -1285,7 +1659,8 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light border fw-semibold" data-bs-dismiss="modal" style="border-radius:10px;">Close</button>
+                    <button type="button" class="btn btn-light border fw-semibold" data-bs-dismiss="modal"
+                        style="border-radius:10px;">Close</button>
                 </div>
             </div>
         </div>
@@ -1294,5 +1669,3 @@
 </body>
 
 </html>
-
-
