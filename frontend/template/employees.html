@@ -13,8 +13,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="/static/css/bootstrap.min.css">
     <link rel="stylesheet" href="/static/css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/static/css/theme.css?v=20260403">
-    <link rel="stylesheet" href="/static/css/components.css?v=20260403">
+    <link rel="stylesheet" href="/static/css/theme.css?v=20260406">
+    <link rel="stylesheet" href="/static/css/components.css?v=20260406">
     <style>
         /* ── Professional Table Styling ── */
         .grid-card {
@@ -258,6 +258,9 @@
             
             /* Responsive Table Columns */
             .d-mobile-none { display: none !important; }
+            .page-header-glass {
+                margin-bottom: 0 !important;
+            }
         }
 
 </style>
@@ -269,7 +272,7 @@
         <div class="flex-grow-1 main-wrapper">
             <div class="page-content-standard">
                 <!-- Header Section -->
-                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+                <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="min-w-0">
                         <h2 class="page-section-title fw-bold mb-1">Employees Directory</h2>
                         <p class="text-muted mb-0 small">Directory, department management and attendance tracking.</p>
@@ -320,7 +323,7 @@
                 </div>
 
                 <!-- Attendance Filter Wrapper (Admin) -->
-                <div id="attendance-filter-wrapper" class="mt-5 mb-3" style="display:none;"></div>
+                <div id="attendance-filter-wrapper" style="display:none;"></div>
 
                 <div class="card shadow-sm grid-card mt-2" id="attendance-admin-card" style="display:none;">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
@@ -366,7 +369,7 @@
 
 
                     <!-- Attendance History Card -->
-                    <div id="self-attendance-filter-wrapper" class="mb-3" style="display:none;"></div>
+                    <div id="self-attendance-filter-wrapper" style="display:none;"></div>
 
                     <div class="card shadow-sm grid-card mt-4" id="self-attendance-card" style="display:none;">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
@@ -582,7 +585,7 @@
                     {
                         type: 'select',
                         label: 'Status',
-                        id: 'status',
+                        id: 'filter-status',
                         options: [
                             { value: 'ALL', label: 'All Status' },
                             { value: 'true', label: 'Active' },
@@ -592,12 +595,7 @@
                 ],
                 onApply: (data) => {
                     lastFilters = data;
-                    loadEmployees({ 
-                        dept: data['dept'], 
-                        role: data['role'], 
-                        status: data['status'], 
-                        search: data['search'] 
-                    });
+                    loadEmployees(data);
                 },
                 onReset: () => {
                     lastFilters = {};
@@ -757,6 +755,7 @@
                 label: 'Quick Range', 
                 id: 'att-quick', 
                 options: [
+                    { value: 'ALL', label: 'All Records' },
                     { value: 'custom', label: 'Custom Range' },
                     { value: 'today', label: 'Today' },
                     { value: 'yesterday', label: 'Yesterday' },
@@ -784,17 +783,10 @@
                     const fromInp = document.getElementById('att-from');
                     const toInp = document.getElementById('att-to');
                     const quickSel = document.getElementById('att-quick');
-                    if (fromInp && toInp && quickSel) {
-                        const end = new Date();
-                        const start = new Date();
-                        start.setDate(end.getDate() - 6);
-                        fromInp.value = start.toISOString().slice(0, 10);
-                        toInp.value = end.toISOString().slice(0, 10);
-                        quickSel.value = 'last_7_days';
-                        attendanceFilters['att-from'] = fromInp.value;
-                        attendanceFilters['att-to'] = toInp.value;
-                        attendanceFilters['att-quick'] = 'last_7_days';
-                    }
+                    if (fromInp) fromInp.value = '';
+                    if (toInp) toInp.value = '';
+                    if (quickSel) quickSel.value = 'ALL';
+                    
                     if (isAdmin) loadAttendanceSummary();
                     else loadSelfAttendance();
                 }
@@ -1098,14 +1090,62 @@
                 onDelete: () => batchDeleteEmployees(),
                 onCancel: () => {
                     document.querySelectorAll('.emp-checkbox').forEach(cb => cb.checked = false);
-                    document.getElementById('emp-select-all').checked = false;
+                    const master = document.getElementById('emp-select-all');
+                    if (master) master.checked = false;
                     updateSelectedCount();
                 }
             });
         }
 
+        async function viewEmployeeAttendance(userId, userName) {
+            const modalEl = document.getElementById('attendanceHistoryModal');
+            if (!modalEl) return;
+            const modal = new bootstrap.Modal(modalEl);
+            const tbody = document.getElementById('att-hist-tbody');
+            const titleName = document.getElementById('att-hist-user-name');
+            
+            titleName.textContent = userName;
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4"><span class="spinner-border spinner-border-sm me-2"></span>Loading history...</td></tr>';
+            modal.show();
+
+            try {
+                // Fetch last 30 days by default
+                const end = new Date();
+                const start = new Date();
+                start.setDate(end.getDate() - 29);
+                
+                const data = await ApiClient.getAttendanceSummary({
+                    user_id: userId,
+                    start_date: start.toISOString().split('T')[0],
+                    end_date: end.toISOString().split('T')[0],
+                    reconcile: true
+                });
+                
+                const records = (data.records || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+                if (!records.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No attendance records found for the last 30 days.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = records.map(r => {
+                    const day = new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    return `<tr>
+                        <td class="ps-3">${day}</td>
+                        <td>${formatTimeCell(r.first_punch_in)}</td>
+                        <td>${formatTimeCell(r.last_punch_out)}</td>
+                        <td class="fw-bold text-primary">${(r.total_hours || 0).toFixed(2)}</td>
+                        <td>${statusBadge(r.day_status)}</td>
+                        <td class="pe-3 text-end">${leaveBadge(r.leave_status)}</td>
+                    </tr>`;
+                }).join('');
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Failed to load attendance history.</td></tr>';
+            }
+        }
+
         async function batchDeleteEmployees() {
-            const selectedIds = Array.from(document.querySelectorAll('.emp-checkbox:checked')).map(cb => parseInt(cb.value));
+            const selectedIds = Array.from(document.querySelectorAll('.emp-checkbox:checked')).map(cb => cb.value);
             if (!selectedIds.length) return;
 
             if (!canManageEmployees) {
@@ -1132,9 +1172,6 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             updateHeaderContext();
-            if (isAdmin) {
-                initFilters();
-            }
             loadEmployees().then(() => {
                 if (isAdmin) {
                     initAttendanceFilters(true, employeesData);

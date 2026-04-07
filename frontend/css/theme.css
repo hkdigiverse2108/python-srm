@@ -722,8 +722,8 @@ body.dark-theme .brand-text {
     align-items: center;
     gap: 12px;
     padding: 10px 16px 10px 18px;
-    margin: 2px 8px 2px 0;
-    border-radius: 0 8px 8px 0;
+    margin: 4px 12px;
+    border-radius: 50px;
     font-size: 15px;
     font-weight: 500;
     color: var(--sb-text);
@@ -741,16 +741,7 @@ body.dark-theme .brand-text {
     justify-content: center;
 }
 
-.sb-link.active::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 8px;
-    bottom: 8px;
-    width: 3px;
-    background-color: var(--accent);
-    border-radius: 0 4px 4px 0;
-}
+
 
 .sb-link:hover {
     background: var(--sb-item-hover);
@@ -775,27 +766,17 @@ body.dark-theme .brand-text {
 }
 
 .sb-link.active {
-    background: var(--sb-item-active-bg);
-    /* #dbeafe */
-    color: var(--nav-text-active) !important;
-    /* #1e40af - Dark blue like header title */
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: #ffffff !important;
     font-weight: 700;
+    border-radius: 50px;
 }
 
 .sb-link.active i {
-    color: var(--nav-text-active) !important;
+    color: #ffffff !important;
 }
 
-.sb-link.active::before {
-    content: '';
-    position: absolute;
-    left: -8px;
-    top: 8px;
-    bottom: 8px;
-    width: 3px;
-    background-color: var(--accent);
-    border-radius: 0 4px 4px 0;
-}
+
 
 .collapsed .sb-section-items {
     display: none;
@@ -1540,8 +1521,8 @@ h6 {
     /* More rounded premium feel */
     padding: 32px 40px;
     /* Slightly adjusted padding */
-    margin-bottom: 40px !important;
-    /* More space below header */
+    margin-bottom: 1.5rem !important;
+    /* Gap above filter: 1.5rem + filter margin-top 2rem = 3.5rem total (matches gap below) */
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
@@ -2669,11 +2650,11 @@ label {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
-    margin-top: 2rem;
-    margin-bottom: 22px;
+    margin: 1.25rem 0;
     box-shadow: var(--shadow-xs);
     overflow: visible;
 }
+
 
 .filter-panel-head {
     display: flex;

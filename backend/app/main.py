@@ -97,15 +97,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="SRM AI SETU API", lifespan=lifespan)
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,  # Set to False to allow "*" in allow_origins with JWT headers
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Global Exception Handler
 @app.middleware("http")
 async def catch_exceptions_middleware(request: Request, call_next):
@@ -118,6 +109,15 @@ async def catch_exceptions_middleware(request: Request, call_next):
             status_code=500,
             content={"detail": "Internal Server Error", "error": str(e)}
         )
+
+# CORS (Added LAST to be OUTERMOST)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Static Files
 app_path = os.path.dirname(os.path.abspath(__file__))

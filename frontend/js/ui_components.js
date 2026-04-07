@@ -742,7 +742,7 @@ window.refreshBell = async function () {
                     sessionClosed = true;
                     cleanMessage = cleanMessage.replace('STATUS:COMPLETED', '').trim();
                 }
-                
+
                 // [START] - Standardized Link/Meeting ID Parsing
                 if (cleanMessage.includes('MEETING_ID:')) {
                     const parts = cleanMessage.split('MEETING_ID:');
@@ -1054,8 +1054,10 @@ window.renderFilterPanel = function (config) {
 
         return `
             <div class="filter-field">
-                <label for="${f.id}">${f.label}</label>
-                ${inputHtml}
+                <label for="${f.id}" class="filter-label">${f.label}</label>
+                <div class="filter-input-wrapper">
+                    ${inputHtml}
+                </div>
             </div>`;
     }).join('');
 
@@ -1073,7 +1075,7 @@ window.renderFilterPanel = function (config) {
                 </div>
                 ${headerContent}
                 <div class="filter-panel-head-meta">
-                    <div class="filter-summary-text" id="${containerId}-summary">No filters active</div>
+                    <span class="filter-summary-text" id="${containerId}-summary">No filters active</span>
                     <button class="filter-toggle-btn">
                         <i class="bi bi-chevron-down"></i>
                     </button>
@@ -1170,7 +1172,12 @@ window.renderFilterPanel = function (config) {
             const el = document.getElementById(f.id);
             if (el) {
                 if (f.type === 'select') {
-                    el.value = f.options[0]?.value || 'ALL';
+                    // Try to find 'ALL' or '' or use first option
+                    const hasAll = f.options.some(o => o.value === 'ALL');
+                    const hasEmpty = f.options.some(o => o.value === '');
+                    if (hasAll) el.value = 'ALL';
+                    else if (hasEmpty) el.value = '';
+                    else el.value = f.options[0]?.value;
                 } else {
                     el.value = '';
                 }
@@ -1436,6 +1443,26 @@ window.initAttendance = async function () {
             if (mm) mm.textContent = '--';
             if (ss) ss.textContent = '--';
         }
+
+        // FIX 4: Midnight reset — check every 30s if the calendar date has rolled over
+        if (window._midnightCheck) clearInterval(window._midnightCheck);
+        const _midnightStartDate = new Date().toDateString();
+        window._midnightCheck = setInterval(async () => {
+            if (new Date().toDateString() !== _midnightStartDate) {
+                clearInterval(window._midnightCheck);
+                window._midnightCheck = null;
+                if (window._attTimer) {
+                    clearInterval(window._attTimer);
+                    window._attTimer = null;
+                }
+                try {
+                    const freshStatus = await window.ApiClient.getPunchStatus();
+                    updateUI(freshStatus);
+                } catch (e) {
+                    console.warn('[Attendance] Midnight refresh failed', e);
+                }
+            }
+        }, 30000);
     };
 
     updateUI(status);

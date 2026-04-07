@@ -678,15 +678,15 @@ class ShopService:
         pipeline = [
             {"$match": {"is_deleted": False, "project_manager_id": {"$ne": None}}},
             {"$lookup": {
-                "from": "users",
+                "from": "srm_users",
                 "localField": "project_manager_id",
                 "foreignField": "_id",
                 "as": "pm"
             }},
             {"$unwind": "$pm"},
             {"$group": {
-                "_id": "$pm.name",
-                "in_demo": {"$sum": {"$cond": [{"$not": {"$in": ["$pipeline_stage", ["DELIVERY", "PITCHING"]]}}, 1, 0]}},
+                "_id": {"$ifNull": ["$pm.name", "$pm.email"]},
+                "in_demo": {"$sum": {"$cond": [{"$eq": ["$pipeline_stage", "NEGOTIATION"]}, 1, 0]}},
                 "meeting_set": {"$sum": {"$cond": [{"$eq": ["$pipeline_stage", "PITCHING"]}, 1, 0]}},
                 "converted": {"$sum": {"$cond": [{"$eq": ["$pipeline_stage", "DELIVERY"]}, 1, 0]}}
             }},
@@ -696,7 +696,8 @@ class ShopService:
                 "meeting_set": 1,
                 "converted": 1,
                 "_id": 0
-            }}
+            }},
+            {"$sort": {"pm_name": 1}}
         ]
         
         results = await Shop.get_pymongo_collection().aggregate(pipeline).to_list(length=None)

@@ -38,7 +38,20 @@ async def create_feedback(
 ) -> Any:
     """Create a new feedback entry. Available to all staff."""
     service = FeedbackService()
-    return await service.create_feedback(feedback_in, current_user, request)
+    return await service.create_client_feedback(feedback_in)
+
+@global_router.post("/public/submit", response_model=FeedbackRead, status_code=status.HTTP_201_CREATED)
+async def public_submit_feedback(feedback_in: FeedbackCreate):
+    """Publicly submit feedback via QR code"""
+    service = FeedbackService()
+    return await service.create_client_feedback(feedback_in)
+
+@global_router.post("/{client_id}/feedback", response_model=FeedbackRead, status_code=status.HTTP_201_CREATED)
+async def public_submit_client_feedback(client_id: PydanticObjectId, feedback_in: FeedbackCreate):
+    """Publicly submit feedback for a specific client via QR"""
+    feedback_in.client_id = client_id
+    service = FeedbackService()
+    return await service.create_client_feedback(feedback_in)
 
 @router.get("/", response_model=List[FeedbackRead])
 async def read_feedbacks(
@@ -55,8 +68,8 @@ async def read_feedback(
     feedback_id: PydanticObjectId,
     current_user: User = Depends(staff_access)
 ) -> Any:
-    service = FeedbackService()
-    feedback = await service.get_feedback(feedback_id, current_user)
+    from app.modules.feedback.models import Feedback
+    feedback = await Feedback.get(feedback_id)
     if not feedback:
         raise HTTPException(status_code=404, detail="Feedback not found")
     return feedback
@@ -68,7 +81,7 @@ async def delete_feedback(
     current_user: User = Depends(admin_access)
 ):
     service = FeedbackService()
-    await service.delete_feedback(feedback_id, current_user, request)
+    await service.delete_feedback(feedback_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.post("/batch-delete")
@@ -77,7 +90,9 @@ async def batch_delete_feedbacks(
     payload: dict,
     current_user: User = Depends(admin_access)
 ):
+    from beanie.operators import In
+    from app.modules.feedback.models import Feedback
     ids = [PydanticObjectId(i) for i in payload.get("ids", []) if i]
-    service = FeedbackService()
-    await service.batch_delete_feedbacks(ids, current_user, request)
+    if ids:
+        await Feedback.find(In(Feedback.id, ids)).delete()
     return {"message": f"Successfully deleted {len(ids)} records"}
