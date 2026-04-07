@@ -204,8 +204,7 @@ class VisitService:
             shop.pipeline_stage = MasterPipelineStage.DELIVERY
             from app.modules.shops.service import ShopService
             await ShopService._cancel_pending_demos(
-                shop, 
-                current_user=current_user,
+                shop,
                 reason="System Auto-Canceled: Advanced to Delivery via Visit"
             )
         elif v_status in ["SATISFIED", "TAKE_TIME_TO_THINK", "OTHER"]:
