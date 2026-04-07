@@ -375,11 +375,20 @@ class AttendanceService:
             uid = str(a["user_id"])
             att_map.setdefault((uid, d), []).append(a)
 
+        # Efficient mapping for nested lookup
         leave_map = {}
         for l in all_leaves:
-            # Normalize ID to string
             uid = str(l["user_id"])
-            leave_map.setdefault(uid, []).append(l)
+            sd = AttendanceService._to_date(l["start_date"])
+            ed = AttendanceService._to_date(l["end_date"])
+            
+            # Map each day in the leave period to the status for O(1) lookup
+            curr_l = sd
+            while curr_l <= ed:
+                # Only map days within the requested range to save memory
+                if start_date <= curr_l <= end_date:
+                    leave_map[(uid, curr_l)] = l.get("status")
+                curr_l += timedelta(days=1)
 
         records     = []
         total_hours = 0.0
@@ -399,13 +408,7 @@ class AttendanceService:
                 elif summary["total_hours"] < float(settings.get("half_day_hours_threshold") or 4.0):
                     day_status = "HALF"
 
-                day_leave_status = None
-                for l in leave_map.get(uid_str, []):
-                    sd = AttendanceService._to_date(l["start_date"])
-                    ed = AttendanceService._to_date(l["end_date"])
-                    if sd <= day <= ed:
-                        day_leave_status = l.get("status")
-                        break
+                day_leave_status = leave_map.get((uid_str, day))
 
                 records.append({
                     "date":           day,
