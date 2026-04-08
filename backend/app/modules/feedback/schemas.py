@@ -9,6 +9,9 @@ class FeedbackBase(MongoBaseSchema):
     mobile: str | None = None
     shop_name: str | None = None
     product: str | None = None
+    rating: int = 0 # Legacy
+    product_rating: int = 0 
+    agent_score: int = 0
     agent_name: str | None = None
     agent_role: str | None = None
     referral_code: str | None = None

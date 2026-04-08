@@ -113,3 +113,9 @@ class FeedbackService:
              raise HTTPException(status_code=404, detail="Feedback not found")
         await db_feedback.delete()
         return True
+
+    async def batch_delete_feedbacks(self, ids: List[PydanticObjectId]):
+        """Delete multiple feedbacks by their IDs."""
+        if not ids:
+            return
+        await Feedback.find(In(Feedback.id, ids)).delete()

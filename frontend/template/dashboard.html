@@ -10,7 +10,7 @@
     <title>Overview — SRM AI SETU</title>
     <script>
         console.log('Diagnostic: Dashboard HTML started loading');
-        window.onerror = function(msg, url, line, col, error) {
+        window.onerror = function (msg, url, line, col, error) {
             console.error('DIAGNOSTIC GLOBAL ERROR:', msg, 'at', url, 'line', line);
         };
     </script>
@@ -26,7 +26,6 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap"
         rel="stylesheet">
     <style>
-
         /* ── Dashboard header ── */
         .dash-header {
             display: flex;
@@ -84,8 +83,9 @@
             font-size: 32px;
             font-weight: 800;
             margin-bottom: 12px;
-            color: #ffffff; /* Contrast on primary gradient */
-            text-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            color: #ffffff;
+            /* Contrast on primary gradient */
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
             letter-spacing: -0.02em;
         }
 
@@ -117,9 +117,23 @@
         }
 
         @keyframes pulseRing {
-            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
-            70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 10px rgba(74, 222, 128, 0); }
-            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7);
+            }
+
+            70% {
+                transform: scale(1.1);
+                opacity: 0.8;
+                box-shadow: 0 0 0 10px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
         }
 
         /* ── KPI Cards ── */
@@ -182,69 +196,348 @@
         .pro-att-widget::before {
             content: '';
             position: absolute;
-            top: -40px; left: -40px;
-            width: 180px; height: 180px;
-            background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+            top: -40px;
+            left: -40px;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
             pointer-events: none;
         }
+
         .pro-att-widget::after {
             content: '';
             position: absolute;
-            bottom: -40px; right: -40px;
-            width: 160px; height: 160px;
-            background: radial-gradient(circle, rgba(37,99,235,0.12) 0%, transparent 70%);
+            bottom: -40px;
+            right: -40px;
+            width: 160px;
+            height: 160px;
+            background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 70%);
             pointer-events: none;
         }
 
-        .pro-att-left { flex: 1; padding-right: 24px; min-width: 0; }
-        .pro-att-date { font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.32); margin-bottom: 6px; }
-        .pro-att-greeting-line { font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.70); line-height: 1; margin-bottom: 2px; }
-        .pro-att-name { font-size: 22px; font-weight: 800; line-height: 1.15; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pro-att-name.punched-in { background: linear-gradient(90deg, #c7d7ff, #a5b8ff, #e0e7ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-        .pro-att-name.punched-out { color: rgba(255,255,255,0.42); -webkit-text-fill-color: rgba(255,255,255,0.42); }
+        .pro-att-left {
+            flex: 1;
+            padding-right: 24px;
+            min-width: 0;
+        }
 
-        .pro-att-live-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-        .pro-att-live-badge.live { background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.22); color: #4ade80; }
-        .pro-att-live-badge.offline { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.35); }
+        .pro-att-date {
+            font-size: 10.5px;
+            font-weight: 600;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.32);
+            margin-bottom: 6px;
+        }
 
-        .pro-att-pulse-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 0 rgba(74,222,128,0.5); animation: attPulse 2s ease-in-out infinite; flex-shrink: 0; }
-        @keyframes attPulse { 0% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); } 60% { box-shadow: 0 0 0 5px rgba(74,222,128,0); } 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0); } }
+        .pro-att-greeting-line {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.70);
+            line-height: 1;
+            margin-bottom: 2px;
+        }
 
-        .pro-att-sep { width: 1px; align-self: stretch; background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.10) 20%, rgba(255,255,255,0.10) 80%, transparent); flex-shrink: 0; margin: 0 4px; }
+        .pro-att-name {
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        .pro-att-right { padding-left: 24px; display: flex; flex-direction: column; gap: 12px; min-width: 260px; max-width: 300px; }
-        .pro-att-user-row { display: flex; align-items: center; gap: 10px; }
-        .pro-att-avatar-wrap { position: relative; flex-shrink: 0; }
-        .pro-att-avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #3b5bdb, #6366f1); border: 2px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: white; overflow: hidden; }
-        .pro-att-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-        .pro-att-status-dot { position: absolute; bottom: 1px; right: 1px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #102272; }
-        .pro-att-status-dot.online { background: #4ade80; }
-        .pro-att-status-dot.offline { background: rgba(255,255,255,0.25); }
-        .pro-att-user-info { flex: 1; min-width: 0; }
-        .pro-att-user-name { font-size: 13.5px; font-weight: 700; color: white; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .pro-att-punch-badge { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; padding: 2px 7px; border-radius: 4px; font-size: 9px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
-        .pro-att-punch-badge.in { background: rgba(74,222,128,0.10); border: 1px solid rgba(74,222,128,0.20); color: #4ade80; }
-        .pro-att-punch-badge.out { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: rgba(255,255,255,0.40); }
+        .pro-att-name.punched-in {
+            background: linear-gradient(90deg, #c7d7ff, #a5b8ff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
 
-        .pro-att-bottom-row { display: flex; align-items: stretch; gap: 8px; }
-        .pro-att-info-cells { display: flex; flex: 1; background: rgba(0,0,0,0.25); border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; }
-        .pro-att-info-cell { flex: 1; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
-        .pro-att-info-cell + .pro-att-info-cell { border-left: 1px solid rgba(255,255,255,0.07); }
-        .pro-att-info-label { font-size: 8.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: rgba(255,255,255,0.30); }
-        .pro-att-info-val { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.80); letter-spacing: 0.01em; white-space: nowrap; }
+        .pro-att-name.punched-out {
+            color: rgba(255, 255, 255, 0.42);
+            -webkit-text-fill-color: rgba(255, 255, 255, 0.42);
+        }
 
-        .pro-att-timer-val { font-family: 'JetBrains Mono', monospace; font-weight: 400; font-size: 17px; color: #fff; letter-spacing: 0; display: flex; align-items: center; }
-        .pro-att-timer-val .att-sep { animation: timerColonBlink 1s step-start infinite; }
-        @keyframes timerColonBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.18; } }
+        .pro-att-live-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
 
-        .pro-att-btn { width: 72px; flex-shrink: 0; border: none; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 10.5px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: white; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; display: flex; align-items: center; justify-content: center; line-height: 1.25; text-align: center; padding: 0; }
-        .pro-att-btn.punch-in { background: linear-gradient(150deg, #15803d, #22c55e); box-shadow: 0 4px 14px rgba(34,197,94,0.35); }
-        .pro-att-btn.punch-out { background: linear-gradient(150deg, #b91c1c, #ef4444); box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
-        .pro-att-btn:hover { transform: translateY(-1px); }
-        .pro-att-btn.punch-in:hover { box-shadow: 0 6px 18px rgba(34,197,94,0.50); }
-        .pro-att-btn.punch-out:hover { box-shadow: 0 6px 18px rgba(239,68,68,0.50); }
-        .pro-att-btn:active { transform: scale(0.97); }
-        .pro-att-btn.loading { opacity: 0.50; cursor: not-allowed; transform: none; box-shadow: none; }
+        .pro-att-live-badge.live {
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.22);
+            color: #4ade80;
+        }
+
+        .pro-att-live-badge.offline {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.35);
+        }
+
+        .pro-att-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+            animation: attPulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+
+        @keyframes attPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.5);
+            }
+
+            60% {
+                box-shadow: 0 0 0 5px rgba(74, 222, 128, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(74, 222, 128, 0);
+            }
+        }
+
+        .pro-att-sep {
+            width: 1px;
+            align-self: stretch;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.10) 20%, rgba(255, 255, 255, 0.10) 80%, transparent);
+            flex-shrink: 0;
+            margin: 0 4px;
+        }
+
+        .pro-att-right {
+            padding-left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 260px;
+            max-width: 300px;
+        }
+
+        .pro-att-user-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .pro-att-avatar-wrap {
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .pro-att-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b5bdb, #6366f1);
+            border: 2px solid rgba(255, 255, 255, 0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            overflow: hidden;
+        }
+
+        .pro-att-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+        .pro-att-status-dot {
+            position: absolute;
+            bottom: 1px;
+            right: 1px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 2px solid #102272;
+        }
+
+        .pro-att-status-dot.online {
+            background: #4ade80;
+        }
+
+        .pro-att-status-dot.offline {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .pro-att-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pro-att-user-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: white;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .pro-att-punch-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 3px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .pro-att-punch-badge.in {
+            background: rgba(74, 222, 128, 0.10);
+            border: 1px solid rgba(74, 222, 128, 0.20);
+            color: #4ade80;
+        }
+
+        .pro-att-punch-badge.out {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.40);
+        }
+
+        .pro-att-bottom-row {
+            display: flex;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .pro-att-info-cells {
+            display: flex;
+            flex: 1;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            overflow: hidden;
+        }
+
+        .pro-att-info-cell {
+            flex: 1;
+            padding: 8px 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .pro-att-info-cell+.pro-att-info-cell {
+            border-left: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .pro-att-info-label {
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.09em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.30);
+        }
+
+        .pro-att-info-val {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.80);
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        .pro-att-timer-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 400;
+            font-size: 17px;
+            color: #fff;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .pro-att-timer-val .att-sep {
+            animation: timerColonBlink 1s step-start infinite;
+        }
+
+        @keyframes timerColonBlink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.18;
+            }
+        }
+
+        .pro-att-btn {
+            width: 72px;
+            flex-shrink: 0;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.25;
+            text-align: center;
+            padding: 0;
+        }
+
+        .pro-att-btn.punch-in {
+            background: linear-gradient(150deg, #15803d, #22c55e);
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+        }
+
+        .pro-att-btn.punch-out {
+            background: linear-gradient(150deg, #b91c1c, #ef4444);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
+
+        .pro-att-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .pro-att-btn.punch-in:hover {
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.50);
+        }
+
+        .pro-att-btn.punch-out:hover {
+            box-shadow: 0 6px 18px rgba(239, 68, 68, 0.50);
+        }
+
+        .pro-att-btn:active {
+            transform: scale(0.97);
+        }
+
+        .pro-att-btn.loading {
+            opacity: 0.50;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         @media (max-width: 991px) {
             .dash-header {
@@ -254,13 +547,16 @@
                 padding: 16px 20px;
                 margin-bottom: 16px;
             }
+
             .dash-greeting {
                 font-size: 24px;
                 margin-bottom: 8px;
             }
+
             .dash-header-left {
                 align-items: flex-start;
             }
+
             .pro-att-widget {
                 flex-direction: column;
                 padding: 16px;
@@ -268,18 +564,21 @@
                 align-items: stretch;
                 border-radius: 16px;
             }
+
             .pro-att-left {
                 padding-right: 0;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
                 padding-bottom: 12px;
                 flex: none;
             }
+
             .pro-att-right {
                 padding-left: 0;
                 min-width: 0;
                 max-width: 100%;
                 gap: 12px;
             }
+
             .pro-att-sep {
                 display: none;
             }
@@ -414,7 +713,8 @@
         .page-section-title {
             font-size: 28px;
             font-weight: 800;
-            color: var(--title-color); /* Theme-aware Blue */
+            color: var(--title-color);
+            /* Theme-aware Blue */
             margin-bottom: 2px;
             letter-spacing: -0.02em;
         }
@@ -826,7 +1126,8 @@
                 height: 32px;
                 font-size: 1rem;
                 margin-bottom: 4px;
-                order: -1; /* Move icon to top */
+                order: -1;
+                /* Move icon to top */
             }
 
             .kpi-trend {
@@ -834,88 +1135,106 @@
                 margin-top: 2px;
             }
         }
+
         /* Standard alignment for Dashboard Overview */
-        .main-wrapper { padding-top: 0 !important; }
+        .main-wrapper {
+            padding-top: 0 !important;
+        }
 
         /* PREMIUM HEADER REDESIGN - ENHANCED PROPORTIONS */
-        .header-outer { 
-            border-radius: 20px; 
-            padding: 1px; 
-            background: var(--header-outer-bg); 
+        .header-outer {
+            border-radius: 20px;
+            padding: 1px;
+            background: var(--header-outer-bg);
             margin-bottom: 2rem;
-            margin-top: 0; /* Reduced from 1rem */            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-top: 0;
+            /* Reduced from 1rem */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
         }
-        .header-inner { 
-            border-radius: 19px; 
-            background: var(--header-inner-bg); 
-            padding: 2.2rem 3rem; 
-            display: flex; 
-            align-items: center; 
+
+        .header-inner {
+            border-radius: 19px;
+            background: var(--header-inner-bg);
+            padding: 2.2rem 3rem;
+            display: flex;
+            align-items: center;
             justify-content: space-between;
-            position: relative; 
-            overflow: hidden; 
+            position: relative;
+            overflow: hidden;
             min-height: 180px;
-            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
         }
+
         .header-inner::before {
             content: '';
             position: absolute;
-            top: -60px; right: -40px;
-            width: 260px; height: 260px;
-            background: rgba(255,255,255,0.08);
+            top: -60px;
+            right: -40px;
+            width: 260px;
+            height: 260px;
+            background: rgba(255, 255, 255, 0.08);
             border-radius: 50%;
             pointer-events: none;
         }
+
         .header-inner::after {
             content: '';
             position: absolute;
-            bottom: -80px; left: 30%;
-            width: 200px; height: 200px;
-            background: rgba(255,255,255,0.05);
+            bottom: -80px;
+            left: 30%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
             pointer-events: none;
         }
-        
-        .header-left { flex: 1; }
-        .header-date { 
-            font-size: 16px; 
-            font-weight: 600; 
-            color: rgba(255,255,255,0.5); 
-            letter-spacing: 0.12em; 
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-date {
+            font-size: 16px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 0.12em;
             margin-bottom: 15px;
             text-transform: uppercase;
         }
-        .header-greeting { 
-            font-size: 22px; 
-            color: #fff; 
-            line-height: 1.2; 
-            font-weight: 400; 
+
+        .header-greeting {
+            font-size: 22px;
+            color: #fff;
+            line-height: 1.2;
+            font-weight: 400;
         }
-        .header-name { 
+
+        .header-name {
             font-size: 1.8rem;
             font-weight: 800;
-            background: var(--header-name-gradient); 
+            background: var(--header-name-gradient);
             background-clip: text;
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent; 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             display: inline-block;
             margin-top: 4px;
             letter-spacing: -0.02em;
         }
-        
+
         .live-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             padding: 4px 12px;
             border-radius: 100px;
             font-size: 11px;
             font-weight: 700;
             color: #fff;
             margin-top: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .live-dot {
             width: 8px;
             height: 8px;
@@ -924,36 +1243,52 @@
             box-shadow: 0 0 8px #10b981;
             animation: pulse-green 2s infinite;
         }
+
         @keyframes pulse-green {
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
         }
 
         .header-divider {
             width: 1px;
             height: 80px;
-            background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.2), transparent);
             margin: 0 40px;
         }
 
-        .header-right { 
+        .header-right {
             flex-shrink: 0;
-            min-width: 380px; 
+            min-width: 380px;
         }
-        
+
         .punch-user-row {
             display: flex;
             align-items: center;
             gap: 15px;
             margin-bottom: 20px;
         }
-        .punch-avatar-wrapper { position: relative; }
+
+        .punch-avatar-wrapper {
+            position: relative;
+        }
+
         .punch-avatar {
             width: 48px;
             height: 48px;
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -962,6 +1297,7 @@
             font-weight: 700;
             font-size: 18px;
         }
+
         .online-dot {
             position: absolute;
             bottom: -2px;
@@ -972,40 +1308,77 @@
             border: 2px solid #0d1f5c;
             border-radius: 50%;
         }
-        .punch-name { font-size: 18px; font-weight: 600; color: #fff; }
+
+        .punch-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+
         .punch-status-badge {
             font-size: 11px;
             font-weight: 700;
-            color: rgba(255,255,255,0.5);
+            color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
         .punch-in-time {
             margin-left: auto;
             text-align: right;
         }
-        .punch-in-label { font-size: 12px; color: rgba(255,255,255,0.5); }
-        .punch-in-val { font-size: 16px; font-weight: 600; color: #fff; }
+
+        .punch-in-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .punch-in-val {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fff;
+        }
 
         .punch-bottom-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
             padding: 15px 20px;
             border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .duration-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 2px; }
-        .duration-timer { 
-            font-family: 'JetBrains Mono', 'DM Mono', monospace; 
-            font-size: 32px; 
-            font-weight: 300; 
-            color: #fff; 
-            letter-spacing: .06em; 
+
+        .duration-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 2px;
         }
-        .colon { animation: colon 1s step-start infinite; }
-        @keyframes colon { 0%,49%{opacity:1} 50%,99%{opacity:.15} }
+
+        .duration-timer {
+            font-family: 'JetBrains Mono', 'DM Mono', monospace;
+            font-size: 32px;
+            font-weight: 300;
+            color: #fff;
+            letter-spacing: .06em;
+        }
+
+        .colon {
+            animation: colon 1s step-start infinite;
+        }
+
+        @keyframes colon {
+
+            0%,
+            49% {
+                opacity: 1
+            }
+
+            50%,
+            99% {
+                opacity: .15
+            }
+        }
 
         .pro-att-btn {
             background: #fff;
@@ -1023,9 +1396,22 @@
             justify-content: center;
             text-align: center;
         }
-        .pro-att-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,255,255,0.2); }
-        .pro-att-btn.punch-in { background: #10b981 !important; color: #fff !important; }
-        .pro-att-btn.punch-out { background: linear-gradient(150deg, #b91c1c, #ef4444) !important; color: #fff !important; box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
+
+        .pro-att-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .pro-att-btn.punch-in {
+            background: #10b981 !important;
+            color: #fff !important;
+        }
+
+        .pro-att-btn.punch-out {
+            background: linear-gradient(150deg, #b91c1c, #ef4444) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+        }
 
         @media (max-width: 991px) {
             .header-inner {
@@ -1034,32 +1420,40 @@
                 padding: 1.8rem 1.5rem;
                 min-height: auto;
             }
+
             .header-left {
                 width: 100%;
             }
+
             .header-greeting {
                 font-size: 1.2rem !important;
             }
+
             .header-name {
                 font-size: 1.8rem !important;
             }
+
             .header-sub-greeting {
                 font-size: 13px !important;
             }
+
             .header-divider {
                 width: 100%;
                 height: 1px;
-                background: linear-gradient(to right, transparent, rgba(255,255,255,0.2), transparent);
+                background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.2), transparent);
                 margin: 20px 0;
             }
+
             .header-right {
                 min-width: 100%;
                 width: 100%;
             }
+
             .punch-user-row {
                 gap: 12px;
                 flex-wrap: wrap;
             }
+
             .punch-bottom-row {
                 flex-direction: row;
                 gap: 12px;
@@ -1067,6 +1461,7 @@
                 justify-content: space-between;
                 padding: 12px 15px;
             }
+
             .duration-timer {
                 font-size: 24px !important;
             }
@@ -1084,64 +1479,78 @@
                 <!-- Header Section -->
                 <!-- Premium Header Section -->
                 <div class="header-outer" id="employee-header-widget">
-                  <div class="header-inner">
-                
-                    <!-- LEFT: Greeting & Motivation -->
-                    <div class="header-left d-flex flex-column align-items-start flex-grow-1" style="position:relative; z-index:1;">
-                      <div class="header-greeting mb-0" id="att-v2-greeting-line" style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: rgba(255,255,255,0.85);">
-                        Good Afternoon, <span class="header-name" id="att-v2-left-name" style="background: var(--header-name-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2.2rem;">User</span>
-                      </div>
-                      <div id="att-v2-motivational-msg" class="header-sub-greeting" style="font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.7); margin-top: 8px; max-width: 500px; line-height: 1.5;">
-                        Manage your efficiency and daily goals here.
-                      </div>
-                      
-                      <!-- Employee Status Zone (Shown only when NOT an admin) -->
-                      <div id="employee-status-zone" class="mt-4">
-                        <div class="header-date" id="att-v2-date" style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; opacity: 0.5; text-transform: uppercase;">--</div>
-                        <div class="live-badge mt-2" id="att-v2-live-badge">
-                          <span class="live-dot" id="att-v2-pulse"></span> <span id="att-v2-live-text">LIVE</span>
+                    <div class="header-inner">
+
+                        <!-- LEFT: Greeting & Motivation -->
+                        <div class="header-left d-flex flex-column align-items-start flex-grow-1"
+                            style="position:relative; z-index:1;">
+                            <div class="header-greeting mb-0" id="att-v2-greeting-line"
+                                style="font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; color: rgba(255,255,255,0.85);">
+                                Good Afternoon, <span class="header-name" id="att-v2-left-name"
+                                    style="background: var(--header-name-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 2.2rem;">User</span>
+                            </div>
+                            <div id="att-v2-motivational-msg" class="header-sub-greeting"
+                                style="font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.7); margin-top: 8px; max-width: 500px; line-height: 1.5;">
+                                Manage your efficiency and daily goals here.
+                            </div>
+
+                            <!-- Employee Status Zone (Shown only when NOT an admin) -->
+                            <div id="employee-status-zone" class="mt-4">
+                                <div class="header-date" id="att-v2-date"
+                                    style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; opacity: 0.5; text-transform: uppercase;">
+                                    --</div>
+                                <div class="live-badge mt-2" id="att-v2-live-badge">
+                                    <span class="live-dot" id="att-v2-pulse"></span> <span
+                                        id="att-v2-live-text">LIVE</span>
+                                </div>
+                            </div>
                         </div>
-                      </div>
+
+                        <div class="header-divider" id="header-divider"></div>
+
+                        <!-- RIGHT: Status (for Admin) or Punch Card (for Employee) -->
+                        <div class="header-right" id="punch-card-container">
+                            <!-- Admin Status Zone (Shown only for Admins) -->
+                            <div id="admin-status-zone"
+                                class="d-none text-end d-flex flex-column align-items-end gap-3">
+                                <div class="header-date mb-0" id="att-v2-date-admin"
+                                    style="font-size: 10px; opacity: 0.4; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">
+                                    --</div>
+                                <div class="live-badge d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill"
+                                    style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">
+                                    <span class="live-dot"
+                                        style="width: 7px; height: 7px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
+                                    <span>LIVE</span>
+                                </div>
+                            </div>
+                            <div class="punch-user-row">
+                                <div class="punch-avatar-wrapper">
+                                    <div class="punch-avatar" id="att-v2-avatar">--</div>
+                                    <span class="online-dot" id="att-v2-status-dot"></span>
+                                </div>
+                                <div class="punch-name-col">
+                                    <div class="punch-name" id="att-v2-name">User Name</div>
+                                    <div class="punch-status-badge" id="att-v2-badge">Not Punched</div>
+                                </div>
+                                <div class="punch-in-time">
+                                    <div class="punch-in-label">In at</div>
+                                    <div class="punch-in-val" id="att-v2-first-in">--:--</div>
+                                </div>
+                            </div>
+                            <div class="punch-bottom-row">
+                                <div class="duration-box">
+                                    <div class="duration-label">Duration</div>
+                                    <div class="duration-timer" id="att-v2-timer">
+                                        <span id="att-v2-hh">00</span><span class="colon">:</span><span
+                                            id="att-v2-mm">00</span><span class="colon">:</span><span
+                                            id="att-v2-ss">00</span>
+                                    </div>
+                                </div>
+                                <button class="pro-att-btn" id="header-punch-btn-new">Punch<br>Out</button>
+                            </div>
+                        </div>
+
                     </div>
-                
-                    <div class="header-divider" id="header-divider"></div>
-                
-                    <!-- RIGHT: Status (for Admin) or Punch Card (for Employee) -->
-                    <div class="header-right" id="punch-card-container">
-                      <!-- Admin Status Zone (Shown only for Admins) -->
-                      <div id="admin-status-zone" class="d-none text-end d-flex flex-column align-items-end gap-3">
-                         <div class="header-date mb-0" id="att-v2-date-admin" style="font-size: 10px; opacity: 0.4; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;">--</div>
-                         <div class="live-badge d-flex align-items-center gap-2 px-3 py-1.5 rounded-pill" style="background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">
-                             <span class="live-dot" style="width: 7px; height: 7px; background: #4ade80; border-radius: 50%; box-shadow: 0 0 10px #4ade80;"></span>
-                             <span>LIVE</span>
-                          </div>
-                      </div>
-                      <div class="punch-user-row">
-                        <div class="punch-avatar-wrapper">
-                            <div class="punch-avatar" id="att-v2-avatar">--</div>
-                            <span class="online-dot" id="att-v2-status-dot"></span>
-                        </div>
-                        <div class="punch-name-col">
-                          <div class="punch-name" id="att-v2-name">User Name</div>
-                          <div class="punch-status-badge" id="att-v2-badge">Not Punched</div>
-                        </div>
-                        <div class="punch-in-time">
-                          <div class="punch-in-label">In at</div>
-                          <div class="punch-in-val" id="att-v2-first-in">--:--</div>
-                        </div>
-                      </div>
-                      <div class="punch-bottom-row">
-                        <div class="duration-box">
-                          <div class="duration-label">Duration</div>
-                          <div class="duration-timer" id="att-v2-timer">
-                            <span id="att-v2-hh">00</span><span class="colon">:</span><span id="att-v2-mm">00</span><span class="colon">:</span><span id="att-v2-ss">00</span>
-                          </div>
-                        </div>
-                        <button class="pro-att-btn" id="header-punch-btn-new">Punch<br>Out</button>
-                      </div>
-                    </div>
-                
-                  </div>
                 </div>
 
 
@@ -1322,7 +1731,8 @@
                                             class="bi bi-activity"></i></div>
                                     Recent Activity
                                 </div>
-                                <span class="badge badge-purple-light" style="font-size: 0.7rem; font-weight: 700;">Last 10 Actions</span>
+                                <span class="badge badge-purple-light" style="font-size: 0.7rem; font-weight: 700;">Last
+                                    10 Actions</span>
                             </div>
                             <div class="section-card-body" id="activity-feed">
                                 <div class="py-3 px-3">
@@ -1391,14 +1801,16 @@
                             <div class="section-card-body" id="clients-table">
                                 <div class="py-3 px-3 stagger-fade-in">
                                     <div class="d-flex align-items-center gap-3 mb-3">
-                                        <div class="skeleton-box skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                        <div class="skeleton-box skeleton-avatar" style="width: 36px; height: 36px;">
+                                        </div>
                                         <div class="flex-grow-1">
                                             <div class="skeleton-box skeleton-text medium mb-1"></div>
                                             <div class="skeleton-box skeleton-text short"></div>
                                         </div>
                                     </div>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="skeleton-box skeleton-avatar" style="width: 36px; height: 36px;"></div>
+                                        <div class="skeleton-box skeleton-avatar" style="width: 36px; height: 36px;">
+                                        </div>
                                         <div class="flex-grow-1">
                                             <div class="skeleton-box skeleton-text medium mb-1"></div>
                                             <div class="skeleton-box skeleton-text short"></div>
@@ -1486,13 +1898,13 @@
         if (isAdmin) {
             const employeeStatus = document.getElementById('employee-status-zone');
             if (employeeStatus) employeeStatus.classList.add('d-none');
-            
+
             const divider = document.getElementById('header-divider');
             if (divider) divider.style.setProperty('display', 'none', 'important');
-            
+
             const adminStatus = document.getElementById('admin-status-zone');
             if (adminStatus) adminStatus.classList.remove('d-none');
-            
+
             // Hide ALL punch block contents for a clean Admin view
             const punchContainer = document.getElementById('punch-card-container');
             if (punchContainer) {
@@ -1511,7 +1923,7 @@
             // Ensure employee status is shown
             const employeeStatus = document.getElementById('employee-status-zone');
             if (employeeStatus) employeeStatus.classList.remove('d-none');
-            
+
             // Ensure admin status is hidden
             const adminStatus = document.getElementById('admin-status-zone');
             if (adminStatus) adminStatus.classList.add('d-none');
@@ -1530,11 +1942,11 @@
         }
 
         updateHeaderContext();
-        
+
         // ── Role-Specific KPI Setup ──────────────────────────────────
         function setupRoleKPIs() {
             const flags = getRoleFlags(currentUser?.role);
-            
+
             if (flags.isSales || flags.isTelesales) {
                 // Sales / Telesales View
                 document.getElementById('kpi-visits-label').textContent = 'My Visits';
@@ -1546,15 +1958,15 @@
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').innerHTML = '<i class="bi bi-award"></i>';
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').style.background = '#fef3c7';
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').style.color = '#d97706';
-                
+
                 document.querySelector('[data-widget-id="kpi-revenue"] .kpi-icon-wrapper').innerHTML = '<i class="bi bi-check2-square"></i>';
-                
+
                 // Update Links
                 document.querySelector('[data-widget-id="kpi-visits"] a').href = 'visits.html';
                 document.querySelector('[data-widget-id="kpi-clients"] a').href = 'clients.html';
                 document.querySelector('[data-widget-id="kpi-employees"] a').href = 'incentives.html';
                 document.querySelector('[data-widget-id="kpi-revenue"] a').href = 'todo.html';
-            } 
+            }
             else if (flags.isPM) {
                 // Project Manager View
                 document.getElementById('kpi-visits-label').textContent = 'Active Projects';
@@ -1567,7 +1979,7 @@
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').innerHTML = '<i class="bi bi-calendar-event"></i>';
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').style.background = '#f0f9ff';
                 document.querySelector('[data-widget-id="kpi-employees"] .kpi-icon-wrapper').style.color = '#0369a1';
-                
+
                 document.querySelector('[data-widget-id="kpi-revenue"] .kpi-icon-wrapper').innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
                 document.querySelector('[data-widget-id="kpi-revenue"] .kpi-icon-wrapper').style.background = '#fef2f2';
                 document.querySelector('[data-widget-id="kpi-revenue"] .kpi-icon-wrapper').style.color = '#dc2626';
@@ -1696,7 +2108,7 @@
                     data: {
                         labels,
                         datasets: [{
-                            label: 'Visits', 
+                            label: 'Visits',
                             data,
                             backgroundColor: gradient,
                             borderRadius: 6,
@@ -1705,7 +2117,7 @@
                         }]
                     },
                     options: {
-                        plugins: { 
+                        plugins: {
                             legend: { display: false },
                             tooltip: {
                                 backgroundColor: '#1e293b',
@@ -1717,20 +2129,20 @@
                             }
                         },
                         scales: {
-                            y: { 
-                                beginAtZero: true, 
-                                border: { display: false }, 
-                                grid: { color: 'rgba(241, 245, 249, 0.6)', drawTicks: false }, 
-                                ticks: { 
-                                    font: { size: 11, weight: '500' }, 
+                            y: {
+                                beginAtZero: true,
+                                border: { display: false },
+                                grid: { color: 'rgba(241, 245, 249, 0.6)', drawTicks: false },
+                                ticks: {
+                                    font: { size: 11, weight: '500' },
                                     padding: 10,
-                                    callback: (v) => v >= 1000 ? (v/1000).toFixed(1) + 'k' : v
-                                } 
+                                    callback: (v) => v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v
+                                }
                             },
-                            x: { 
-                                border: { display: false }, 
-                                grid: { display: false }, 
-                                ticks: { font: { size: 11, weight: '500' }, color: '#64748b' } 
+                            x: {
+                                border: { display: false },
+                                grid: { display: false },
+                                ticks: { font: { size: 11, weight: '500' }, color: '#64748b' }
                             }
                         },
                         maintainAspectRatio: false,
@@ -1756,13 +2168,13 @@
                     data: {
                         labels: rLabels,
                         datasets: [{
-                            label: 'Revenue', 
+                            label: 'Revenue',
                             data: rData,
-                            borderColor: '#10b981', 
+                            borderColor: '#10b981',
                             backgroundColor: rGradient,
                             fill: true,
-                            tension: 0.4, 
-                            borderWidth: 3, 
+                            tension: 0.4,
+                            borderWidth: 3,
                             pointRadius: 0,
                             pointHoverRadius: 6,
                             pointHoverBackgroundColor: '#10b981',
@@ -1771,7 +2183,7 @@
                         }]
                     },
                     options: {
-                        plugins: { 
+                        plugins: {
                             legend: { display: false },
                             tooltip: {
                                 backgroundColor: '#1e293b',
@@ -1785,19 +2197,19 @@
                         },
                         scales: {
                             y: {
-                                beginAtZero: true, 
-                                border: { display: false }, 
+                                beginAtZero: true,
+                                border: { display: false },
                                 grid: { color: 'rgba(241, 245, 249, 0.6)' },
-                                ticks: { 
-                                    font: { size: 11, weight: '500' }, 
+                                ticks: {
+                                    font: { size: 11, weight: '500' },
                                     padding: 8,
-                                    callback: (value) => '₹' + (value >= 100000 ? (value / 100000).toFixed(1) + 'L' : (value >= 1000 ? (value / 1000) + 'K' : value)) 
+                                    callback: (value) => '₹' + (value >= 100000 ? (value / 100000).toFixed(1) + 'L' : (value >= 1000 ? (value / 1000) + 'K' : value))
                                 }
                             },
-                            x: { 
-                                border: { display: false }, 
-                                grid: { display: false }, 
-                                ticks: { font: { size: 11, weight: '500' }, color: '#64748b' } 
+                            x: {
+                                border: { display: false },
+                                grid: { display: false },
+                                ticks: { font: { size: 11, weight: '500' }, color: '#64748b' }
                             }
                         },
                         maintainAspectRatio: false,
@@ -1855,7 +2267,7 @@
                         },
                         plugins: [{
                             id: 'centerText',
-                            beforeDraw: function(chart) {
+                            beforeDraw: function (chart) {
                                 if (chart.config.type !== 'doughnut') return;
                                 const width = chart.width, height = chart.height, ctx = chart.ctx;
                                 ctx.restore();
@@ -1863,15 +2275,15 @@
                                 ctx.font = `600 ${fontSize}em 'Inter'`;
                                 ctx.textBaseline = "middle";
                                 const text = sValues.reduce((a, b) => a + b, 0),
-                                      textX = Math.round((width - ctx.measureText(text).width) / 2),
-                                      textY = height / 2;
+                                    textX = Math.round((width - ctx.measureText(text).width) / 2),
+                                    textY = height / 2;
                                 ctx.fillStyle = '#1e293b';
                                 ctx.fillText(text, textX, textY);
-                                
+
                                 ctx.font = `500 0.75em 'Inter'`;
                                 const label = "TOTAL",
-                                      labelX = Math.round((width - ctx.measureText(label).width) / 2),
-                                      labelY = (height / 2) + 20;
+                                    labelX = Math.round((width - ctx.measureText(label).width) / 2),
+                                    labelY = (height / 2) + 20;
                                 ctx.fillStyle = '#64748b';
                                 ctx.fillText(label, labelX, labelY);
                                 ctx.save();
@@ -1970,7 +2382,7 @@
                 </div>`;
             try {
                 const issues = await apiGet('/issues/?limit=5');
-                
+
                 if (!issues.length) {
                     el.innerHTML = `<div class="empty-state py-4"><i class="bi bi-check2-circle opacity-25" style="font-size: 2rem;"></i><p class="mt-2 text-muted small">No active issues found.</p></div>`;
                     return;
@@ -2195,7 +2607,7 @@
                     // Update KPIs (with null guards since non-admin dashboard may differ)
                     // Update KPIs (with null guards since non-admin dashboard may differ)
                     const flags = getRoleFlags(currentUser?.role);
-                    
+
                     // Card 1: Visits / Active Projects
                     const kpiLeads = document.getElementById('kpi-leads');
                     const val1 = flags.isPM ? stats.ongoing_projects : stats.total_visits;
@@ -2323,8 +2735,8 @@
         // Update pills and auto-reload on change
         ['filter-area', 'filter-user', 'filter-start', 'filter-end'].forEach(function (id) {
             const el = document.getElementById(id);
-            if (el) el.addEventListener('change', function () { 
-                updateFilterPills(); 
+            if (el) el.addEventListener('change', function () {
+                updateFilterPills();
                 loadDashboard();
             });
         });
@@ -2435,7 +2847,7 @@
             };
             const role = currentUser?.role || 'ADMIN';
             const prefixes = rolePrefixes[role] || rolePrefixes.ADMIN;
-            
+
             const suffixes = {
                 today: ' (Today)', week: ' (This Week)', month: ' (MTD)',
                 last_3_months: ' (3M)', last_6_months: ' (6M)',
@@ -2500,24 +2912,24 @@
                         ghostClass: 'sortable-ghost',
                         dragClass: 'sortable-drag',
                         handle: '.section-card-header',
-                         onEnd: function () {
+                        onEnd: function () {
                             const order = Array.from(row.querySelectorAll('[data-widget-id]'))
                                 .map(el => el.dataset.widgetId);
                             saveOrder(rowId, order);
                         }
                     });
                 });
-                
+
                 // Refresh order if widget IDs changed
                 ['widget-row-1'].forEach(rowId => {
                     const row = document.getElementById(rowId);
                     if (row) {
-                       const order = getOrder(rowId);
-                       if (order && order.includes('open-issues')) {
-                           const newOrder = order.map(id => id === 'open-issues' ? 'present-employees' : id);
-                           saveOrder(rowId, newOrder);
-                           applyOrder(row, newOrder);
-                       }
+                        const order = getOrder(rowId);
+                        if (order && order.includes('open-issues')) {
+                            const newOrder = order.map(id => id === 'open-issues' ? 'present-employees' : id);
+                            saveOrder(rowId, newOrder);
+                            applyOrder(row, newOrder);
+                        }
                     }
                 });
             });
@@ -2526,4 +2938,3 @@
 </body>
 
 </html>
-

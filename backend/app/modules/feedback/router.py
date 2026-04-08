@@ -19,6 +19,15 @@ async def get_all_feedbacks(
     from app.modules.feedback.service import FeedbackService
     service = FeedbackService()
     return await service.get_all_client_feedbacks(skip=skip, limit=limit)
+
+@global_router.post("/public/submit", status_code=status.HTTP_201_CREATED)
+async def submit_public_feedback(
+    feedback_in: FeedbackCreate
+) -> Any:
+    """Public endpoint for clients to submit feedback via QR code."""
+    from app.modules.feedback.service import FeedbackService
+    service = FeedbackService()
+    return await service.create_client_feedback(feedback_in)
 # Role checkers
 staff_access = RoleChecker([
     UserRole.ADMIN,
@@ -38,7 +47,7 @@ async def create_feedback(
 ) -> Any:
     """Create a new feedback entry. Available to all staff."""
     service = FeedbackService()
-    return await service.create_feedback(feedback_in, current_user, request)
+    return await service.create_client_feedback(feedback_in)
 
 @router.get("/", response_model=List[FeedbackRead])
 async def read_feedbacks(
@@ -61,23 +70,23 @@ async def read_feedback(
         raise HTTPException(status_code=404, detail="Feedback not found")
     return feedback
 
-@router.delete("/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
+@global_router.delete("/{feedback_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_feedback(
-    request: Request,
     feedback_id: PydanticObjectId,
     current_user: User = Depends(admin_access)
 ):
+    """Delete a single feedback record. Admin only."""
     service = FeedbackService()
-    await service.delete_feedback(feedback_id, current_user, request)
+    await service.delete_feedback(feedback_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@router.post("/batch-delete")
+@global_router.post("/batch-delete")
 async def batch_delete_feedbacks(
-    request: Request,
     payload: dict,
     current_user: User = Depends(admin_access)
 ):
+    """Delete multiple feedback records. Admin only."""
     ids = [PydanticObjectId(i) for i in payload.get("ids", []) if i]
     service = FeedbackService()
-    await service.batch_delete_feedbacks(ids, current_user, request)
+    await service.batch_delete_feedbacks(ids)
     return {"message": f"Successfully deleted {len(ids)} records"}

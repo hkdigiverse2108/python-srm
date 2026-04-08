@@ -212,9 +212,17 @@ async def get_effective_access_policy(
 async def list_users(
     current_user: User = Depends(get_current_active_user)
 ) -> Any:
-    if current_user.role != UserRole.ADMIN:
-        return [current_user]
-    return await User.find(User.is_deleted != True).to_list()
+    try:
+        if current_user.role != UserRole.ADMIN:
+            return [current_user]
+        users = await User.find(
+            {"is_deleted": {"$ne": True}}
+        ).to_list()
+        return users
+    except Exception as e:
+        import logging
+        logging.error(f"list_users error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load users: {str(e)}")
 
 @router.get("/project-managers", response_model=List[UserRead])
 async def list_project_managers(
