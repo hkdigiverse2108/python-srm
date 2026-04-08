@@ -516,7 +516,7 @@
                 renderPagination({
                     data: users,
                     paginationId: 'users-pagination',
-                    targetId: 'users-table',
+                    tbodyId: 'users-table',
                     renderRow: (u) => {
                         const role = roleMeta[u.role] || { cls: '', label: u.role };
                         const char = (u.name || u.email || 'U')[0].toUpperCase();

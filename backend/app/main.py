@@ -65,8 +65,23 @@ async def lifespan(app: FastAPI):
     # ── Startup ──────────────────────────────────────────────────
     try:
         print(f"[Lifespan] Connecting to MongoDB (DB: aisetu_db)...")
-        print(f"[Lifespan] URI: {settings.MONGODB_URI}")
-        mongo_client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_URI)
+        mongo_client = motor.motor_asyncio.AsyncIOMotorClient(
+            settings.MONGODB_URI,
+            # ── Connection Pool ──────────────────────────────────
+            maxPoolSize=20,          # Allow more concurrent connections
+            minPoolSize=5,           # Keep 5 warm connections ready
+            maxIdleTimeMS=45000,     # Close idle connections after 45s
+            # ── Timeout Tuning ───────────────────────────────────
+            serverSelectionTimeoutMS=8000,   # Fail fast if Atlas unreachable (8s)
+            connectTimeoutMS=8000,           # TCP connect timeout
+            socketTimeoutMS=15000,           # Per-query timeout (15s max)
+            # ── Reliability ──────────────────────────────────────
+            retryWrites=True,
+            retryReads=True,
+            heartbeatFrequencyMS=10000,      # Heartbeat every 10s
+            # ── DNS (bypass broken system resolver) ──────────────
+            tlsAllowInvalidCertificates=False,
+        )
         mongo_client.append_metadata = lambda *args, **kwargs: None
         db_name = "aisetu_db"
         
