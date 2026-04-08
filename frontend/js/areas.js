@@ -221,7 +221,7 @@ window.handleModalSave = async function () {
 
     const rules = {
         'a-name': 'Area name is required',
-        'map-search': () => (lat && lng) || 'Please select a location on the map'
+        'map-search': () => (lat && lng) ? true : 'Please select a location on the map'
     };
 
     if (!validateForm(document.getElementById('form-area'), rules)) {
