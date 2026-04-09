@@ -12,7 +12,15 @@ try:
     dns.resolver.default_resolver = dns.resolver.Resolver(configure=True)
 except Exception:
     dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
-    dns.resolver.default_resolver.nameservers = ['8.8.8.8', '8.8.4.4', '1.1.1.1']
+
+# Always ensure robust nameservers are present in the list
+if not dns.resolver.default_resolver.nameservers:
+    dns.resolver.default_resolver.nameservers = ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1']
+else:
+    # Append if not already present
+    for ns in ['8.8.8.8', '1.1.1.1']:
+        if ns not in dns.resolver.default_resolver.nameservers:
+            dns.resolver.default_resolver.nameservers.append(ns)
 # ─────────────────────────────────────────────────────────────────────────────
 
 from fastapi import FastAPI, Request
@@ -72,9 +80,9 @@ async def lifespan(app: FastAPI):
             minPoolSize=5,           # Keep 5 warm connections ready
             maxIdleTimeMS=45000,     # Close idle connections after 45s
             # ── Timeout Tuning ───────────────────────────────────
-            serverSelectionTimeoutMS=8000,   # Fail fast if Atlas unreachable (8s)
-            connectTimeoutMS=8000,           # TCP connect timeout
-            socketTimeoutMS=15000,           # Per-query timeout (15s max)
+            serverSelectionTimeoutMS=20000,   # Increase to 20s for slow Atlas handshakes
+            connectTimeoutMS=20000,           # Increase to 20s for TCP connect
+            socketTimeoutMS=30000,           # Increase per-query timeout to 30s
             # ── Reliability ──────────────────────────────────────
             retryWrites=True,
             retryReads=True,

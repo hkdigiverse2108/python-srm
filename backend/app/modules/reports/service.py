@@ -52,6 +52,16 @@ class ReportService:
         
         import asyncio
 
+        # Parse dates
+        start_dt = None
+        end_dt = None
+        if start_date:
+            try: start_dt = datetime.fromisoformat(str(start_date)).replace(tzinfo=UTC)
+            except: pass
+        if end_date:
+            try: end_dt = datetime.fromisoformat(str(end_date)).replace(tzinfo=UTC)
+            except: pass
+
         # Match expressions for date aggregation with type-safety
         curr_m_expr = {"$and": [{"$eq": [{"$type": "$created_at"}, "date"]}, {"$eq": [{"$month": "$created_at"}, curr_month]}, {"$eq": [{"$year": "$created_at"}, curr_year]}]}
         prev_m_expr = {"$and": [{"$eq": [{"$type": "$created_at"}, "date"]}, {"$eq": [{"$month": "$created_at"}, prev_month]}, {"$eq": [{"$year": "$created_at"}, prev_year]}]}
@@ -63,20 +73,40 @@ class ReportService:
              raw_ids = await Shop.get_pymongo_collection().distinct("_id", {"area_id": PydanticObjectId(area_id) if hasattr(area_id, "id") or type(area_id)==str else area_id})
              shop_ids = [PydanticObjectId(rid) for rid in raw_ids if rid]
              v_match["shop_id"] = {"$in": shop_ids}
+        if start_dt or end_dt:
+            date_filter = {}
+            if start_dt: date_filter["$gte"] = start_dt
+            if end_dt: date_filter["$lte"] = end_dt
+            v_match["visit_date"] = date_filter
         
         # Define expressions for Visit counts
         v_expr_curr = {"$expr": {"$and": [{"$eq": [{"$type": "$visit_date"}, "date"]}, {"$eq": [{"$month": "$visit_date"}, curr_month]}, {"$eq": [{"$year": "$visit_date"}, curr_year]}]}}
         v_expr_prev = {"$expr": {"$and": [{"$eq": [{"$type": "$visit_date"}, "date"]}, {"$eq": [{"$month": "$visit_date"}, prev_month]}, {"$eq": [{"$year": "$visit_date"}, prev_year]}]}}
         
-        c_match = {"status": "ACTIVE", "is_deleted": False}
+        c_match = {"status": "ACTIVE", "is_active": True, "is_deleted": False}
         if user_id: c_match["owner_id"] = user_id
         if area_id: c_match["area_id"] = area_id
+        if start_dt or end_dt:
+            date_filter = {}
+            if start_dt: date_filter["$gte"] = start_dt
+            if end_dt: date_filter["$lte"] = end_dt
+            c_match["created_at"] = date_filter
         
         p_match = {"status": GlobalTaskStatus.IN_PROGRESS, "is_deleted": False}
         if user_id: p_match["pm_id"] = user_id
+        if start_dt or end_dt:
+            date_filter = {}
+            if start_dt: date_filter["$gte"] = start_dt
+            if end_dt: date_filter["$lte"] = end_dt
+            p_match["created_at"] = date_filter
 
         b_match = {"invoice_status": "SENT", "is_deleted": False}
         if user_id: b_match["created_by_id"] = user_id
+        if start_dt or end_dt:
+            date_filter = {}
+            if start_dt: date_filter["$gte"] = start_dt
+            if end_dt: date_filter["$lte"] = end_dt
+            b_match["created_at"] = date_filter
 
         rev_pipeline = [
             {"$match": b_match},
@@ -116,23 +146,23 @@ class ReportService:
         employees_present = len(present_user_ids)
         visit_status_breakdown = {str(r["_id"]): r["count"] for r in visit_status_res}
 
-        # --- 7. Chart Data (Last 12 Months for better visibility) ---
-        one_year_ago = now - timedelta(days=365)
+        # --- 7. Chart Data (Last 6 Months for UI) ---
+        six_months_ago = now - timedelta(days=180)
         
         # Visits Trend
         v_chart_pipeline = [
             {"$addFields": {"v_date_dt": {"$toDate": "$visit_date"}}},
-            {"$match": {**v_match, "v_date_dt": {"$gte": one_year_ago}}},
+            {"$match": {**v_match, "v_date_dt": {"$gte": six_months_ago}}},
             {"$group": {"_id": {"year": {"$year": "$v_date_dt"}, "month": {"$month": "$v_date_dt"}}, "count": {"$sum": 1}}},
-            {"$sort": {"_id.year": 1, "_id.month": 1}}, {"$limit": 12}
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
         ]
         
         # Revenue Trend
         r_chart_pipeline = [
             {"$addFields": {"c_date_dt": {"$toDate": "$created_at"}}},
-            {"$match": {**b_match, "c_date_dt": {"$gte": one_year_ago}}},
+            {"$match": {**b_match, "c_date_dt": {"$gte": six_months_ago}}},
             {"$group": {"_id": {"year": {"$year": "$c_date_dt"}, "month": {"$month": "$c_date_dt"}}, "total": {"$sum": "$amount"}}},
-            {"$sort": {"_id.year": 1, "_id.month": 1}}, {"$limit": 12}
+            {"$sort": {"_id.year": 1, "_id.month": 1}}
         ]
 
         v_chart_res, r_chart_res = await asyncio.gather(
@@ -140,8 +170,19 @@ class ReportService:
             Bill.get_pymongo_collection().aggregate(r_chart_pipeline).to_list(length=None)
         )
 
-        visits_chart_data = {datetime(r["_id"]["year"], r["_id"]["month"], 1).strftime("%b"): r["count"] for r in v_chart_res}
-        revenue_by_month = {datetime(r["_id"]["year"], r["_id"]["month"], 1).strftime("%b"): float(r["total"]) for r in r_chart_res}
+        # Helper to pad data for the last 6 months
+        def pad_monthly_data(results, key_name, months_count=6):
+            padded = {}
+            for i in range(months_count - 1, -1, -1):
+                dt = now - timedelta(days=i*30)
+                month_name = dt.strftime("%b")
+                # Find if result exists for this month/year
+                match = next((r for r in results if r["_id"]["month"] == dt.month and r["_id"]["year"] == dt.year), None)
+                padded[month_name] = float(match[key_name]) if match else 0.0 if key_name == "total" else (match["count"] if match else 0)
+            return padded
+
+        visits_chart_data = pad_monthly_data(v_chart_res, "count")
+        revenue_by_month = pad_monthly_data(r_chart_res, "total")
 
         # --- 8. Project Status Breakdown (for alternative/new chart) ---
         p_status_pipeline = [
