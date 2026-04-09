@@ -67,7 +67,18 @@ class ReportService:
         prev_m_expr = {"$and": [{"$eq": [{"$type": "$created_at"}, "date"]}, {"$eq": [{"$month": "$created_at"}, prev_month]}, {"$eq": [{"$year": "$created_at"}, prev_year]}]}
 
         # --- 1. Visits Metrics ---
-        v_match = {"is_deleted": False}
+        # 1. Base Filters
+        v_match = {
+            "is_deleted": False,
+            "status": {"$in": [
+                VisitStatus.SATISFIED.value, 
+                VisitStatus.ACCEPT.value, 
+                VisitStatus.DECLINE.value, 
+                VisitStatus.TAKE_TIME_TO_THINK.value, 
+                VisitStatus.OTHER.value, 
+                VisitStatus.MISSED.value
+            ]}
+        }
         if user_id: v_match["user_id"] = user_id
         if area_id:
              raw_ids = await Shop.get_pymongo_collection().distinct("_id", {"area_id": PydanticObjectId(area_id) if hasattr(area_id, "id") or type(area_id)==str else area_id})
@@ -84,8 +95,23 @@ class ReportService:
         v_expr_prev = {"$expr": {"$and": [{"$eq": [{"$type": "$visit_date"}, "date"]}, {"$eq": [{"$month": "$visit_date"}, prev_month]}, {"$eq": [{"$year": "$visit_date"}, prev_year]}]}}
         
         c_match = {"status": "ACTIVE", "is_active": True, "is_deleted": False}
-        if user_id: c_match["owner_id"] = user_id
-        if area_id: c_match["area_id"] = area_id
+        if user_id:
+            # Unified scoping: Owner, PM, or previously Billed
+            billed_phones = await Bill.get_pymongo_collection().distinct(
+                "invoice_client_phone", 
+                {"created_by_id": user_id, "is_deleted": False}
+            )
+            c_match["$or"] = [
+                {"owner_id": user_id}, 
+                {"pm_id": user_id},
+                {"phone": {"$in": billed_phones}}
+            ]
+        
+        if area_id:
+            # Correct area filtering for clients: find clients with a shop in this area
+            target_area = PydanticObjectId(area_id) if isinstance(area_id, str) or not hasattr(area_id, "id") else area_id
+            client_ids_in_area = await Shop.get_pymongo_collection().distinct("client_id", {"area_id": target_area, "is_deleted": False})
+            c_match["_id"] = {"$in": [PydanticObjectId(rid) for rid in client_ids_in_area if rid]}
         if start_dt or end_dt:
             date_filter = {}
             if start_dt: date_filter["$gte"] = start_dt
@@ -100,7 +126,8 @@ class ReportService:
             if end_dt: date_filter["$lte"] = end_dt
             p_match["created_at"] = date_filter
 
-        b_match = {"invoice_status": "SENT", "is_deleted": False}
+        # Revenue filter: only count confirmed SUCCESSful payments
+        b_match = {"status": "SUCCESS", "is_deleted": False}
         if user_id: b_match["created_by_id"] = user_id
         if start_dt or end_dt:
             date_filter = {}
@@ -130,7 +157,9 @@ class ReportService:
         ) = await asyncio.gather(
             Visit.find(v_match).count(), Visit.find(v_match, v_expr_curr).count(), Visit.find(v_match, v_expr_prev).count(),
             Client.find(c_match).count(), Client.find(c_match, {"$expr": curr_m_expr}).count(), Client.find(c_match, {"$expr": prev_m_expr}).count(),
-            Project.find(p_match).count(), Project.find(p_match, {"$expr": curr_m_expr}).count(), Project.find(p_match, {"$expr": prev_m_expr}).count(),
+            Shop.find({"is_deleted": False, "pipeline_stage": {"$in": ["PITCHING", "NEGOTIATION", "DELIVERY"]}}).count(), 
+            Shop.find({"is_deleted": False, "pipeline_stage": {"$in": ["PITCHING", "NEGOTIATION", "DELIVERY"]}, "$expr": curr_m_expr}).count(), 
+            Shop.find({"is_deleted": False, "pipeline_stage": {"$in": ["PITCHING", "NEGOTIATION", "DELIVERY"]}, "$expr": prev_m_expr}).count(),
             Bill.get_pymongo_collection().aggregate(rev_pipeline).to_list(length=None),
             Attendance.get_pymongo_collection().distinct("user_id", {"date": today_start, "is_deleted": False}),
             Issue.find(Issue.status == GlobalTaskStatus.OPEN, Issue.is_deleted == False).count(),
@@ -184,24 +213,24 @@ class ReportService:
         visits_chart_data = pad_monthly_data(v_chart_res, "count")
         revenue_by_month = pad_monthly_data(r_chart_res, "total")
 
-        # --- 8. Project Status Breakdown (for alternative/new chart) ---
+        # --- 8. Project / Pipeline Status Breakdown (from Shops) ---
         p_status_pipeline = [
             {"$match": {"is_deleted": False}},
-            {"$group": {"_id": "$status", "count": {"$sum": 1}}}
+            {"$group": {"_id": "$pipeline_stage", "count": {"$sum": 1}}}
         ]
-        project_status_res = await Project.get_pymongo_collection().aggregate(p_status_pipeline).to_list(length=None)
+        project_status_res = await Shop.get_pymongo_collection().aggregate(p_status_pipeline).to_list(length=None)
         project_status_breakdown = {str(r["_id"]): r["count"] for r in project_status_res}
 
         return {
-            "total_visits": total_visits,
+            "total_visits": v_curr,
             "active_clients": active_clients,
-            "ongoing_projects": ongoing_projects,
+            "ongoing_projects": projects_curr,
             "revenue_mtd": float(revenue_mtd),
             "visits_mom_pct": visits_mom_pct,
             "clients_mom_pct": clients_mom_pct,
             "projects_mom_pct": projects_mom_pct,
             "revenue_mom_pct": 0.0,
-            "open_issues": await Issue.find(Issue.status == GlobalTaskStatus.OPEN, Issue.is_deleted == False).count(),
+            "open_issues": open_issues_count,
             "employees_present": employees_present,
             "visit_status_breakdown": visit_status_breakdown,
             "visits_chart_data": visits_chart_data,
@@ -245,7 +274,15 @@ class ReportService:
                         { "$match": { 
                             "$expr": { "$eq": ["$user_id", "$$u_id"] },
                             "visit_date": { "$gte": start_dt, "$lte": end_dt },
-                            "is_deleted": False
+                            "is_deleted": False,
+                            "status": {"$in": [
+                                VisitStatus.SATISFIED.value, 
+                                VisitStatus.ACCEPT.value, 
+                                VisitStatus.DECLINE.value, 
+                                VisitStatus.TAKE_TIME_TO_THINK.value, 
+                                VisitStatus.OTHER.value, 
+                                VisitStatus.COMPLETED.value
+                            ]}
                         }}
                     ],
                     "as": "visits"

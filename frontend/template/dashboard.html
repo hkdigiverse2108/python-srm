@@ -1618,7 +1618,7 @@
                             <div class="kpi-card kpi-visits h-100">
                                 <div class="d-flex justify-content-between align-items-start w-100 kpi-inner-mobile">
                                     <div class="flex-grow-1 me-2 kpi-text-container">
-                                        <div class="kpi-label" id="kpi-visits-label">Total Visits</div>
+                                        <div class="kpi-label" id="kpi-visits-label">Visits (MTD)</div>
                                         <div class="kpi-value" id="kpi-leads">
                                             <span class="spinner-border spinner-border-sm text-secondary"></span>
                                         </div>
@@ -1654,7 +1654,7 @@
                             <div class="kpi-card kpi-employees h-100">
                                 <div class="d-flex justify-content-between align-items-start w-100 kpi-inner-mobile">
                                     <div class="flex-grow-1 me-2 kpi-text-container">
-                                        <div class="kpi-label" id="kpi-employees-label">Present Employees</div>
+                                        <div class="kpi-label" id="kpi-employees-label">Active Users</div>
                                         <div class="kpi-value" id="kpi-employees">
                                             <span class="spinner-border spinner-border-sm text-secondary"></span>
                                         </div>
@@ -1672,7 +1672,7 @@
                             <div class="kpi-card kpi-revenue h-100">
                                 <div class="d-flex justify-content-between align-items-start w-100 kpi-inner-mobile">
                                     <div class="flex-grow-1 me-2 kpi-text-container">
-                                        <div class="kpi-label" id="kpi-revenue-label">Total Revenue</div>
+                                        <div class="kpi-label" id="kpi-revenue-label">Revenue (MTD)</div>
                                         <div class="kpi-value" id="kpi-revenue">
                                             <span class="spinner-border spinner-border-sm text-secondary"></span>
                                         </div>
@@ -2118,55 +2118,41 @@
 
                 if (outcomesChartType === 'visits') {
                     title = "Visit Outcomes";
-                    sub = "Grouped interaction results";
-                    const rawData = stats.visit_outcomes_breakdown || {};
+                    sub = "Real-world field results";
+                    const rawData = stats.visit_status_breakdown || {};
                     
-                    // Grouping Logic
-                    const groups = {
-                        'Success': { count: 0, color: '#10b981', statuses: ['COMPLETED', 'SATISFIED', 'ACCEPT', 'ACCEPTED'] },
-                        'Follow-up': { count: 0, color: '#8b5cf6', statuses: ['SCHEDULED', 'TAKE_TIME_TO_THINK', 'THINKING'] },
-                        'Rescheduled': { count: 0, color: '#f59e0b', statuses: ['DEMO_RESCHEDULED', 'MEETING_RESCHEDULED'] },
-                        'Negative': { count: 0, color: '#ef4444', statuses: ['CANCELLED', 'DECLINE', 'DECLINED', 'MISSED'] },
-                        'Other': { count: 0, color: '#94a3b8', statuses: ['OTHER'] }
+                    const config = {
+                        'SATISFIED': { label: 'Satisfied', color: '#3b82f6' },
+                        'ACCEPT': { label: 'Accepted', color: '#10b981' },
+                        'TAKE_TIME_TO_THINK': { label: 'Needs Time', color: '#f59e0b' },
+                        'DECLINE': { label: 'Declined', color: '#ef4444' },
+                        'MISSED': { label: 'Missed', color: '#94a3b8' },
+                        'OTHER': { label: 'Other', color: '#64748b' }
                     };
 
-                    Object.entries(rawData).forEach(([status, count]) => {
-                        const s = status.toUpperCase();
-                        let found = false;
-                        for (const [groupName, group] of Object.entries(groups)) {
-                            if (group.statuses.includes(s)) {
-                                group.count += count;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found) groups['Other'].count += count;
-                    });
-
-                    Object.entries(groups).forEach(([name, group]) => {
-                        if (group.count > 0) {
-                            labels.push(name);
-                            data.push(group.count);
-                            colors.push(group.color);
-                        }
+                    Object.entries(config).forEach(([status, item]) => {
+                        labels.push(item.label);
+                        data.push(rawData[status] || 0);
+                        colors.push(item.color);
                     });
 
                 } else {
-                    title = "Project Status";
-                    sub = "Current project health";
+                    title = "Shop Pipeline";
+                    sub = "Conversion funnel stages";
                     const rawData = stats.project_status_breakdown || {};
-                    const projectColors = {
-                        'OPEN': '#6366f1',
-                        'IN_PROGRESS': '#3b82f6',
-                        'BLOCKED': '#f59e0b',
-                        'RESOLVED': '#10b981',
-                        'CANCELLED': '#ef4444'
+                    
+                    const config = {
+                        'LEAD':        { label: 'Lead', color: '#6366f1' },
+                        'PITCHING':    { label: 'Pitching', color: '#f59e0b' },
+                        'NEGOTIATION': { label: 'Negotiation', color: '#0ea5e9' },
+                        'DELIVERY':    { label: 'Delivery', color: '#10b981' },
+                        'MAINTENANCE': { label: 'Maintenance', color: '#1e293b' }
                     };
                     
-                    Object.entries(rawData).forEach(([status, count]) => {
-                        labels.push(status.replace(/_/g, ' '));
-                        data.push(count);
-                        colors.push(projectColors[status.toUpperCase()] || '#94a3b8');
+                    Object.entries(config).forEach(([stage, item]) => {
+                        labels.push(item.label);
+                        data.push(rawData[stage] || 0);
+                        colors.push(item.color);
                     });
                 }
 
