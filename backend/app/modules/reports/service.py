@@ -22,6 +22,7 @@ from app.modules.incentives.models import IncentiveSlip
 from app.modules.attendance.models import Attendance
 from app.modules.todos.models import Todo, TodoStatus
 from app.modules.meetings.models import MeetingSummary
+from app.modules.reports.models import PerformanceNote
 
 class ReportService:
     @staticmethod
@@ -167,32 +168,57 @@ class ReportService:
         }
 
     @staticmethod
+    def _parse_date(date_str, is_end=False):
+        if not date_str:
+            return None
+        formats = ["%Y-%m-%d", "%d-%m-%Y", "%m-%d-%Y"]
+        for fmt in formats:
+            try:
+                dt = datetime.strptime(str(date_str), fmt).replace(tzinfo=UTC)
+                if is_end:
+                    return dt.replace(hour=23, minute=59, second=59)
+                return dt
+            except:
+                continue
+        return None
+
+    @staticmethod
     async def get_employee_performance(requesting_user: User, month: str = None, **kwargs):
         """Refined performance aggregation with custom timeframe support and Pydantic alignment."""
         # 1. Parse timeframe from kwargs
-        start_date_str = kwargs.get("start_date")
-        end_date_str = kwargs.get("end_date")
-        
         now = datetime.now(UTC)
-        start_dt = datetime(now.year, now.month, 1, tzinfo=UTC)
-        end_dt = now
         
-        if start_date_str:
-             try: start_dt = datetime.fromisoformat(str(start_date_str)).replace(tzinfo=UTC)
-             except: pass
-        if end_date_str:
-             try: end_dt = datetime.fromisoformat(str(end_date_str)).replace(tzinfo=UTC)
-             except: pass
+        # FIX: If start_date is empty string (All Time), default to very old date
+        start_date_str = kwargs.get("start_date")
+        if start_date_str == "":
+            start_dt = datetime(2000, 1, 1, tzinfo=UTC)
+        else:
+            start_dt = ReportService._parse_date(start_date_str) or datetime(now.year, now.month, 1, tzinfo=UTC)
+            
+        end_dt = ReportService._parse_date(kwargs.get("end_date"), is_end=True) or now
 
         match_stage = {"is_deleted": False, "role": {"$ne": "CLIENT"}}
+
+        match_stage = {"is_deleted": False, "role": {"$ne": "CLIENT"}}
+        
+        # 2. Extract specific user filter from kwargs
+        user_id_filter = kwargs.get("user_id")
+        
         if requesting_user.role != UserRole.ADMIN:
+            # Non-admins can only see their own performance
             match_stage["_id"] = requesting_user.id
+        elif user_id_filter:
+            # Admins can filter by a specific user if provided
+            try:
+                match_stage["_id"] = PydanticObjectId(user_id_filter)
+            except:
+                pass # Invalid ID, ignore filter
             
         pipeline = [
             {"$match": match_stage},
             {
                 "$lookup": {
-                    "from": "visits",
+                    "from": "srm_visits",
                     "let": { "u_id": "$_id" },
                     "pipeline": [
                         { "$match": { 
@@ -206,7 +232,7 @@ class ReportService:
             },
             {
                 "$lookup": {
-                    "from": "payments",
+                    "from": "srm_payments",
                     "let": { "u_id": "$_id" },
                     "pipeline": [
                         { "$match": { 
@@ -221,7 +247,7 @@ class ReportService:
             },
             {
                 "$lookup": {
-                    "from": "projects",
+                    "from": "srm_projects",
                     "localField": "_id",
                     "foreignField": "pm_id",
                     "as": "all_projects"
@@ -229,7 +255,7 @@ class ReportService:
             },
             {
                 "$lookup": {
-                    "from": "issues",
+                    "from": "srm_issues",
                     "localField": "_id",
                     "foreignField": "assigned_to_id",
                     "as": "all_issues"
@@ -241,6 +267,7 @@ class ReportService:
                     "email": 1,
                     "role": 1,
                     "target": 1,
+                    "employee_code": 1,
                     "total_visits": {"$size": "$visits"},
                     "total_leads": {"$size": {"$filter": {"input": "$visits", "cond": {"$eq": ["$$this.status", "COMPLETED"]}}}},
                     "revenue": {"$sum": "$payments.amount"},
@@ -272,7 +299,8 @@ class ReportService:
                 "total_incentive": round(rev * 0.05, 2),
                 "total_projects": r.get("total_projects", 0),
                 "total_open_issues": r.get("total_open_issues", 0),
-                "target": r.get("target", 0)
+                "target": r.get("target", 0),
+                "employee_code": r.get("employee_code", "")
             })
         return performance
 
@@ -340,3 +368,101 @@ class ReportService:
             "net_profit": float(revenue - expenses),
             "new_clients": await Client.find({"$expr": {"$and": [{"$eq": [{"$type": "$created_at"}, "date"]}, {"$eq": [{"$month": "$created_at"}, m]}, {"$eq": [{"$year": "$created_at"}, year]}]}}).count()
         }
+
+    @staticmethod
+    async def generate_csv_response(data: List[dict]) -> str:
+        """Converts a list of dictionaries into a CSV string for export."""
+        if not data:
+            return ""
+        
+        output = io.StringIO()
+        # Use keys from the first dictionary as headers
+        keys = data[0].keys()
+        dict_writer = csv.DictWriter(output, fieldnames=keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(data)
+        
+        return output.getvalue()
+
+    @staticmethod
+    async def get_employee_activities(user_id: str, start_date: str = None, end_date: str = None):
+        """Fetches a combined log of visits and verified payments for the activity stream."""
+        now = datetime.now(UTC)
+        s_dt = ReportService._parse_date(start_date) or (now - timedelta(days=30))
+        e_dt = ReportService._parse_date(end_date, is_end=True) or now
+        
+        u_id = PydanticObjectId(user_id)
+        activities = []
+        
+        # 1. Fetch Visits as Activities
+        visits = await Visit.find(
+            Visit.user_id == u_id,
+            Visit.visit_date >= s_dt,
+            Visit.visit_date <= e_dt,
+            Visit.is_deleted == False
+        ).to_list()
+        
+        for v in visits:
+            # Try to get shop name for context
+            shop_name = "Direct Visit"
+            if v.shop_id:
+                shop = await Shop.get(v.shop_id)
+                if shop: shop_name = shop.name
+            
+            activities.append({
+                "date": v.visit_date,
+                "client": shop_name,
+                "type": "Client Visit",
+                "status": str(v.status).split('.')[-1]
+            })
+            
+        # 2. Fetch Payments as Activities
+        payments = await Payment.find(
+            Payment.generated_by_id == u_id,
+            Payment.verified_at >= s_dt,
+            Payment.verified_at <= e_dt,
+            Payment.status == "VERIFIED",
+            Payment.is_deleted == False
+        ).to_list()
+        
+        for p in payments:
+            client = await Client.get(p.client_id)
+            activities.append({
+                "date": p.verified_at,
+                "client": client.name if client else "Unknown Client",
+                "type": f"Payment: ₹{p.amount}",
+                "status": "VERIFIED"
+            })
+            
+        # Sort by date descending
+        activities.sort(key=lambda x: x["date"], reverse=True)
+        return activities
+
+    @staticmethod
+    async def save_performance_note(emp_id: str, admin: User, content: str):
+        """Saves a performance note for an employee."""
+        note = PerformanceNote(
+            employee_id=PydanticObjectId(emp_id),
+            admin_id=admin.id,
+            admin_name=admin.name or admin.email.split("@")[0],
+            content=content
+        )
+        await note.insert()
+        return note
+
+    @staticmethod
+    async def get_performance_notes(emp_id: str):
+        """Fetches all performance notes for an employee, sorted by latest first."""
+        notes = await PerformanceNote.find(
+            PerformanceNote.employee_id == PydanticObjectId(emp_id)
+        ).sort("-created_at").to_list()
+        return notes
+
+    @staticmethod
+    async def delete_performance_note(note_id: str):
+        """Deletes a performance note by ID."""
+        note = await PerformanceNote.get(PydanticObjectId(note_id))
+        if note:
+            await note.delete()
+            return True
+        return False

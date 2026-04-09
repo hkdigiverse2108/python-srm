@@ -8,7 +8,10 @@ import io
 
 from app.modules.users.models import User, UserRole
 from app.core.dependencies import RoleChecker, get_current_user
-from app.modules.reports.schemas import DashboardStats, EmployeePerformance, BusinessSummary, ProjectPortfolio, EmployeeActivity
+from app.modules.reports.schemas import (
+    DashboardStats, EmployeePerformance, BusinessSummary, 
+    ProjectPortfolio, EmployeeActivity, PerformanceNoteCreate, PerformanceNoteResponse
+)
 from app.modules.reports.service import ReportService
 
 router = APIRouter()
@@ -206,3 +209,49 @@ async def export_report(
             "Pragma": "no-cache"
         }
     )
+
+@router.post("/employees/{user_id}/notes", response_model=PerformanceNoteResponse)
+async def save_performance_note(
+    user_id: PydanticObjectId,
+    note: PerformanceNoteCreate,
+    current_user: User = Depends(dashboard_viewer)
+) -> Any:
+    """Save a new performance note for an employee (Admin only)."""
+    if current_user.role != UserRole.ADMIN:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Only admins can save performance notes")
+        
+    service = ReportService()
+    return await service.save_performance_note(user_id, current_user, note.content)
+
+@router.get("/employees/{user_id}/notes", response_model=List[PerformanceNoteResponse])
+async def get_performance_notes(
+    user_id: PydanticObjectId,
+    current_user: User = Depends(dashboard_viewer)
+) -> Any:
+    """Get history of performance notes for an employee."""
+    # RBAC: Employees can only see their own notes
+    if current_user.role != UserRole.ADMIN and current_user.id != user_id:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not authorized to view notes for other users")
+        
+    service = ReportService()
+    return await service.get_performance_notes(str(user_id))
+
+@router.delete("/employees/notes/{id}")
+async def delete_performance_note(
+    id: PydanticObjectId,
+    current_user: User = Depends(dashboard_viewer)
+) -> Any:
+    """Delete a performance note (Admin only)."""
+    if current_user.role != UserRole.ADMIN:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Only admins can delete notes")
+        
+    service = ReportService()
+    success = await service.delete_performance_note(str(id))
+    if not success:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Note not found")
+        
+    return {"message": "Note deleted successfully"}
