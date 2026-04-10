@@ -60,7 +60,8 @@ async def create_timetable_event(
         assignee_name = event.assignee_name
         if assignee_name and assignee_name not in ("All Employees", ""):
             import re
-            pattern = re.compile(f"^{re.escape(assignee_name.strip())}$", re.IGNORECASE)
+            clean_name = re.sub(r'\s*\([^)]*\)$', '', assignee_name.strip())
+            pattern = re.compile(f"^{re.escape(clean_name)}$", re.IGNORECASE)
             target = await User.find_one(
                 User.is_deleted == False,
                 Or({"name": pattern}, {"email": pattern})

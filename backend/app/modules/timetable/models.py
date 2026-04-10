@@ -10,8 +10,8 @@ class TimetableEvent(Document):
     title: str
     assignee_name: Optional[str] = None
     date: dt.date
-    start_time: dt.time
-    end_time: dt.time
+    start_time: Optional[str] = None
+    end_time: Optional[str] = None
     location: Optional[str] = None
     
     priority: TodoPriority = TodoPriority.MEDIUM
