@@ -362,7 +362,7 @@
                 return;
             }
 
-            const tableHead = `<div class="table-responsive d-none d-md-block"><table class="table table-hover align-middle mb-0" style="font-size:0.88rem;"><thead style="background:var(--bg-app);border-bottom:2px solid var(--border-subtle);"><tr>
+            const tableHead = `<div class="table-responsive d-none d-md-block" style="overflow: visible !important; min-height: 250px;"><table class="table table-hover align-middle mb-0" style="font-size:0.88rem;"><thead style="background:var(--bg-app);border-bottom:2px solid var(--border-subtle);"><tr>
                 <th class="px-2 px-lg-4 py-3 text-uppercase text-muted" style="font-size:0.7rem;letter-spacing:0.05em;font-weight:700;">Lead / Shop</th>
                 <th class="px-2 px-lg-3 py-3 text-uppercase text-muted" style="font-size:0.7rem;letter-spacing:0.05em;font-weight:700;">Contact</th>
                 <th class="px-2 px-lg-3 py-3 text-uppercase text-muted" style="font-size:0.7rem;letter-spacing:0.05em;font-weight:700;">Demo Progress</th>
@@ -438,7 +438,7 @@
 
         function buildDemoDropdown(shop, hasDemoScheduled) {
             return `<div class="dropdown">
-                <button class="btn btn-sm btn-light border-0 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown">
+                <button class="btn btn-sm btn-light border-0 dropdown-toggle-no-caret" type="button" data-bs-toggle="dropdown" data-bs-popper-config='{"strategy":"fixed"}'>
                     <i class="bi bi-three-dots-vertical text-muted"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 fs-sm" style="min-width: 180px;">
