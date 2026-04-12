@@ -1845,4 +1845,148 @@ window.renderPagination = function (options) {
         getCurrentPage: () => currentPage,
         getTotalPages: () => totalPages,
     };
+};
+
+/**
+ * SRM Modern Multi-Select Initialization
+ * @param {string} elementId - ID of the original <select multiple>
+ * @param {object} options - Configuration options
+ */
+window.initSrmMultiSelect = function (elementId, options = {}) {
+    const originalSelect = document.getElementById(elementId);
+    if (!originalSelect) return;
+
+    // Remove existing wrapper if already initialized
+    const existingWrapper = originalSelect.parentElement.querySelector('.srm-multi-select-container');
+    if (existingWrapper) existingWrapper.remove();
+
+    originalSelect.style.display = 'none';
+
+    const container = document.createElement('div');
+    container.className = 'srm-multi-select-container';
+    container.innerHTML = `
+        <div class="srm-multi-select-tags"></div>
+        <input type="text" class="srm-multi-select-input" placeholder="${options.placeholder || 'Search employees...'}">
+        <div class="srm-multi-select-dropdown"></div>
+    `;
+
+    originalSelect.parentElement.appendChild(container);
+
+    const tagsArea = container.querySelector('.srm-multi-select-tags');
+    const input = container.querySelector('.srm-multi-select-input');
+    const dropdown = container.querySelector('.srm-multi-select-dropdown');
+
+    const updateTags = () => {
+        tagsArea.innerHTML = '';
+        Array.from(originalSelect.selectedOptions).forEach(opt => {
+            if (opt.value === '' || opt.value === 'All Employees') return;
+            const tag = document.createElement('span');
+            tag.className = 'srm-tag';
+            tag.innerHTML = `
+                ${opt.text.split('(')[0].trim()}
+                <span class="srm-tag-remove" data-value="${opt.value}">&times;</span>
+            `;
+            tag.querySelector('.srm-tag-remove').onclick = (e) => {
+                e.stopPropagation();
+                opt.selected = false;
+                originalSelect.dispatchEvent(new Event('change'));
+                updateTags();
+                renderDropdown();
+            };
+            tagsArea.appendChild(tag);
+        });
+
+        // Special tag for All Employees
+        const bulkOpt = Array.from(originalSelect.options).find(o => o.value === 'All Employees');
+        if (bulkOpt && bulkOpt.selected) {
+             const tag = document.createElement('span');
+             tag.className = 'srm-tag';
+             tag.style.background = 'var(--primary)';
+             tag.style.color = 'white';
+             tag.innerHTML = `
+                 👤 All Employees
+                 <span class="srm-tag-remove" data-value="All Employees">&times;</span>
+             `;
+             tag.querySelector('.srm-tag-remove').onclick = (e) => {
+                 e.stopPropagation();
+                 bulkOpt.selected = false;
+                 // Deselect everyone if All Employees was unchecked? 
+                 // Actually, let's keep it simple: just uncheck the bulk option.
+                 originalSelect.dispatchEvent(new Event('change'));
+                 updateTags();
+                 renderDropdown();
+             };
+             tagsArea.prepend(tag);
+        }
+    };
+
+    const renderDropdown = (filter = '') => {
+        const query = filter.toLowerCase();
+        dropdown.innerHTML = '';
+
+        Array.from(originalSelect.options).forEach(opt => {
+            if (opt.value === '') return;
+            if (query && !opt.text.toLowerCase().includes(query)) return;
+
+            const isBulk = opt.value === 'All Employees';
+            const isSelected = opt.selected;
+            const item = document.createElement('div');
+            item.className = `srm-multi-select-item ${isSelected ? 'selected' : ''} ${isBulk ? 'srm-multi-select-bulk' : ''}`;
+
+            const [name, role] = opt.text.split('(');
+            item.innerHTML = `
+                ${isBulk ? '' : '<div class="srm-checkbox"></div>'}
+                <div class="srm-multi-select-item-info">
+                    <span class="srm-multi-select-item-name">${name.trim()}</span>
+                    ${role ? `<span class="srm-multi-select-item-role">${role.replace(')', '').trim()}</span>` : ''}
+                </div>
+            `;
+
+            item.onclick = (e) => {
+                e.stopPropagation();
+                if (isBulk) {
+                    const shouldSelect = !opt.selected;
+                    Array.from(originalSelect.options).forEach(o => {
+                        if (o.value !== '') o.selected = shouldSelect;
+                    });
+                } else {
+                    opt.selected = !opt.selected;
+                }
+                originalSelect.dispatchEvent(new Event('change'));
+                updateTags();
+                renderDropdown(input.value);
+            };
+
+            dropdown.appendChild(item);
+        });
+    };
+
+    input.onfocus = () => dropdown.classList.add('show');
+    container.onclick = () => {
+        input.focus();
+        dropdown.classList.add('show');
+    };
+
+    input.oninput = (e) => {
+        renderDropdown(e.target.value);
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!container.contains(e.target)) {
+            dropdown.classList.remove('show');
+            input.value = '';
+        }
+    });
+
+    // Initial render
+    updateTags();
+    renderDropdown();
+
+    // Expose a way to refresh if the original select options change dynamically
+    container.refresh = () => {
+        updateTags();
+        renderDropdown();
+    };
+
+    return container;
 };

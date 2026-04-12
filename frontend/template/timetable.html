@@ -2411,6 +2411,10 @@
             const delBtn = document.getElementById('btn-delete-event');
             if (delBtn) delBtn.style.display = 'none';
 
+            // [START] Initialize Modern Multi-Select
+            window.initSrmMultiSelect('ev-user');
+            // [END]
+
             bsModal.show();
         }
 
@@ -2460,11 +2464,15 @@
             saveBtn.innerHTML = '<i class="bi bi-floppy me-1"></i>Update';
 
             // Show delete button
-            let delBtn = document.getElementById('btn-delete-event');
+            const delBtn = document.getElementById('btn-delete-event');
             if (delBtn) {
                 delBtn.style.display = 'block';
                 delBtn.onclick = () => deleteActivity(ev.id, ev.event_type);
             }
+
+            // [START] Initialize Modern Multi-Select
+            window.initSrmMultiSelect('ev-user');
+            // [END]
 
             bsModal.show();
         }
@@ -2964,13 +2972,17 @@
                 // Populate Assignee dropdown
                 const sel = document.getElementById('ev-user');
                 sel.innerHTML = '<option value="">— Unassigned —</option>' +
-                    (isTimetableAdmin() ? '<option value="All Employees" style="font-weight:bold; color:var(--primary);">Assign All Employees</option>' : '') +
+                    (isTimetableAdmin() ? '<option value="All Employees" style="font-weight:bold; color:var(--primary);">👤 All Employees (Bulk)</option>' : '') +
                     ALL_USERS_LIST.map(e => {
                         const uniqueVal = e.name || e.email;
                         const role = (e.role || '').replace(/_/g, ' ');
                         return `<option value="${uniqueVal}">${e.name || e.email} (${role})</option>`;
                     }).join('');
                 configureTimetableAssigneeSelect();
+
+                // [START] Initialize Modern Multi-Select
+                window.initSrmMultiSelect('ev-user');
+                // [END]
 
                 // clients variable is now pre-loaded by Promise.all
                 const clientSel = document.getElementById('ev-client');
