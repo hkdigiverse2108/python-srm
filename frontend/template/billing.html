@@ -51,10 +51,10 @@
             padding: 6px 12px !important;
         }
     </style>
-    <link rel="stylesheet" href="/static/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="/static/css/theme.css?v=20260406">
-    <link rel="stylesheet" href="/static/css/components.css?v=20260406">
+    <link rel="stylesheet" href="/frontend/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/frontend/css/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/frontend/css/theme.css?v=20260406">
+    <link rel="stylesheet" href="/frontend/css/components.css?v=20260406">
     <style>
         /* ── Status Pills ─────────────────────────────────────── */
         .inv-pill {
@@ -684,7 +684,7 @@
                 <div class="modal-title-text"><i class="bi bi-file-earmark-text text-primary me-2"></i>Invoice Preview</div>
                 <button class="modal-close-x" onclick="closeViewModal()"><i class="bi bi-x-lg"></i></button>
             </div>
-            <div id="p3-preview-body" style="height: calc(100vh - 200px); overflow-y: auto; background: var(--bg-app); padding: 20px;">
+            <div id="invoice-view-body" style="height: calc(100vh - 200px); overflow-y: auto; background: var(--bg-app); padding: 0;">
                 <!-- HTML content injected here -->
             </div>
             <div class="modal-footer px-3 py-2 border-top text-end bg-light">
@@ -720,12 +720,12 @@
         </div>
     </div>
 
-    <script src="/static/js/utils.js?v=20260408"></script>
-    <script src="/static/js/api.js?v=20260408"></script>
-    <script src="/static/js/auth.js?v=20260408"></script>
-    <script src="/static/js/ui_components.js?v=20260408"></script>
-    <script src="/static/js/app.js?v=20260408"></script>
-    <script src="/static/js/bootstrap.bundle.min.js"></script>
+    <script src="/frontend/js/utils.js?v=20260403"></script>
+    <script src="/frontend/js/api.js?v=20260403"></script>
+    <script src="/frontend/js/auth.js?v=20260403"></script>
+    <script src="/frontend/js/ui_components.js?v=20260403"></script>
+    <script src="/frontend/js/app.js?v=20260403"></script>
+    <script src="/frontend/js/bootstrap.bundle.min.js"></script>
     <script>
         requireAuth();
         const sb = document.getElementById('sidebar');
@@ -1809,7 +1809,7 @@
                     payment_type: pt,
                     gst_type: gt,
                     amount: amt,
-                    shop_id: autoConvertShopId ? parseInt(autoConvertShopId) : null,
+                    shop_id: autoConvertShopId || null,
                     transaction_id: wizardQRData?.transaction_id || null,
                     payment_gateway_status: wizardQRData?.payment_gateway_status || null
                 });
@@ -1945,14 +1945,14 @@
         function previewInvoice(billId) {
             const token = ApiClient.getAccessToken();
             const url = `${ApiClient.API_BASE_URL}/billing/${billId}/invoice-html`;
-            const previewBody = document.getElementById('p3-preview-body');
+            const previewBody = document.getElementById('invoice-view-body');
             previewBody.innerHTML = '<div class="text-center py-5 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Loading invoice preview...</div>';
             document.getElementById('viewModal').classList.remove('d-none');
             
             fetch(url, { headers: { 'Authorization': 'Bearer ' + token } })
                 .then(r => r.text())
                 .then(html => {
-                    previewBody.innerHTML = html;
+                    previewBody.innerHTML = `<iframe style="width: 100%; height: 100%; border: none;" srcdoc='${html.replace(/'/g, "&apos;")}'></iframe>`;
                 })
                 .catch(e => {
                     showToast('Failed to load invoice: ' + e.message, 'error');
