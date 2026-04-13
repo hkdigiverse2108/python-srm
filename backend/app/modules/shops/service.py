@@ -574,10 +574,10 @@ class ShopService:
             raise HTTPException(status_code=404, detail="User not found")
 
         shop.project_manager_id = body.pm_id
-        shop.pipeline_stage = MasterPipelineStage.NEGOTIATION
         if body.demo_scheduled_at:
             shop.demo_scheduled_at = body.demo_scheduled_at
             shop.scheduled_by_id = current_user.id
+            shop.pipeline_stage = MasterPipelineStage.NEGOTIATION  # Advance only when demo is set
 
         await shop.save()
 
