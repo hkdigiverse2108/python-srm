@@ -1194,10 +1194,17 @@
             // Show action buttons
             document.getElementById('areaActionButtons').classList.remove('d-none');
             
-            // Update shop count and manager info
+            // Update shop count, Accept button (non-admin) and Assign button (admin)
             document.getElementById('shopCountDisplay').innerHTML = `
-                <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="text-muted small fw-medium">${shops.length} shop${shops.length !== 1 ? 's' : ''}</span>
+                    ${isPendingArea && !isAdmin ? `
+                        <button class="btn btn-sm btn-success fw-semibold d-flex align-items-center gap-1" 
+                                onclick="acceptAssignment('areas', '${areaId}')" 
+                                style="border-radius:8px;padding:5px 12px;font-size:0.8rem;">
+                            <i class="bi bi-check-circle-fill"></i> Accept Area
+                        </button>
+                    ` : ''}
                     ${isAdmin ? `<button class="btn btn-sm fw-semibold d-flex align-items-center gap-2" onclick="openAssignModal('${areaId}')" style="background:#4f46e5;color:white;border:none;border-radius:8px;padding:6px 14px;"><i class="bi bi-person-plus"></i> Assign</button>` : ''}
                 </div>
             `;
