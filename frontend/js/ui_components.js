@@ -178,7 +178,7 @@ window.renderSidebar = function (active) {
                 <i class="bi ${icon} sb-sec-icon"></i>
                 <div class="d-flex align-items-center gap-2">
                     <span>${title}</span>
-                    ${sectionHasAlert ? '<span class="sb-sec-dot" style="background:#f59e0b;"></span>' : ''}
+                    ${sectionHasAlert ? '<span class="sb-sec-dot" style="background:#ef4444;"></span>' : ''}
                 </div>
                 <i class="bi bi-chevron-right sb-arrow"></i>
             </div>
@@ -944,19 +944,22 @@ window.initLiveSearch = function () {
 
 
 window.checkHighPriorityIssues = async function () {
-    if (!sessionStorage.getItem('access_token')) return;
+    // Tokens are always stored in localStorage (not sessionStorage)
+    if (!localStorage.getItem('access_token')) return;
     try {
         const issues = await apiGet('/issues/');
+        // Only count issues that are NOT resolved/cancelled — red only when unsolved
         const unreadHigh = (Array.isArray(issues) ? issues : []).filter(i => i.severity === 'HIGH' && !['RESOLVED', 'CANCELLED'].includes(i.status));
 
         // Store for sidebar badge
         const oldCount = sessionStorage.getItem('crm_high_issue_count');
         sessionStorage.setItem('crm_high_issue_count', unreadHigh.length);
 
-        // If count changed and we have a sidebar active, re-render it
+        // If count changed, re-render sidebar to update badges & dot
         if (oldCount !== String(unreadHigh.length) && window.renderSidebar && window.__lastSidebarActive) {
-            const sb = document.getElementById('sidebar') || document.getElementById('sidebar-container')?.parentElement;
-            if (sb && sb.id === 'sidebar') {
+            // #sidebar is the wrapper div; renderSidebar() produces #sidebar-container inside it
+            const sb = document.getElementById('sidebar');
+            if (sb) {
                 sb.innerHTML = window.renderSidebar(window.__lastSidebarActive);
             }
         }
@@ -968,31 +971,27 @@ window.checkHighPriorityIssues = async function () {
             // ── Top banner: show only once per session (until user dismisses or logs out) ──
             if (!alertEl && sessionStorage.getItem('high_issue_alert_dismissed') !== '1') {
                 const html = `
-                <div id="${alertContainerId}" class="alert alert-danger d-flex align-items-center justify-content-between py-2 px-3 mb-0 border-0 rounded-0" style="background-color: #B91C1C; color: white; position: sticky; top: 0; z-index: 2000; font-size: 0.85rem; font-weight: 600;">
+                <div id="${alertContainerId}" class="d-flex align-items-center justify-content-between py-2 px-4 mb-0" style="background-color: #B91C1C; color: white; z-index: 1050; font-size: 0.85rem; font-weight: 600; flex-shrink: 0;">
                     <div class="d-flex align-items-center gap-2">
                         <i class="bi bi-exclamation-triangle-fill"></i>
                         <span>System Alert: ${unreadHigh.length} Unresolved High Priority Issue(s) detected.</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <a href="issues.html" class="btn btn-sm btn-light py-0 px-2 fw-bold" style="font-size: 0.75rem; color: #B91C1C;">View Issues</a>
-                        <button type="button" onclick="(function(){ var el=document.getElementById('${alertContainerId}'); if(el) el.remove(); var th=document.querySelector('.top-header'); if(th) th.style.top='0'; var sb=document.getElementById('sidebar-container'); if(sb){sb.style.height='100vh';sb.style.top='0';} sessionStorage.setItem('high_issue_alert_dismissed','1'); })()" style="background:none;border:none;color:white;font-size:1.1rem;line-height:1;padding:0 2px;cursor:pointer;opacity:0.85;" title="Dismiss">&times;</button>
+                        <button type="button" onclick="(function(){ var el=document.getElementById('${alertContainerId}'); if(el) el.remove(); sessionStorage.setItem('high_issue_alert_dismissed','1'); })()" style="background:none;border:none;color:white;font-size:1.1rem;line-height:1;padding:0 2px;cursor:pointer;opacity:0.85;" title="Dismiss">&times;</button>
                     </div>
                 </div>`;
-                document.body.insertAdjacentHTML('afterbegin', html);
-                alertEl = document.getElementById(alertContainerId);
 
-                // Adjust top header & sidebar position
-                const topHeader = document.querySelector('.top-header');
-                if (topHeader) topHeader.style.top = alertEl.offsetHeight + 'px';
-                const sidebar = document.getElementById('sidebar-container');
-                if (sidebar) {
-                    sidebar.style.height = `calc(100vh - ${alertEl.offsetHeight}px)`;
-                    sidebar.style.top = alertEl.offsetHeight + 'px';
+                // Insert inside .main-wrapper, before page content (not at body root)
+                const mainWrapper = document.querySelector('.main-wrapper');
+                if (mainWrapper) {
+                    mainWrapper.insertAdjacentHTML('afterbegin', html);
+                } else {
+                    document.body.insertAdjacentHTML('afterbegin', html);
                 }
+                alertEl = document.getElementById(alertContainerId);
             } else if (alertEl) {
                 alertEl.querySelector('span').textContent = `System Alert: ${unreadHigh.length} Unresolved High Priority Issue(s) detected.`;
-                const topHeader = document.querySelector('.top-header');
-                if (topHeader) topHeader.style.top = alertEl.offsetHeight + 'px';
             }
 
             // ── Notification bell: inject high-priority section (always, regardless of banner) ──
@@ -1018,16 +1017,22 @@ window.checkHighPriorityIssues = async function () {
                 const dot = document.getElementById('nav-notif-dot');
                 if (dot) dot.classList.remove('d-none');
             }
-        } else if (alertEl) {
-            alertEl.remove();
-            sessionStorage.removeItem('crm_high_issue_count');
-            const topHeader = document.querySelector('.top-header');
-            if (topHeader) topHeader.style.top = '0';
-            const sidebar = document.getElementById('sidebar-container');
-            if (sidebar) {
-                sidebar.style.height = '100vh';
-                sidebar.style.top = '0';
+        } else {
+            if (alertEl) {
+                alertEl.remove();
+                const topHeader = document.querySelector('.top-header');
+                if (topHeader) topHeader.style.top = '0';
+                const sidebar = document.getElementById('sidebar-container');
+                if (sidebar) {
+                    sidebar.style.height = '100vh';
+                    sidebar.style.top = '0';
+                }
             }
+            // Remove bell section if it exists
+            const bellHigh = document.getElementById('bell-high-issues-section');
+            if (bellHigh) bellHigh.remove();
+            
+            sessionStorage.removeItem('crm_high_issue_count');
         }
     } catch (e) {
         console.error("High Priority check failed", e);
@@ -1212,8 +1217,9 @@ window.renderFilterPanel = function (config) {
 // Start both polls
 window.startAllPolling = function () {
     startNotificationPolling();
-    // High priority check every 60s
-    setInterval(window.checkHighPriorityIssues, 60000);
+    // Run immediately on page load, then every 30s
+    window.checkHighPriorityIssues();
+    setInterval(window.checkHighPriorityIssues, 30000);
 };
 
 // ─── Dark Mode ────────────────────────────────────────────────
@@ -1862,9 +1868,17 @@ window.renderPagination = function (options) {
                 const p = parseInt(btn.dataset.page, 10);
                 if (!isNaN(p) && p >= 1 && p <= totalPages) {
                     renderPage(p);
-                    // Scroll to top of containing card
-                    const el = tbody.closest('.card, .table-responsive, [class*="card"]');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    /* 
+                    // Scroll to top of containing card — disabled per user request
+                    const scrollTargetId = tbodyId || (targets && targets[0] ? targets[0].id : null);
+                    if (scrollTargetId) {
+                        const targetEl = document.getElementById(scrollTargetId);
+                        if (targetEl) {
+                            const el = targetEl.closest('.card, .table-responsive, [class*="card"]');
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        }
+                    }
+                    */
                 }
             });
         });

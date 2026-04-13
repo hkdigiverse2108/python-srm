@@ -99,6 +99,7 @@ class AreaService:
             print("="*50 + "\n")
 
         import asyncio
+
         async def enrich_area(area):
             try:
                 # Count only active (non-deleted, non-archived) shops for the main view
