@@ -1496,6 +1496,8 @@
                     await ApiClient.updateMeeting(originalId, { status: newStatus });
                 } else if (type === 'VISIT') {
                     await ApiClient.updateVisit(originalId, { status: newStatus });
+                } else if (type === 'TIMETABLE') {
+                    await ApiClient.updateTimetableEvent(originalId, { status: newStatus });
                 }
                 showToast("Status updated");
                 loadTasks();

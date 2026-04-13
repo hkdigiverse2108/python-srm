@@ -41,6 +41,7 @@ class TimetableEventBase(MongoBaseSchema):
     end_time: str | None = None
     location: str | None = None
     priority: str | None = "MEDIUM"
+    status: str | None = "PENDING"
 
 class TimetableEventCreate(TimetableEventBase):
     pass
@@ -53,6 +54,7 @@ class TimetableEventUpdate(MongoBaseSchema):
     end_time: str | None = None
     location: str | None = None
     priority: str | None = None
+    status: str | None = None
 
 class TimetableEventRead(TimetableEventBase):
     id: PydanticObjectId

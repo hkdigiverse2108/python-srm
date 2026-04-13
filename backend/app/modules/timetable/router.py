@@ -331,7 +331,7 @@ async def get_timetable(
             "eh": eh, "em": em,
             "loc": c.location or "",
             "event_type": "TIMETABLE",
-            "status": "PENDING",
+            "status": c.status or "PENDING",
             "priority": c.priority or "MEDIUM",
             "reference_id": str(c.id),
             "description": None

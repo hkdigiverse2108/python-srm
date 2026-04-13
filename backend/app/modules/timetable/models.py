@@ -15,6 +15,7 @@ class TimetableEvent(Document):
     location: Optional[str] = None
     
     priority: TodoPriority = TodoPriority.MEDIUM
+    status: str = "PENDING"
 
     is_deleted: bool = False
 

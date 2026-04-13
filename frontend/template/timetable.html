@@ -998,6 +998,12 @@
             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
         }
 
+        .tt-pinned-capsule.done {
+            opacity: 0.5;
+            text-decoration: line-through;
+            filter: grayscale(0.5);
+        }
+
         .tt-pinned-row-week {
             display: flex;
             flex-direction: column;
@@ -1566,24 +1572,35 @@
             eventsList.sort((a, b) => {
                 const sA = a.sh * 60 + a.sm, eA = a.eh * 60 + a.em;
                 const sB = b.sh * 60 + b.sm, eB = b.eh * 60 + b.em;
-
-                // Priority sorting: HIGH > MEDIUM > LOW
                 const pMap = { 'HIGH': 3, 'MEDIUM': 2, 'LOW': 1, 'NORMAL': 2 };
                 const pA = pMap[(a.priority || '').toUpperCase()] || 0;
                 const pB = pMap[(b.priority || '').toUpperCase()] || 0;
-
-                // If priorities differ, high priority takes precedence for column placement (left-most)
                 if (pA !== pB) return pB - pA;
                 if (sA !== sB) return sA - sB;
-                return eB - eA;
+                return eA - eB;
             });
+
             const placed = [];
             let columns = [];
             let lastEnd = null;
+            let clusterCounter = 0;
+
+            if (!window._clusterCache) window._clusterCache = {};
+
             function flush() {
+                if (columns.length === 0) return;
                 const numCols = columns.length;
-                columns.forEach((col, c) => col.forEach(ev => placed.push({ ev, slot: c, slots: numCols })));
+                const clusterId = 'c_' + Date.now() + '_' + clusterCounter++;
+                const uids = [];
+                columns.forEach((col, c) => {
+                    col.forEach(ev => {
+                        uids.push(ev._uid);
+                        placed.push({ ev, slot: c, slots: numCols, clusterId: clusterId });
+                    });
+                });
+                window._clusterCache[clusterId] = uids;
             }
+
             eventsList.forEach(ev => {
                 const evS = ev.sh * 60 + ev.sm, evE = ev.eh * 60 + ev.em;
                 if (lastEnd !== null && evS >= lastEnd) {
@@ -1592,15 +1609,15 @@
                 let placedInCol = false;
                 for (let c = 0; c < columns.length; c++) {
                     const col = columns[c];
-                    const lastEv = col[col.length - 1];
-                    if (evS >= lastEv.eh * 60 + lastEv.em) {
+                    const lastEvInCol = col[col.length - 1];
+                    if (evS >= lastEvInCol.eh * 60 + lastEvInCol.em) {
                         col.push(ev); placedInCol = true; break;
                     }
                 }
                 if (!placedInCol) columns.push([ev]);
                 if (lastEnd === null || evE > lastEnd) lastEnd = evE;
             });
-            if (columns.length > 0) flush();
+            flush();
             return placed;
         }
 
@@ -1836,11 +1853,12 @@
 
                 const pinnedHtml = pinnedEvts.length > 0 ? `
                     <div class="tt-pinned-row-day">
-                        <div style="font-size: 0.65rem; font-weight: 800; color: #b91c1c; margin-right: 8px; flex-shrink: 0; letter-spacing:.04em;">HIGH PRIORITY:</div>
                         ${pinnedEvts.map(ev => {
                     const u = getEventStyles(ev);
+                    const s = (ev.status || '').toUpperCase();
+                    const isDone = (s === 'COMPLETED' || s === 'DONE' || s === 'CANCELLED' || s === 'CANCEL' || completedIds.has(ev._uid));
                     const timeStr = ev.event_type === 'MEETING' ? `[${String(ev.sh).padStart(2, '0')}:${String(ev.sm).padStart(2, '0')}] ` : '';
-                    return `<div class="tt-pinned-capsule" style="background:${u.bg}; border-left:3px solid ${u.color}; color:${u.color}; width: auto; max-width: 200px;" onclick="openEditModal('${ev._uid}')" title="${timeStr}${ev.title}">
+                    return `<div class="tt-pinned-capsule ${isDone ? 'done' : ''}" style="background:${u.bg}; border-left:3px solid ${u.color}; color:${u.color}; width: auto; max-width: 200px;" onclick="openEditModal('${ev._uid}')" title="${timeStr}${ev.title}">
                                 ${ev.event_type === 'MEETING' ? '<i class="bi bi-camera-video-fill"></i>' : '<i class="bi bi-exclamation-circle-fill"></i>'} <span class="text-truncate">${timeStr}${ev.title}</span>
                             </div>`;
                 }).join('')}
@@ -1849,56 +1867,34 @@
                 // ── DAY VIEW: Split events into first-time-slot cluster + later-time events ──
                 // (packEvents sorts by start time, so 12AM events always come first)
                 const allPlaced = packEvents(scrollEvts);
-                const DAY_MAX = 7;
+                const MAX_VISIBLE = 4; // More space in day view
 
-                // Determine end time of the first event to identify the "first cluster"
-                const firstCluster = [], laterEvts = [];
-                if (allPlaced.length > 0) {
-                    const firstEnd = allPlaced[0].ev.eh * 60 + allPlaced[0].ev.em;
-                    allPlaced.forEach(p => {
-                        const es = p.ev.sh * 60 + p.ev.sm;
-                        // If event starts before the first event ends → same time group
-                        if (es < firstEnd) {
-                            firstCluster.push(p);
-                        } else {
-                            // Different time (e.g. 7AM, 8AM, 10AM) → always on calendar
-                            laterEvts.push(p);
-                        }
-                    });
-                }
+                const mainHtml = allPlaced.map(({ ev, slot, slots, clusterId }) => {
+                    const hasOvf = slots > MAX_VISIBLE;
+                    if (slot >= MAX_VISIBLE) return '';
 
-                const visibleMain = firstCluster.slice(0, DAY_MAX);
-                const hiddenMain = firstCluster.slice(DAY_MAX);
-                const hasOvf = hiddenMain.length > 0;
-
-                // Store overflow UIDs for the popup (day-view only)
-                if (!window._dayOvfCache) window._dayOvfCache = {};
-                window._dayOvfCache[sdStr] = hiddenMain.map(p => p.ev._uid);
-
-                // Render first-cluster visible events (capped at 7)
-                const mainHtml = visibleMain.map(({ ev }, idx) => {
+                    const isLast = (slot === MAX_VISIBLE - 1) && hasOvf;
                     const u = getEventStyles(ev);
                     const t = Math.max(topPx(ev.sh, ev.sm), 0);
                     const h = Math.max(hPx(ev.sh, ev.sm, ev.eh, ev.em), 22);
-                    const wPct = 96 / visibleMain.length;
-                    const lPct = 2 + idx * wPct;
+                    
+                    const visibleCount = Math.min(slots, MAX_VISIBLE);
+                    const wPct = 96 / visibleCount;
+                    const lPct = 2 + slot * wPct;
+                    
                     const timeLbl = `${fmtH(ev.sh, ev.sm)} – ${fmtH(ev.eh, ev.em)}`;
                     const s = (ev.status || '').toUpperCase();
                     const isDone = (s === 'COMPLETED' || s === 'DONE' || s === 'CANCELLED' || s === 'CANCEL' || completedIds.has(ev._uid));
-                    const isLast = (idx === visibleMain.length - 1) && hasOvf;
 
                     const ovfHtml = isLast ? `
                         <div style="
                             position:absolute; inset:0;
-                            backdrop-filter: blur(3px);
-                            -webkit-backdrop-filter: blur(3px);
-                            background: rgba(255,255,255,0.45);
-                            border-radius: 6px;
-                            display:flex; flex-direction:column;
+                            backdrop-filter: blur(3px); background: rgba(255,255,255,0.45);
+                            border-radius: 6px; display:flex; flex-direction:column;
                             align-items:center; justify-content:center;
                             cursor:pointer; z-index:10; gap:2px;
-                        " onclick="event.stopPropagation(); showDayOverflowModal('${sdStr}')">
-                            <div style="font-size:1.1rem; font-weight:800; color:#1e3a8a; line-height:1;">+${hiddenMain.length}</div>
+                        " onclick="event.stopPropagation(); showOverflowModal('${clusterId}', '${sdStr}')">
+                            <div style="font-size:1.1rem; font-weight:800; color:#1e3a8a; line-height:1;">+${slots - MAX_VISIBLE + 1}</div>
                             <div style="font-size:0.6rem; font-weight:600; color:#1e3a8a; opacity:.8; letter-spacing:.03em;">more</div>
                         </div>` : '';
 
@@ -1917,31 +1913,7 @@
                     </div>`;
                 }).join('');
 
-                // Render later-time events (ALWAYS visible at their correct time positions)
-                const laterHtml = laterEvts.map(({ ev, slot, slots }) => {
-                    const u = getEventStyles(ev);
-                    const t = Math.max(topPx(ev.sh, ev.sm), 0);
-                    const h = Math.max(hPx(ev.sh, ev.sm, ev.eh, ev.em), 22);
-                    const wPct = 96 / slots;
-                    const lPct = 2 + slot * wPct;
-                    const timeLbl = `${fmtH(ev.sh, ev.sm)} – ${fmtH(ev.eh, ev.em)}`;
-                    const s = (ev.status || '').toUpperCase();
-                    const isDone = (s === 'COMPLETED' || s === 'DONE' || s === 'CANCELLED' || s === 'CANCEL' || completedIds.has(ev._uid));
-                    return `
-                    <div class="cal-evt${isDone ? ' evt-done' : ''}" style="top:${t}px;height:${h}px;left:${lPct}%;width:${wPct}%;background:${u.bg};border-left:3px solid ${u.color};display:flex;flex-direction:column;padding-left:${ev.event_type === 'TODO' ? '17px' : '8px'};overflow:hidden;position:absolute;"
-                         title="${ev.title} (${ev.user})\n${timeLbl}\n${ev.loc}"
-                         onclick="event.stopPropagation();openEditModal('${ev._uid}')">
-                        ${ev.event_type === 'TODO' ? `<button class="evt-complete-btn${isDone ? ' done' : ''}" style="color:${u.color};"
-                            onclick="event.stopPropagation();completeEvent('${ev._uid}')" title="${isDone ? 'Mark incomplete' : 'Mark complete'}"></button>` : ''}
-                        <div class="evt-inner-title" style="color:${u.color};font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${ev.event_type === 'MEETING' ? '<i class="bi bi-camera-video me-1"></i>' : ''}${ev.title}
-                        </div>
-                        ${h > 30 ? `<div class="evt-time" style="color:${u.color};font-size:0.7rem;">${timeLbl}</div>` : ''}
-                        <div style="font-size:.72rem;color:${u.color};opacity:.7;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><i class="bi bi-person me-1"></i>${ev.user}</div>
-                    </div>`;
-                }).join('');
-
-                const evHtml = mainHtml + laterHtml;
+                const evHtml = mainHtml;
 
                 // Current time
                 const nowH = today.getHours(), nowM = today.getMinutes();
@@ -2144,8 +2116,10 @@
                     <div class="tt-pinned-row-week">
                         ${dayPinned.map(ev => {
                     const u = getEventStyles(ev);
+                    const s = (ev.status || '').toUpperCase();
+                    const isDone = (s === 'COMPLETED' || s === 'DONE' || s === 'CANCELLED' || s === 'CANCEL' || completedIds.has(ev._uid));
                     const timeStr = ev.event_type === 'MEETING' ? `[${String(ev.sh).padStart(2, '0')}:${String(ev.sm).padStart(2, '0')}] ` : '';
-                    return `<div class="tt-pinned-capsule" style="background:${u.bg}; border-left:3px solid ${u.color}; color:${u.color};" onclick="openEditModal('${ev._uid}')" title="${ev.title}">
+                    return `<div class="tt-pinned-capsule ${isDone ? 'done' : ''}" style="background:${u.bg}; border-left:3px solid ${u.color}; color:${u.color};" onclick="openEditModal('${ev._uid}')" title="${ev.title}">
                                 ${ev.event_type === 'MEETING' ? '<i class="bi bi-camera-video-fill"></i>' : ''} <span class="text-truncate" style="flex:1; text-align:left;">${timeStr}${ev.title}</span>
                             </div>`;
                 }).join('') || '<div style="text-align:center;"><span style="opacity:0.2; font-size:0.6rem;">—</span></div>'}
@@ -2171,60 +2145,55 @@
                 const dayEvts = filteredEvents.filter(e => e.date === ds && (e.priority || '').toUpperCase() !== 'HIGH');
                 const placed = packEvents(dayEvts);
 
-                // ── MAX 3 EVENTS PER COLUMN ──
+                // ── PER-CLUSTER OVERFLOW LOGIC ──
                 const MAX_VISIBLE = 3;
-                const visiblePlaced = placed.slice(0, MAX_VISIBLE);
-                const hiddenEvts = placed.slice(MAX_VISIBLE).map(p => p.ev);
-                const hasOverflow = hiddenEvts.length > 0;
+                
+                const evHtml = placed.map(({ ev, slot, slots, clusterId }, idx) => {
+                    const hasOverflow = slots > MAX_VISIBLE;
+                    if (slot >= MAX_VISIBLE) return ''; // Hide events beyond limit
 
-                // Re-layout: distribute visible events evenly across the column width
-                // (ignore original slot/slots which were calculated for ALL events)
-                const visibleCount = visiblePlaced.length;
-
-                const evHtml = visiblePlaced.map(({ ev }, idx) => {
                     const u = getEventStyles(ev);
                     const t = Math.max(topPx(ev.sh, ev.sm), 0);
                     const h = Math.max(hPx(ev.sh, ev.sm, ev.eh, ev.em), 22);
-                    // Recalculate width using only visibleCount
+                    
+                    // Width is shared across the VISIBLE count in this cluster
+                    const visibleCount = Math.min(slots, MAX_VISIBLE);
                     const w = 96 / visibleCount;
-                    const l = 2 + idx * w;
+                    const l = 2 + slot * w;
+
                     const timeLbl = `${fmtH(ev.sh, ev.sm)} – ${fmtH(ev.eh, ev.em)}`;
                     const s = (ev.status || '').toUpperCase();
                     const isDone = (s === 'COMPLETED' || s === 'DONE' || s === 'CANCELLED' || s === 'CANCEL' || completedIds.has(ev._uid));
 
-                    // If this is the last visible item AND there are hidden ones, add blur overlay
-                    const isLastVisible = (idx === MAX_VISIBLE - 1) && hasOverflow;
-                    const overflowCount = hiddenEvts.length;
+                    // If this is the last visible item AND there is an overflow in THIS cluster
+                    const isLastVisible = (slot === MAX_VISIBLE - 1) && hasOverflow;
+                    const overflowCount = slots - MAX_VISIBLE + 1;
 
                     const overflayHtml = isLastVisible ? `
                         <div style="
                             position:absolute; inset:0;
-                            backdrop-filter: blur(3px);
-                            -webkit-backdrop-filter: blur(3px);
-                            background: rgba(255,255,255,0.45);
-                            border-radius: 6px;
-                            display:flex; flex-direction:column;
+                            backdrop-filter: blur(3px); background: rgba(255,255,255,0.45);
+                            border-radius: 6px; display:flex; flex-direction:column;
                             align-items:center; justify-content:center;
-                            cursor:pointer; z-index:10;
-                            gap:2px;
-                        " onclick="event.stopPropagation(); showOverflowModal('${ds}')">
+                            cursor:pointer; z-index:10; gap:2px;
+                        " onclick="event.stopPropagation(); showOverflowModal('${clusterId}', '${ds}')">
                             <div style="font-size:1.1rem; font-weight:800; color:#1e3a8a; line-height:1;">+${overflowCount}</div>
                             <div style="font-size:0.6rem; font-weight:600; color:#1e3a8a; opacity:.8; letter-spacing:.03em;">more</div>
                         </div>` : '';
 
                     return `
-            <div class="cal-evt${isDone ? ' evt-done' : ''}" title="${ev.title} (${ev.user})\n${timeLbl}\n${ev.loc}"
-                style="top:${t}px;height:${h}px;left:${l}%;width:${w}%;background:${u.bg};border-left:3px solid ${u.color};padding-left:${ev.event_type === 'TODO' ? '17px' : '8px'};min-width:40px;display:flex;flex-direction:column;position:absolute;overflow:hidden;"
-                onclick="event.stopPropagation();${isLastVisible ? '' : `openEditModal('${ev._uid}')`}">
-                ${ev.event_type === 'TODO' ? `<button class="evt-complete-btn${isDone ? ' done' : ''}" style="color:${u.color};"
-                    onclick="event.stopPropagation();completeEvent('${ev._uid}')" title="${isDone ? 'Mark incomplete' : 'Mark complete'}"></button>` : ''}
-                <div class="evt-inner-title" style="color:${u.color};font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    ${ev.event_type === 'MEETING' ? '<i class="bi bi-camera-video me-1"></i>' : ''}${ev.title}
-                </div>
-                ${h > 30 ? `<div class="evt-time" style="font-size:0.6rem;white-space:nowrap;overflow:hidden;">${timeLbl}</div>` : ''}
-                <div class="evt-user" style="color:${u.color};">${u.initials}</div>
-                ${overflayHtml}
-            </div>`;
+                    <div class="cal-evt${isDone ? ' evt-done' : ''}" title="${ev.title} (${ev.user})\n${timeLbl}\n${ev.loc}"
+                        style="top:${t}px;height:${h}px;left:${l}%;width:${w}%;background:${u.bg};border-left:3px solid ${u.color};padding-left:${ev.event_type === 'TODO' ? '17px' : '8px'};min-width:40px;display:flex;flex-direction:column;position:absolute;overflow:hidden;"
+                        onclick="event.stopPropagation();${isLastVisible ? '' : `openEditModal('${ev._uid}')`}">
+                        ${ev.event_type === 'TODO' ? `<button class="evt-complete-btn${isDone ? ' done' : ''}" style="color:${u.color};"
+                            onclick="event.stopPropagation();completeEvent('${ev._uid}')" title="${isDone ? 'Mark incomplete' : 'Mark complete'}"></button>` : ''}
+                        <div class="evt-inner-title" style="color:${u.color};font-size:.7rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${ev.event_type === 'MEETING' ? '<i class="bi bi-camera-video me-1"></i>' : ''}${ev.title}
+                        </div>
+                        ${h > 30 ? `<div class="evt-time" style="font-size:0.6rem;white-space:nowrap;overflow:hidden;">${timeLbl}</div>` : ''}
+                        <div class="evt-user" style="color:${u.color};">${u.initials}</div>
+                        ${overflayHtml}
+                    </div>`;
                 }).join('');
 
                 const nowHtml = (isToday && showNow && nowTop >= 0 && nowTop <= TOTAL_H) ? `
@@ -2778,6 +2747,9 @@
                 try {
                     if (type === 'MEETING') {
                         await ApiClient.updateMeeting(id, { status: newStatus });
+                    } else if (type === 'TIMETABLE') {
+                        const ttStatus = isDoneNow ? 'COMPLETED' : 'PENDING';
+                        await ApiClient.updateTimetableEvent(id, { status: ttStatus });
                     }
                     // For local state/fading
                     if (isDoneNow) {
@@ -2822,6 +2794,11 @@
                     await ApiClient.updateTodo(ev.id, { status: 'PENDING' });
                     ev.status = 'PENDING';
                 } catch (e) { console.error("Could not undo Todo status:", e); }
+            } else if (ev && ev.event_type === 'TIMETABLE') {
+                try {
+                    await ApiClient.updateTimetableEvent(ev.id, { status: 'PENDING' });
+                    ev.status = 'PENDING';
+                } catch (e) { console.error("Could not undo Timetable status:", e); }
             } else {
                 completedIds.delete(uid);
             }
@@ -2892,19 +2869,30 @@
             modal.show();
         }
 
-        // ── Overflow Modal (More Events) – Week View ──────────────────────────────
-        function showOverflowModal(dateStr) {
-            const dayEvts = events.filter(e => e.date === dateStr && (e.priority || '').toUpperCase() !== 'HIGH');
+        // ── Overflow Modal (More Events) – Refined to specific cluster ──────
+        function showOverflowModal(clusterId, dateStr) {
+            const uids = window._clusterCache ? window._clusterCache[clusterId] : null;
+            let dayEvts;
+
+            if (uids) {
+                dayEvts = events.filter(e => uids.includes(e._uid));
+            } else {
+                // Fallback to day view if cache missing
+                dayEvts = events.filter(e => e.date === dateStr && (e.priority || '').toUpperCase() !== 'HIGH');
+            }
+            
             dayEvts.sort((a, b) => (a.sh * 60 + a.sm) - (b.sh * 60 + b.sm));
 
             const dateObj = new Date(dateStr);
             const dateLabel = dateObj.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+            // Add cluster time info if possible
+            const timeRange = dayEvts.length > 0 ? ` (${fmtH(dayEvts[0].sh, dayEvts[0].sm)} group)` : '';
 
             const titleEl = document.getElementById('hiddenTasksModalTitle');
             const listEl = document.getElementById('hiddenTasksList');
             if (!titleEl || !listEl) return;
 
-            titleEl.textContent = dateLabel;
+            titleEl.textContent = dateLabel + timeRange;
             listEl.innerHTML = dayEvts.map(ev => {
                 const u = getEventStyles(ev);
                 const timeLbl = `${fmtH(ev.sh, ev.sm)} – ${fmtH(ev.eh, ev.em)}`;
