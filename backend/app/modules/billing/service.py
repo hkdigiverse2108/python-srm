@@ -409,6 +409,10 @@ class BillingService:
         gst_type = kwargs.get("gst_type")
         if gst_type and gst_type.upper() != "ALL":
             filters["gst_type"] = gst_type.upper()
+            
+        shop_id = kwargs.get("shop_id")
+        if shop_id:
+            filters["shop_id"] = shop_id
              
         if "archived" in kwargs:
             val = kwargs["archived"]
