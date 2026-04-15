@@ -219,7 +219,10 @@ async def create_meeting(
         raise HTTPException(status_code=404, detail="Client not found")
 
     if current_user.role in PM_SCOPED_ROLES and client.pm_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied to this client")
+        from app.modules.shops.models import Shop
+        manages_shop = await Shop.find_one(Shop.client_id == client_id, Shop.project_manager_id == current_user.id)
+        if not manages_shop:
+            raise HTTPException(status_code=403, detail="Access denied to this client")
 
     service = MeetingService()
     return await service.create_meeting(meeting_in, client_id, current_user, request)
@@ -235,7 +238,10 @@ async def read_client_meetings(
         raise HTTPException(status_code=404, detail="Client not found")
 
     if current_user.role in PM_SCOPED_ROLES and client.pm_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Access denied")
+        from app.modules.shops.models import Shop
+        manages_shop = await Shop.find_one(Shop.client_id == client_id, Shop.project_manager_id == current_user.id)
+        if not manages_shop:
+            raise HTTPException(status_code=403, detail="Access denied")
 
     return await MeetingSummary.find(MeetingSummary.client_id == client_id).to_list()
 
