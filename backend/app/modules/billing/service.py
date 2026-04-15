@@ -85,7 +85,6 @@ class BillingService:
         except ValueError:
             year = datetime.datetime.now(UTC).year
 
-        sync_website = False  # Default: no website sync for non-GST invoices
         if gst_type == "WITHOUT_GST":
             seq_key = "invoice_seq_without_gst"
             series  = "PINV"
@@ -410,14 +409,20 @@ class BillingService:
         gst_type = kwargs.get("gst_type")
         if gst_type and gst_type.upper() != "ALL":
             filters["gst_type"] = gst_type.upper()
-            
-        shop_id = kwargs.get("shop_id")
-        if shop_id:
-            filters["shop_id"] = shop_id
              
+        # shop_id filter — CRITICAL: scope invoices to the specific lead/shop
+        shop_id_val = kwargs.get("shop_id")
+        if shop_id_val is not None:
+            try:
+                filters["shop_id"] = PydanticObjectId(shop_id_val) if not isinstance(shop_id_val, PydanticObjectId) else shop_id_val
+            except Exception:
+                pass  # ignore invalid shop_id
+
         if "archived" in kwargs:
             val = kwargs["archived"]
-            if val == "ARCHIVED":
+            if val and str(val).upper() == "ALL":
+                pass  # No archive filter — return both archived and non-archived
+            elif val == "ARCHIVED":
                 filters["is_archived"] = True
             elif val == "ACTIVE":
                 filters["is_archived"] = False
@@ -466,8 +471,14 @@ class BillingService:
         bill.is_archived = True
         await bill.save()
 
-        # NOTE: Archiving a bill does NOT archive the lead.
-        # Only Refund triggers lead archiving.
+        # Sync with Shop
+        if bill.shop_id:
+            from app.modules.shops.models import Shop
+            shop = await Shop.get(bill.shop_id)
+            if shop:
+                shop.is_archived = True
+                shop.archived_by_id = current_user.id
+                await shop.save()
 
         await ActivityLogger().log_activity(
             user_id=current_user.id,

@@ -772,9 +772,44 @@ class ShopService:
 
     @staticmethod
     async def schedule_demo(shop_id: PydanticObjectId, payload, current_user: User):
+        from app.modules.visits.models import Visit, VisitStatus
+        from datetime import datetime, UTC
+
         shop = await Shop.find_one(Shop.id == shop_id, Shop.is_deleted == False)
         if not shop:
             raise HTTPException(status_code=404, detail="Shop not found")
+
+        # ── Determine if this is a reschedule or a fresh schedule ──
+        is_reschedule = shop.demo_scheduled_at is not None
+        actor_id = shop.project_manager_id or current_user.id
+
+        # ── Create audit Visit record BEFORE overwriting demo_scheduled_at ──
+        try:
+            if is_reschedule:
+                # Rescheduling: log the old slot being replaced
+                old_slot_str = shop.demo_scheduled_at.strftime("%d %b %Y, %I:%M %p") if shop.demo_scheduled_at else "—"
+                new_slot_str = payload.scheduled_at.strftime("%d %b %Y, %I:%M %p") if payload.scheduled_at else "—"
+                reschedule_visit = Visit(
+                    shop_id=shop.id,
+                    user_id=current_user.id,
+                    status=VisitStatus.DEMO_RESCHEDULED,
+                    remarks=f"Demo rescheduled from {old_slot_str} → {new_slot_str}.",
+                    visit_date=datetime.now(UTC),
+                )
+                await reschedule_visit.insert()
+            else:
+                # First-time scheduling: log the new demo slot
+                new_slot_str = payload.scheduled_at.strftime("%d %b %Y, %I:%M %p") if payload.scheduled_at else "—"
+                scheduled_visit = Visit(
+                    shop_id=shop.id,
+                    user_id=current_user.id,
+                    status=VisitStatus.SCHEDULED,
+                    remarks=f"Demo scheduled for {new_slot_str}.",
+                    visit_date=datetime.now(UTC),
+                )
+                await scheduled_visit.insert()
+        except Exception as e:
+            print(f"[schedule_demo] Warning: could not write audit Visit record: {e}")
 
         shop.demo_scheduled_at = payload.scheduled_at
         shop.demo_title = payload.title
@@ -787,7 +822,7 @@ class ShopService:
 
         await shop.save()
 
-        # Notify PM
+        # ── Notify PM ──
         if shop.project_manager_id and shop.scheduled_by_id != shop.project_manager_id:
             try:
                 notif = Notification(
