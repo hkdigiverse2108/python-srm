@@ -455,6 +455,15 @@ async function loadVisitHistory(shopId) {
             invoices = invoicesRes.items || invoicesRes.data || invoicesRes.invoices || [];
         }
 
+        // 🚀 NEW: Intelligent fallback - if the shop lost its client_id linkage, try to recover it from the invoice!
+        if (currentProject && !currentProject.client_id && invoices.length > 0) {
+            const firstInvoice = invoices.find(inv => inv.client_id);
+            if (firstInvoice && firstInvoice.client_id) {
+                currentProject.client_id = firstInvoice.client_id;
+                console.log(`[Timeline] Recovered missing client_id from invoice for shop ${shopId}: ${currentProject.client_id}`);
+            }
+        }
+
         // 🚀 NEW: Fetch Meetings using client_id
         let meetingsRes = [];
         if (currentProject && currentProject.client_id) {
