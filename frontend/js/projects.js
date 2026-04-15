@@ -455,6 +455,15 @@ async function loadVisitHistory(shopId) {
             invoices = invoicesRes.items || invoicesRes.data || invoicesRes.invoices || [];
         }
 
+        // 🚀 NEW: Intelligent fallback - if the shop lost its client_id linkage, try to recover it from the invoice!
+        if (currentProject && !currentProject.client_id && invoices.length > 0) {
+            const firstInvoice = invoices.find(inv => inv.client_id);
+            if (firstInvoice && firstInvoice.client_id) {
+                currentProject.client_id = firstInvoice.client_id;
+                console.log(`[Timeline] Recovered missing client_id from invoice for shop ${shopId}: ${currentProject.client_id}`);
+            }
+        }
+
         // 🚀 NEW: Fetch Meetings using client_id
         let meetingsRes = [];
         if (currentProject && currentProject.client_id) {
@@ -467,6 +476,9 @@ async function loadVisitHistory(shopId) {
             }
         }
         const meetings = Array.isArray(meetingsRes) ? meetingsRes : (meetingsRes?.items || meetingsRes?.data || meetingsRes?.meetings || []);
+        
+        // Sync meetings to the global project object so that modals (like submitTrainingSchedule) can read existing meetings and increment titles properly
+        if (currentProject) currentProject.meetings = meetings;
 
         // 🚀 OVERRIDE THE UI: If an invoice exists, morph the Action Center into the Live Tracker!
         // FIX: We now check for DELIVERY *OR* MAINTENANCE
@@ -1271,10 +1283,13 @@ function renderTrainingTracker(project, meetings = []) {
 
     // Build timeline nodes based on actual meetings
     sortedMeetings.forEach((m, idx) => {
-        if (m.status === 'RESOLVED') {
+        const isResolved = m.status === 'RESOLVED' || m.status === 'COMPLETED' || m.status === 'DONE';
+        const isCancelled = m.status === 'CANCELLED' || m.status === 'CANCEL';
+
+        if (isResolved) {
             nodes.push({ num: idx + 1, label: 'Successful', color: '#10b981', icon: 'bi-check-lg', bg: '#ecfdf5', border: '#10b981' });
             successCount++;
-        } else if (m.status === 'CANCELLED' || m.status === 'CANCEL') {
+        } else if (isCancelled) {
             nodes.push({ num: idx + 1, label: 'Cancelled', color: '#ef4444', icon: 'bi-x-lg', bg: '#fef2f2', border: '#ef4444' });
         } else {
             nodes.push({ num: idx + 1, label: 'Scheduled', color: '#eab308', icon: 'bi-clock', bg: '#fefce8', border: '#eab308' });
@@ -1354,10 +1369,13 @@ function renderTrainingTracker(project, meetings = []) {
         let icon = 'bi-calendar-event';
         let statusBadge = `<span class="badge bg-warning bg-opacity-10 text-warning border border-warning"><i class="bi bi-clock me-1"></i>Scheduled</span>`;
 
-        if (m.status === 'RESOLVED') {
+        const isResolved = m.status === 'RESOLVED' || m.status === 'COMPLETED' || m.status === 'DONE';
+        const isCancelled = m.status === 'CANCELLED' || m.status === 'CANCEL';
+
+        if (isResolved) {
             statusClass = 'completed'; icon = 'bi-check-lg';
             statusBadge = `<span class="badge bg-success text-white"><i class="bi bi-check2-all me-1"></i>Completed</span>`;
-        } else if (m.status === 'CANCELLED' || m.status === 'CANCEL') {
+        } else if (isCancelled) {
             statusClass = 'cancelled'; icon = 'bi-x-lg';
             statusBadge = `<span class="badge bg-danger text-white"><i class="bi bi-x-circle me-1"></i>Cancelled</span>`;
         } else {
@@ -1394,7 +1412,7 @@ function renderTrainingTracker(project, meetings = []) {
                         <div class="small text-muted">Awaiting PM Availability</div>
                     </div>
                 </div>
-                <button class="btn btn-primary fw-bold shadow-sm" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || 'null'}')">
+                <button class="btn btn-primary fw-bold shadow-sm" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || ''}')">
                     <i class="bi bi-calendar-plus me-2"></i>Schedule Session
                 </button>
             </div>
@@ -1406,7 +1424,7 @@ function renderTrainingTracker(project, meetings = []) {
         html += `
             <div class="text-center mt-4 pt-3 border-top">
                 <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Client has completed the mandatory 3 sessions.</p>
-                <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-4" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || 'null'}')">
+                <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-4" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || ''}')">
                     <i class="bi bi-plus-lg me-1"></i>Schedule Optional Session ${sessionCounter}
                 </button>
             </div>
