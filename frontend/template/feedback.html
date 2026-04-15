@@ -410,7 +410,7 @@
                         <h6 class="table-title-p mb-0"><i class="bi bi-list-stars text-primary"></i> Recent Feedback
                             Records</h6>
                         <div class="text-muted small fw-bold">
-                            Total: <span id="record-count" class="text-primary">0</span>
+                            TOTAL: <span id="record-count" class="text-primary fs-6">0</span>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -576,8 +576,8 @@
         let baseData = [];
         const loadFeedback = async () => {
             try {
-                // Use /feedback/ to ensure current user permissions are respected, or /feedback/all for admin
-                const response = await ApiClient.request('/feedback/');
+                // Use /feedback to ensure current user permissions are respected, or /feedback/all for admin
+                const response = await ApiClient.request('/feedback');
                 baseData = response || [];
                 updateKPIs(baseData);
                 populateFilters();

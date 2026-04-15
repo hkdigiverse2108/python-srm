@@ -90,14 +90,8 @@ def get_system_ip():
 
 @api_router.get("/")
 async def health_check():
-    return {"status": "ok", "version": 2, "source": "api_routes_health"}
+    return {"status": "ok"}
 
 @api_router.get("/health")
 def health_check():
-    return {"status": "ok", "version": 2, "source": "api_router"}
-
-@api_router.get("/feedback/form")
-def get_feedback_form():
-    # Depending on your setup, you might return an HTML file or a JSON response
-    # For now, this will stop the 404 error
-    return {"status": "feedback_form_ready"}
+    return {"status": "ok"}

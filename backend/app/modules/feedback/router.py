@@ -7,8 +7,7 @@ from app.modules.users.models import User, UserRole
 from app.modules.feedback.schemas import FeedbackCreate, FeedbackRead
 from app.modules.feedback.service import FeedbackService
 
-# Using redirect_slashes=False to prevent "unexpected keyword argument" crashes
-router = APIRouter(redirect_slashes=False)
+router = APIRouter()
 
 @router.get("/", response_model=List[FeedbackRead])
 @router.get("", response_model=List[FeedbackRead], include_in_schema=False)
