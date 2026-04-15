@@ -1114,9 +1114,16 @@
                         body: { new_date: new_date }
                     });
                 } else {
-                    // Calculate which session number this is
-                    const existingMeetings = (typeof currentProject !== 'undefined' && currentProject.meetings) ? currentProject.meetings : [];
-                    const sessionNum = existingMeetings.length + 1;
+                    // Bulletproof FIX: Always fetch the latest meeting count directly from the API right before saving
+                    let sessionNum = 1;
+                    try {
+                        let existing = await window.ApiClient.request(`/clients/${clientId}/meetings`);
+                        if (existing && Array.isArray(existing)) {
+                            sessionNum = existing.length + 1;
+                        }
+                    } catch (e) {
+                         console.warn('Could not fetch existing meetings, defaulting to Session 1', e);
+                    }
                     const meetingTitle = `Session ${sessionNum}: Client Onboarding & Training`;
 
                     await window.ApiClient.request(`/clients/${clientId}/meetings`, {
