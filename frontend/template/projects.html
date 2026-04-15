@@ -923,14 +923,36 @@
         // 🚀 POST-SALES TRAINING SCHEDULING ENGINE
         // ========================================================
 
-        window.openTrainingScheduleModal = (shopId, clientId) => {
+        window.openTrainingScheduleModal = async (shopId, clientId) => {
             const project = allProjects.find(p => p.id === shopId);
             if (!project) return;
 
-            // Failsafe: require a linked Client ID for the meeting API
-            const resolvedClientId = clientId || project.client_id;
+            // Guard against JS null AND the string "null" from template literals
+            const isValidId = (v) => v && v !== 'null' && v !== 'undefined' && v !== '';
+
+            // Primary: use passed clientId or project.client_id
+            let resolvedClientId = isValidId(clientId) ? clientId
+                                 : isValidId(project.client_id) ? project.client_id
+                                 : null;
+
+            // Fallback: look up client_id from billing records (for legacy MAINTENANCE shops)
             if (!resolvedClientId) {
-                alert('Error: No linked client found for this project. Please ensure this shop has been converted to a client.');
+                try {
+                    const invoices = await window.ApiClient.request(`/billing/?shop_id=${shopId}&archived=ALL`);
+                    const inv = Array.isArray(invoices) && invoices.length > 0 ? invoices[0] : null;
+                    if (inv && isValidId(inv.client_id)) {
+                        resolvedClientId = inv.client_id;
+                        console.log('[TrainingModal] Resolved client_id from billing record:', resolvedClientId);
+                        // Also patch the local project object so future calls work
+                        project.client_id = resolvedClientId;
+                    }
+                } catch (e) {
+                    console.warn('[TrainingModal] Billing fallback lookup failed:', e);
+                }
+            }
+
+            if (!resolvedClientId) {
+                showToast('No linked client found for this project. Please ensure the invoice was sent via WhatsApp to complete onboarding.', 'warning');
                 return;
             }
 
@@ -946,7 +968,7 @@
                 || 'Assigned Manager';
 
             if (!pmId) {
-                alert("No Project Manager assigned! Please assign one in the Clients tab first.");
+                showToast('No Project Manager assigned! Please assign one in the Clients tab first.', 'warning');
                 return;
             }
 
@@ -1057,10 +1079,17 @@
             const time = document.getElementById('train-selected-time').value;
             const btn = document.getElementById('train-submit-btn');
 
-            const rules = {
-                'train-date': 'Please select a date',
-                'train-slots-container': () => time || 'Please select a time slot'
+        const rules = {
+                'train-date': 'Please select a date'
             };
+
+            // Explicit time check — same pattern as demo modal
+            // Bug was: `() => time || 'message'` returns the time value "10:00" as an error string
+            if (!time) {
+                if (window.showToast) window.showToast('Please select a time slot before booking.', 'warning');
+                else alert('Please select a time slot');
+                return;
+            }
 
             if (!window.validateForm(document.querySelector('#trainingScheduleModal .modal-body'), rules)) {
                 return;

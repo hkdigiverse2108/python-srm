@@ -545,13 +545,17 @@ class BillingService:
         bill.whatsapp_sent = True
         await bill.save()
         
-        # ─── Step 3 of 3: Advance shop to MAINTENANCE now that bill is sent ───
+        # ─── Step 3 of 3: Advance shop to MAINTENANCE + link client_id ───
         if bill.shop_id:
             from app.modules.shops.models import Shop
             from app.core.enums import MasterPipelineStage
             shop = await Shop.get(bill.shop_id)
-            if shop and shop.pipeline_stage == MasterPipelineStage.DELIVERY:
-                shop.pipeline_stage = MasterPipelineStage.MAINTENANCE
+            if shop:
+                if shop.pipeline_stage == MasterPipelineStage.DELIVERY:
+                    shop.pipeline_stage = MasterPipelineStage.MAINTENANCE
+                # Always sync client_id — critical for training session scheduling
+                if bill.client_id and not shop.client_id:
+                    shop.client_id = bill.client_id
                 await shop.save()
 
         return {"bill": bill, "status": "sent"}

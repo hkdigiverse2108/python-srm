@@ -1394,7 +1394,7 @@ function renderTrainingTracker(project, meetings = []) {
                         <div class="small text-muted">Awaiting PM Availability</div>
                     </div>
                 </div>
-                <button class="btn btn-primary fw-bold shadow-sm" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || 'null'}')">
+                <button class="btn btn-primary fw-bold shadow-sm" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || ''}')">
                     <i class="bi bi-calendar-plus me-2"></i>Schedule Session
                 </button>
             </div>
@@ -1406,7 +1406,7 @@ function renderTrainingTracker(project, meetings = []) {
         html += `
             <div class="text-center mt-4 pt-3 border-top">
                 <p class="text-muted small mb-2"><i class="bi bi-info-circle me-1"></i>Client has completed the mandatory 3 sessions.</p>
-                <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-4" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || 'null'}')">
+                <button class="btn btn-outline-secondary btn-sm fw-bold rounded-pill px-4" onclick="openTrainingScheduleModal('${project.id}', '${project.client_id || ''}')">
                     <i class="bi bi-plus-lg me-1"></i>Schedule Optional Session ${sessionCounter}
                 </button>
             </div>
