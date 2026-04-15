@@ -361,6 +361,42 @@ class BillingService:
             new_data={"invoice_number": db_bill.invoice_number, "amount": db_bill.amount, "payment_type": db_bill.payment_type}
         )
 
+        # ─── Notify Admins about new invoice ───
+        try:
+            from app.utils.notify_helpers import notify_admins
+            client_name = db_bill.invoice_client_name or "Unknown Client"
+            amount_fmt = f"₹{db_bill.amount:,.0f}"
+            payment_label = {
+                "BUSINESS_ACCOUNT": "Bank (Business)",
+                "PERSONAL_ACCOUNT": "Bank (Personal)",
+                "CASH": "Cash",
+            }.get(db_bill.payment_type, db_bill.payment_type or "—")
+
+            if db_bill.invoice_status == "PENDING_VERIFICATION":
+                # Needs admin verification — urgent alert
+                await notify_admins(
+                    title=f"🧾 New Invoice Pending Verification — {db_bill.invoice_number}",
+                    message=(
+                        f"Invoice {db_bill.invoice_number} for {client_name} "
+                        f"| Amount: {amount_fmt} | Mode: {payment_label} "
+                        f"| Created by: {current_user.name}. Please verify."
+                    ),
+                    actor_id=current_user.id,
+                )
+            else:
+                # BUSINESS_ACCOUNT invoices are auto-VERIFIED via PhonePe — informational
+                await notify_admins(
+                    title=f"✅ Invoice Auto-Verified (PhonePe) — {db_bill.invoice_number}",
+                    message=(
+                        f"Invoice {db_bill.invoice_number} for {client_name} "
+                        f"| Amount: {amount_fmt} | Mode: {payment_label} "
+                        f"| Created & auto-verified by: {current_user.name}."
+                    ),
+                    actor_id=current_user.id,
+                )
+        except Exception as e:
+            print(f"[create_invoice] Warning: admin notification failed: {e}")
+
         return db_bill
 
     async def get_bill(self, bill_id: PydanticObjectId, current_user: User = None) -> Bill | None:
