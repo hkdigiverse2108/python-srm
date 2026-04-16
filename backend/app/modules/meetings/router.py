@@ -180,10 +180,40 @@ async def delete_meeting_global(
 @global_router.post("/batch-delete")
 async def batch_delete_meetings(
     payload: dict,
-    current_user: User = Depends(admin_checker)
+    current_user: User = Depends(staff_checker)
 ):
     ids = [PydanticObjectId(i) for i in payload.get("ids", []) if i]
-    res = await MeetingSummary.find(In(MeetingSummary.id, ids)).delete()
+    if not ids:
+        return {"message": "No IDs provided"}
+
+    # Fetch meetings to check permissions
+    meetings = await MeetingSummary.find(In(MeetingSummary.id, ids)).to_list()
+    if not meetings:
+        return {"message": "No meetings found"}
+
+    ids_to_delete = []
+    
+    for meeting in meetings:
+        can_delete = False
+        if current_user.role == UserRole.ADMIN:
+            can_delete = True
+        else:
+            # Check if host
+            if meeting.host_id == current_user.id:
+                can_delete = True
+            # Check if PM of the client
+            elif meeting.client_id:
+                client = await Client.get(meeting.client_id)
+                if client and current_user.role in PM_SCOPED_ROLES and client.pm_id == current_user.id:
+                    can_delete = True
+        
+        if can_delete:
+            ids_to_delete.append(meeting.id)
+
+    if not ids_to_delete:
+        raise HTTPException(status_code=403, detail="Access denied to all selected meetings")
+
+    res = await MeetingSummary.find(In(MeetingSummary.id, ids_to_delete)).delete()
     return {"message": f"Successfully deleted {res.deleted_count} meetings"}
 
 
@@ -223,6 +253,49 @@ async def init_meeting_link(
     current_user: User = Depends(pm_checker)
 ) -> Any:
     return await MeetingService().initialize_google_meet(meeting_id)
+
+
+@global_router.post("/{meeting_id}/cancel", response_model=MeetingSummaryRead)
+async def cancel_meeting_global(
+    meeting_id: PydanticObjectId,
+    cancel_in: MeetingCancel,
+    current_user: User = Depends(pm_checker)
+) -> Any:
+    meeting = await MeetingSummary.get(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    # Scope check
+    if current_user.role in PM_SCOPED_ROLES and meeting.client_id:
+        client = await Client.get(meeting.client_id)
+        if client and client.pm_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif meeting.host_id != current_user.id and current_user.role != UserRole.ADMIN:
+        # If not host and not admin, and no client scope...
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    if meeting.status == GlobalTaskStatus.RESOLVED:
+        raise HTTPException(status_code=400, detail="Cannot cancel a completed meeting.")
+
+    meeting.status = GlobalTaskStatus.CANCELLED
+    meeting.cancellation_reason = cancel_in.reason
+    await meeting.save()
+
+    try:
+        from app.utils.notify_helpers import notify_client_stakeholders
+        client = await Client.get(meeting.client_id) if meeting.client_id else None
+        if client:
+            reason_suffix = f" Reason: {cancel_in.reason}" if cancel_in.reason else ""
+            await notify_client_stakeholders(
+                client,
+                "❌ Meeting Cancelled",
+                f"Meeting '{meeting.title}' with {client.name} has been cancelled.{reason_suffix}",
+                actor_id=current_user.id,
+            )
+    except Exception as e:
+        print(f"Notification error: {e}")
+
+    return meeting
 
 
 # ─── CLIENT-SCOPED ENDPOINTS (/clients/{client_id}/meetings) ───────────────
