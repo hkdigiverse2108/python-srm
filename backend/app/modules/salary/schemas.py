@@ -1,8 +1,7 @@
 import typing
 import datetime
 from pydantic import field_validator, Field
-from beanie import PydanticObjectId
-from app.core.base_schema import MongoBaseSchema
+from app.core.base_schema import MongoBaseSchema, PydanticObjectId
 from app.modules.salary.models import LeaveStatus, LeaveType, DayType
 
 class LeaveApplicationCreate(MongoBaseSchema):
@@ -64,6 +63,8 @@ class SalarySlipGenerate(MongoBaseSchema):
     month: str  # YYYY-MM
     extra_deduction: float = 0.0  # Admin-applied manual deduction
     base_salary: float | None = None  # Override employee profile base salary for this slip
+    incentive_amount: float | None = None
+    slab_bonus: float | None = None
 
 
 class SalaryPreviewResponse(MongoBaseSchema):
@@ -107,6 +108,7 @@ class SalarySlipRead(MongoBaseSchema):
     user_name: str | None = None
     confirmer_name: str | None = None
     generated_at: datetime.date
+    slip_no: str | None = None
 
 
 class SalaryBulkGenerateRequest(MongoBaseSchema):
