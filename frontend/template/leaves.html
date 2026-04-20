@@ -45,6 +45,29 @@
     <link rel="stylesheet" href="/frontend/css/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/frontend/css/theme.css?v=20260406">
     <link rel="stylesheet" href="/frontend/css/components.css?v=20260406">
+    <style>
+        /* ── Gradient Top Borders for Leave Summary ── */
+        .grid-card {
+            position: relative;
+            overflow: hidden;
+            border-top: none !important;
+        }
+
+        .grid-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            z-index: 10;
+        }
+
+        .border-gradient-warning::before { background: linear-gradient(90deg, #f59e0b 0%, #fcd34d 100%); }
+        .border-gradient-success::before { background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%); }
+        .border-gradient-danger::before { background: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%); }
+        .border-gradient-primary::before { background: linear-gradient(90deg, #3b82f6 0%, #93c5fd 100%); }
+    </style>
 </head>
 
 <body class="bg-app">
@@ -56,16 +79,21 @@
                 <div class="page-header-glass d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="mb-3 mb-sm-0">
                         <h2 class="page-section-title fw-bold mb-1">Leave Management</h2>
-                        <p class="text-muted mb-0" style="font-size:0.93rem;">Apply for leaves and track approval status.</p>
+                        <p class="text-muted mb-0" style="font-size:0.93rem;">Apply for leaves and track approval
+                            status.</p>
                     </div>
                     <div class="d-flex align-items-center gap-3">
                         <!-- Search / Quick Filter (Optional) -->
-                        <div id="admin-tabs" class="nav nav-pills p-1 bg-white rounded-3 shadow-sm border" style="display:none; font-size: 0.85rem;">
-                            <button class="nav-link active px-3 py-2 fw-semibold" id="tab-team" onclick="switchTab('team')">Team Leaves</button>
-                            <button class="nav-link px-3 py-2 fw-semibold" id="tab-my" onclick="switchTab('my')">My Leaves</button>
+                        <div id="admin-tabs" class="nav nav-pills p-1 bg-white rounded-3 shadow-sm border"
+                            style="display:none; font-size: 0.85rem;">
+                            <button class="nav-link active px-3 py-2 fw-semibold" id="tab-team"
+                                onclick="switchTab('team')">Team Leaves</button>
+                            <button class="nav-link px-3 py-2 fw-semibold" id="tab-my" onclick="switchTab('my')">My
+                                Leaves</button>
                         </div>
-                        
-                        <button id="apply-leave-btn" class="btn btn-primary fw-semibold shadow-sm" style="border-radius:10px; display:none;" onclick="openLeaveModal()">
+
+                        <button id="apply-leave-btn" class="btn btn-primary fw-semibold shadow-sm"
+                            style="border-radius:10px; display:none;" onclick="openLeaveModal()">
                             <i class="bi bi-calendar-plus me-2"></i>Apply Leave
                         </button>
                     </div>
@@ -74,57 +102,68 @@
                 <!-- Summary Cards (admin view) -->
                 <div id="leave-summary-bar" class="row g-3 mb-4" style="display:none;">
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--warning);">
+                        <div class="grid-card p-3 border-gradient-warning">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                     style="width:40px;height:40px;background:var(--warning-light);">
                                     <i class="bi bi-hourglass-split" style="color:var(--warning-text);"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small fw-semibold mb-0" style="font-size:0.78rem;letter-spacing:0.3px;">PENDING</div>
-                                    <div class="fw-bold" style="color:var(--warning-text);font-size:1.5rem;line-height:1;" id="sum-pending">0</div>
+                                    <div class="text-muted small fw-semibold mb-0"
+                                        style="font-size:0.78rem;letter-spacing:0.3px;">PENDING</div>
+                                    <div class="fw-bold"
+                                        style="color:var(--warning-text);font-size:1.5rem;line-height:1;"
+                                        id="sum-pending">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--success);">
+                        <div class="grid-card p-3 border-gradient-success">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                     style="width:40px;height:40px;background:var(--success-light);">
                                     <i class="bi bi-check-circle" style="color:var(--success-text);"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small fw-semibold mb-0" style="font-size:0.78rem;letter-spacing:0.3px;">APPROVED</div>
-                                    <div class="fw-bold" style="color:var(--success-text);font-size:1.5rem;line-height:1;" id="sum-approved">0</div>
+                                    <div class="text-muted small fw-semibold mb-0"
+                                        style="font-size:0.78rem;letter-spacing:0.3px;">APPROVED</div>
+                                    <div class="fw-bold"
+                                        style="color:var(--success-text);font-size:1.5rem;line-height:1;"
+                                        id="sum-approved">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--danger);">
+                        <div class="grid-card p-3 border-gradient-danger">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                     style="width:40px;height:40px;background:var(--danger-light);">
                                     <i class="bi bi-x-circle" style="color:var(--danger-text);"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small fw-semibold mb-0" style="font-size:0.78rem;letter-spacing:0.3px;">REJECTED</div>
-                                    <div class="fw-bold" style="color:var(--danger-text);font-size:1.5rem;line-height:1;" id="sum-rejected">0</div>
+                                    <div class="text-muted small fw-semibold mb-0"
+                                        style="font-size:0.78rem;letter-spacing:0.3px;">REJECTED</div>
+                                    <div class="fw-bold"
+                                        style="color:var(--danger-text);font-size:1.5rem;line-height:1;"
+                                        id="sum-rejected">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-6 col-md-3">
-                        <div class="grid-card p-3" style="border-left:4px solid var(--primary);">
+                        <div class="grid-card p-3 border-gradient-primary">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                                     style="width:40px;height:40px;background:var(--primary-light);">
                                     <i class="bi bi-calendar-check" style="color:var(--primary);"></i>
                                 </div>
                                 <div>
-                                    <div class="text-muted small fw-semibold mb-0" style="font-size:0.78rem;letter-spacing:0.3px;">TOTAL DAYS</div>
-                                    <div class="fw-bold" style="color:var(--primary);font-size:1.5rem;line-height:1;" id="sum-total">0</div>
+                                    <div class="text-muted small fw-semibold mb-0"
+                                        style="font-size:0.78rem;letter-spacing:0.3px;">TOTAL DAYS</div>
+                                    <div class="fw-bold" style="color:var(--primary);font-size:1.5rem;line-height:1;"
+                                        id="sum-total">0</div>
                                 </div>
                             </div>
                         </div>
@@ -152,7 +191,8 @@
                                     </th>
                                     <th class="text-uppercase small fw-bold text-muted" style="min-width: 180px;">Period
                                     </th>
-                                    <th class="text-center text-uppercase small fw-bold text-muted" style="min-width: 80px;">Days
+                                    <th class="text-center text-uppercase small fw-bold text-muted"
+                                        style="min-width: 80px;">Days
                                     </th>
                                     <th class="text-uppercase small fw-bold text-muted" style="min-width: 250px;">Reason
                                         & Remarks</th>
@@ -207,8 +247,10 @@
                     <label class="form-label fw-semibold small">Day Type <span class="text-danger">*</span></label>
                     <div class="d-flex gap-2">
                         <label class="d-flex align-items-center gap-2 cursor-pointer px-3 py-2 rounded border"
-                            id="dt-full-lbl" style="flex:1; cursor:pointer; border-color:var(--primary); background:var(--primary-soft);">
-                            <input type="radio" name="day-type" id="dt-full" value="FULL" class="form-check-input m-0" checked>
+                            id="dt-full-lbl"
+                            style="flex:1; cursor:pointer; border-color:var(--primary); background:var(--primary-soft);">
+                            <input type="radio" name="day-type" id="dt-full" value="FULL" class="form-check-input m-0"
+                                checked>
                             <span class="fw-semibold small" style="color:var(--primary);">Full Day</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 cursor-pointer px-3 py-2 rounded border"
@@ -244,25 +286,31 @@
         <div class="srm-box" style="max-width:480px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
             <div class="p-4 border-bottom d-flex justify-content-between align-items-center" id="remarks-modal-header">
                 <div class="d-flex align-items-center gap-3">
-                    <div id="remarks-icon-container" class="rounded-circle d-flex align-items-center justify-content-center" style="width:40px; height:40px;">
+                    <div id="remarks-icon-container"
+                        class="rounded-circle d-flex align-items-center justify-content-center"
+                        style="width:40px; height:40px;">
                         <i id="remarks-icon" class="bi fs-5"></i>
                     </div>
                     <div>
                         <h5 class="fw-bold mb-0" id="remarks-modal-title">Leave Action</h5>
-                        <div class="text-muted small" id="remarks-helper">Provide additional context for this leave request.</div>
+                        <div class="text-muted small" id="remarks-helper">Provide additional context for this leave
+                            request.</div>
                     </div>
                 </div>
                 <button class="btn-close" onclick="closeRemarksModal()"></button>
             </div>
             <div class="p-4">
                 <div class="mb-4">
-                    <label class="form-label fw-semibold text-muted small text-uppercase mb-2" style="letter-spacing: 0.5px;">Your Remarks</label>
+                    <label class="form-label fw-semibold text-muted small text-uppercase mb-2"
+                        style="letter-spacing: 0.5px;">Your Remarks</label>
                     <textarea id="remarks-input" class="form-control" rows="4"
-                        placeholder="Enter remarks for the employee..." style="border-radius: 12px; padding: 15px; border-color: var(--border);"></textarea>
+                        placeholder="Enter remarks for the employee..."
+                        style="border-radius: 12px; padding: 15px; border-color: var(--border);"></textarea>
                 </div>
-                
+
                 <div class="d-flex justify-content-end gap-2 pt-3 border-top">
-                    <button class="btn btn-light px-4 border fw-semibold" style="border-radius: 10px;" onclick="closeRemarksModal()">Cancel</button>
+                    <button class="btn btn-light px-4 border fw-semibold" style="border-radius: 10px;"
+                        onclick="closeRemarksModal()">Cancel</button>
                     <button class="btn px-4 fw-bold" id="remarks-submit-btn" style="border-radius: 10px;"
                         onclick="submitRemarksApproval()">Submit</button>
                 </div>
@@ -273,7 +321,8 @@
     <script src="/frontend/js/utils.js?v=20260413" onload="window.__loadedScripts.push('utils.js')"></script>
     <script src="/frontend/js/api.js?v=20260413" onload="window.__loadedScripts.push('api.js')"></script>
     <script src="/frontend/js/auth.js?v=20260413" onload="window.__loadedScripts.push('auth.js')"></script>
-    <script src="/frontend/js/ui_components.js?v=20260421" onload="window.__loadedScripts.push('ui_components.js')"></script>
+    <script src="/frontend/js/ui_components.js?v=20260421"
+        onload="window.__loadedScripts.push('ui_components.js')"></script>
     <script src="/frontend/js/app.js?v=20260413" onload="window.__loadedScripts.push('app.js')"></script>
     <script src="/frontend/js/bootstrap.bundle.min.js" onload="window.__loadedScripts.push('bootstrap.js')"></script>
     <script>
@@ -305,15 +354,15 @@
          * - Regular users only see 'My Leaves'.
          * - UPDATE: Per requirements, Admin no longer needs 'My Leaves' tab.
          */
-        window.switchTab = function(tab) {
+        window.switchTab = function (tab) {
             activeTab = tab;
-            
+
             // Update Tab UI visibility
             if (document.getElementById('admin-tabs')) {
                 const teamTab = document.getElementById('tab-team');
                 const myTab = document.getElementById('tab-my');
-                if(teamTab) teamTab.classList.toggle('active', tab === 'team');
-                if(myTab) myTab.classList.toggle('active', tab === 'my');
+                if (teamTab) teamTab.classList.toggle('active', tab === 'team');
+                if (myTab) myTab.classList.toggle('active', tab === 'my');
             }
 
             // Toggle filter and summary visibility
@@ -383,7 +432,7 @@
 
             document.getElementById('leave-summary-bar').style.display = 'flex';
             document.getElementById('filter-wrapper').style.display = 'block';
-            
+
             ApiClient.getEmployees().then(emps => {
                 initFilters(emps);
             }).catch(() => { });
@@ -720,7 +769,7 @@
         function approveLeaveWithRemarks(id, status) {
             _pendingApprovalId = id;
             _pendingApprovalStatus = status;
-            
+
             const modal = document.getElementById('remarksModal');
             const title = document.getElementById('remarks-modal-title');
             const helper = document.getElementById('remarks-helper');
@@ -731,7 +780,7 @@
             const header = document.getElementById('remarks-modal-header');
 
             remarksInput.value = '';
-            
+
             // Context-specific styling
             if (status === 'REJECTED') {
                 title.textContent = 'Reject Leave';

@@ -440,16 +440,70 @@
             line-height: 1;
         }
 
-        .theme-purple-solid { background-color: #6366f1; }
-        .theme-red-solid { background-color: #ef4444; }
-        .theme-blue-solid { background-color: #3b82f6; }
-        .theme-green-solid { background-color: #10b981; }
+        .theme-purple-solid {
+            background-color: #6366f1;
+        }
 
-        .label-purple { color: #6366f1; }
-        .label-red { color: #dc2626; }
-        .label-blue { color: #2563eb; }
-        .label-green { color: #059669; }
-    </style>
+        .theme-red-solid {
+            background-color: #ef4444;
+        }
+
+        .theme-blue-solid {
+            background-color: #3b82f6;
+        }
+
+        .theme-green-solid {
+            background-color: #10b981;
+        }
+
+        .label-purple {
+            color: #6366f1;
+        }
+
+        .label-red {
+            color: #dc2626;
+        }
+
+        .label-blue {
+            color: #2563eb;
+        }
+
+        .label-green {
+            color: #059669;
+        }
+
+        /* ── Gradient Top Borders ── */
+        .stat-card-premium {
+            position: relative;
+            overflow: hidden;
+            border-top: none !important; /* Ensure no standard border */
+        }
+
+        .stat-card-premium::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            z-index: 10;
+        }
+
+        .border-gradient-purple::before {
+            background: linear-gradient(90deg, #6366f1 0%, #a5b4fc 100%);
+        }
+
+        .border-gradient-red::before {
+            background: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%);
+        }
+
+        .border-gradient-blue::before {
+            background: linear-gradient(90deg, #3b82f6 0%, #93c5fd 100%);
+        }
+
+        .border-gradient-green::before {
+            background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%);
+        }
 
 
         /* ── Priority pill buttons ── */
@@ -1293,7 +1347,7 @@
             if (statsRow) {
                 statsRow.innerHTML = `
                 <div class="col-6 col-md-3">
-                    <div class="stat-card-premium">
+                    <div class="stat-card-premium border-gradient-purple">
                         <div class="stat-icon-circle theme-purple-solid">
                             <i class="bi bi-layers-fill"></i>
                         </div>
@@ -1304,35 +1358,35 @@
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="stat-card-premium">
+                    <div class="stat-card-premium border-gradient-red">
                         <div class="stat-icon-circle theme-red-solid">
                             <i class="bi bi-exclamation-triangle-fill"></i>
                         </div>
                         <div>
                             <div class="stat-label-p label-red">High Priority</div>
-                            <div class="stat-value-p" style="color:#dc2626 !important;">${highPri}</div>
+                            <div class="stat-value-p">${highPri}</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="stat-card-premium">
+                    <div class="stat-card-premium border-gradient-blue">
                         <div class="stat-icon-circle theme-blue-solid">
                             <i class="bi bi-hourglass-split"></i>
                         </div>
                         <div>
                             <div class="stat-label-p label-blue">Pending</div>
-                            <div class="stat-value-p" style="color:#2563eb !important;">${pending}</div>
+                            <div class="stat-value-p">${pending}</div>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="stat-card-premium">
+                    <div class="stat-card-premium border-gradient-green">
                         <div class="stat-icon-circle theme-green-solid">
                             <i class="bi bi-check-circle-fill"></i>
                         </div>
                         <div>
                             <div class="stat-label-p label-green">Completed</div>
-                            <div class="stat-value-p" style="color:#059669 !important;">${completed}</div>
+                            <div class="stat-value-p">${completed}</div>
                         </div>
                     </div>
                 </div>`;
@@ -1714,7 +1768,7 @@
                 const meetingIds = otherTasksToSingleDelete
                     .filter(t => t.event_type === 'MEETING')
                     .map(t => t.original_id);
-                
+
                 if (meetingIds.length > 0) {
                     await ApiClient.deleteMeetingsBulk(meetingIds);
                 }
@@ -1725,7 +1779,7 @@
                 }
 
                 showToast(`Success: Deleted ${selected.length} items.`);
-                
+
                 // Reload tasks and wait for DOM update
                 await loadTasks();
 
