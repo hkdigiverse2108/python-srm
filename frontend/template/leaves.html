@@ -62,21 +62,23 @@
                             status.</p>
                     </div>
                     <div class="d-flex align-items-center gap-3">
+                        <!-- Admin Tab Switcher -->
+                        <div id="admin-tabs" class="nav nav-pills p-1 bg-light rounded-3 shadow-sm border"
+                            style="display:none; font-size: 0.85rem;">
+                            <button class="nav-link active px-3 py-2 fw-semibold" id="tab-team"
+                                onclick="switchTab('team')">Team Leaves</button>
+                            <button class="nav-link px-3 py-2 fw-semibold" id="tab-my" onclick="switchTab('my')">My
+                                Leaves</button>
+                        </div>
                         <button id="apply-leave-btn" class="btn btn-primary fw-semibold shadow-sm"
                             style="border-radius:10px;" onclick="openLeaveModal()">
-                        <!-- Admin Tab Switcher -->
-                        <div id="admin-tabs" class="nav nav-pills p-1 bg-light rounded-3 shadow-sm border" style="display:none; font-size: 0.85rem;">
-                            <button class="nav-link active px-3 py-2 fw-semibold" id="tab-team" onclick="switchTab('team')">Team Leaves</button>
-                            <button class="nav-link px-3 py-2 fw-semibold" id="tab-my" onclick="switchTab('my')">My Leaves</button>
-                        </div>
-                        <button id="apply-leave-btn" class="btn btn-primary fw-semibold shadow-sm" style="border-radius:10px;" onclick="openLeaveModal()">
                             <i class="bi bi-calendar-plus me-2"></i>Apply Leave
                         </button>
                     </div>
                 </div>
 
                 <!-- Summary Cards (admin view) -->
-                <div id="leave-summary-bar" class="row g-3 mb-2" style="display:none;">
+                <div id="leave-summary-bar" class="row g-3 mb-4 mx-0" style="display:none;">
                     <div class="col-6 col-md-3">
                         <div class="card stat-card card-warning h-100 p-3">
                             <div class="stat-label mb-2">Pending</div>
@@ -148,14 +150,14 @@
                                     </th>
                                     <th class="text-uppercase small fw-bold text-muted" style="min-width: 180px;">Period
                                     </th>
-                                    <th class="text-uppercase small fw-bold text-muted" style="min-width: 80px;">Days
+                                    <th class="text-center text-uppercase small fw-bold text-muted" style="min-width: 80px;">Days
                                     </th>
                                     <th class="text-uppercase small fw-bold text-muted" style="min-width: 250px;">Reason
                                         & Remarks</th>
                                     <th class="text-uppercase small fw-bold text-muted" style="min-width: 150px;">Status
                                     </th>
-                                    <th class="pe-4 text-end text-uppercase small fw-bold text-muted"
-                                        style="min-width: 100px;">Actions</th>
+                                    <th class="text-center text-uppercase small fw-bold text-muted"
+                                        style="min-width: 180px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="leaves-tbody">
@@ -175,7 +177,7 @@
 
     <!-- Apply Leave Modal -->
     <div class="srm-overlay" id="leaveModal">
-        <div class="srm-box" style="max-width:560px;">
+        <div class="srm-box p-4" style="max-width:560px;">
             <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
                 <h5 class="fw-bold mb-0"><i class="bi bi-calendar-minus text-primary me-2"></i>Apply for Leave</h5>
                 <button class="btn-close" onclick="closeLeaveModal()"></button>
@@ -202,7 +204,12 @@
                 <div class="col-12">
                     <label class="form-label fw-semibold small">Day Type <span class="text-danger">*</span></label>
                     <div class="d-flex gap-2">
-                        <span class="fw-semibold small" style="color:var(--primary);">Full Day</span>
+                        <label class="d-flex align-items-center gap-2 cursor-pointer px-3 py-2 rounded border"
+                            id="dt-full-lbl"
+                            style="flex:1; cursor:pointer; background:var(--primary-soft); border-color:var(--primary);">
+                            <input type="radio" name="day-type" id="dt-full" value="FULL" checked
+                                class="form-check-input m-0">
+                            <span class="fw-semibold small">Full Day</span>
                         </label>
                         <label class="d-flex align-items-center gap-2 cursor-pointer px-3 py-2 rounded border"
                             id="dt-half-lbl" style="flex:1; cursor:pointer; border-color:var(--border);">
@@ -258,7 +265,8 @@
     <script src="/frontend/js/utils.js?v=20260413" onload="window.__loadedScripts.push('utils.js')"></script>
     <script src="/frontend/js/api.js?v=20260413" onload="window.__loadedScripts.push('api.js')"></script>
     <script src="/frontend/js/auth.js?v=20260413" onload="window.__loadedScripts.push('auth.js')"></script>
-    <script src="/frontend/js/ui_components.js?v=20260413" onload="window.__loadedScripts.push('ui_components.js')"></script>
+    <script src="/frontend/js/ui_components.js?v=20260413"
+        onload="window.__loadedScripts.push('ui_components.js')"></script>
     <script src="/frontend/js/app.js?v=20260413" onload="window.__loadedScripts.push('app.js')"></script>
     <script src="/frontend/js/bootstrap.bundle.min.js" onload="window.__loadedScripts.push('bootstrap.js')"></script>
     <script>
@@ -269,7 +277,7 @@
 
         const user = window.getUser ? window.getUser() : null;
         const isAdmin = user?.role === 'ADMIN';
-        const canApplyLeave = !isAdmin && (window.hasFeatureAccess ? window.hasFeatureAccess('leave_apply_roles') : true);
+        const canApplyLeave = true;
         const canEditOwnLeave = window.hasFeatureAccess ? window.hasFeatureAccess('leave_edit_own_roles') : !isAdmin;
         const canManageLeave = window.hasFeatureAccess ? window.hasFeatureAccess('leave_manage_roles') : isAdmin;
         let leaveEditMode = false;
@@ -277,9 +285,9 @@
         let currentLeaveRows = [];
         let activeTab = canManageLeave ? 'team' : 'my';
 
-        window.switchTab = function(tab) {
+        window.switchTab = function (tab) {
             activeTab = tab;
-            
+
             // Update UI tabs
             if (document.getElementById('admin-tabs')) {
                 document.getElementById('tab-team').classList.toggle('active', tab === 'team');
@@ -289,7 +297,7 @@
             // Toggle filter and summary visibility
             const filterWrapper = document.getElementById('filter-wrapper');
             const summaryBar = document.getElementById('leave-summary-bar');
-            
+
             if (tab === 'team') {
                 if (filterWrapper) filterWrapper.style.display = 'block';
                 if (summaryBar) summaryBar.style.display = 'flex';
@@ -301,10 +309,6 @@
             loadLeaves();
         };
 
-        const applyBtn = document.getElementById('apply-leave-btn');
-        if (applyBtn && !canApplyLeave) {
-            applyBtn.style.display = 'none';
-        }
 
         let currentFilters = {};
 
@@ -482,7 +486,7 @@
 
         async function loadLeaves(filters = {}) {
             const tbody = document.getElementById('leaves-tbody');
-            
+
             // Standardize pagination params
             const skip = filters.skip || 0;
             const limit = filters.limit || 200;
@@ -566,7 +570,7 @@
                             const isAutoLeave = (l.reason || '').includes('Auto leave');
 
                             if (canManageLeave && l.status === 'PENDING') {
-                                lastCol = `<div class="d-flex gap-1 flex-wrap">
+                                lastCol = `<div class="d-flex gap-1 justify-content-center">
                                    <button class="btn btn-sm btn-outline-success" title="Approve" onclick="approveLeaveWithRemarks('${l.id}', 'APPROVED')"><i class="bi bi-check-lg"></i> Approve</button>
                                    <button class="btn btn-sm btn-outline-danger" title="Reject" onclick="approveLeaveWithRemarks('${l.id}', 'REJECTED')"><i class="bi bi-x-lg"></i> Reject</button>
                                  </div>`;
@@ -574,13 +578,13 @@
                                 if (isAutoLeave) {
                                     lastCol = `<span class="text-muted small italic"><i class="bi bi-lock-fill me-1"></i>Auto leave restricted</span>`;
                                 } else {
-                                    lastCol = `<div class="d-flex gap-1 flex-wrap">
+                                    lastCol = `<div class="d-flex gap-1 justify-content-center">
                                         <button class="btn btn-sm btn-outline-primary" title="Edit" onclick="openEditLeave('${l.id}')"><i class="bi bi-pencil"></i> Edit</button>
                                         <button class="btn btn-sm btn-outline-danger" title="Cancel" onclick="cancelLeave('${l.id}')"><i class="bi bi-x-circle"></i> Cancel</button>
                                     </div>`;
                                 }
                             } else if (canManageLeave && (l.status === 'APPROVED' || l.status === 'REJECTED')) {
-                                lastCol = `<div class="d-flex gap-1 justify-content-end">
+                                lastCol = `<div class="d-flex gap-1 justify-content-center">
                                     <button class="btn btn-sm btn-outline-secondary" style="font-size:0.7rem;" title="Edit Remarks" onclick="approveLeaveWithRemarks('${l.id}', '${l.status}')">
                                         <i class="bi bi-chat-left-text me-1"></i>Remark
                                     </button>
@@ -608,7 +612,7 @@
                                 <td class="ps-4 fw-semibold text-dark" style="white-space:nowrap; max-width:150px; overflow:hidden; text-overflow:ellipsis;" title="${l.user_name || ''}">${l.user_name || 'User #' + String(l.user_id).slice(-4)}</td>
                                 <td><span class="badge ${typeCls}" style="font-weight:500;white-space:nowrap; font-size:0.75rem;">${typeLabel}</span></td>
                                 <td class="text-muted" style="white-space:nowrap; font-size:0.75rem;">${start} — ${end}</td>
-                                <td class="fw-semibold" style="white-space:nowrap; font-size:0.75rem;">${displayDays}${dayTypeLabel}</td>
+                                <td class="fw-semibold text-center" style="white-space:nowrap; font-size:0.75rem;">${displayDays}${dayTypeLabel}</td>
                                 <td>
                                     <div style="font-size:0.75rem; line-height:1.3; min-width:200px;">
                                         ${reasonHtml}
@@ -619,7 +623,7 @@
                                     <span class="status-pill ${st.cls}" style="white-space:nowrap; font-size:0.7rem;"><i class="bi ${st.icon} me-1"></i>${st.label}</span>
                                     ${timeInfo}
                                 </td>
-                                <td class="pe-4 text-end">
+                                <td class="text-center">
                                     ${lastCol}
                                 </td>
                             </tr>`;
