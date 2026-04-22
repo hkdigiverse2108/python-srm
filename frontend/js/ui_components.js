@@ -1821,13 +1821,13 @@ window.renderPagination = function (options) {
     }
 
     function renderControls() {
-        if (totalPages <= 1) {
+        const showing = data.length === 0 ? 0 : Math.min(currentPage * pageSize, data.length);
+        const from = data.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+
+        if (data.length === 0) {
             paginationContainer.innerHTML = '';
             return;
         }
-
-        const showing = data.length === 0 ? 0 : Math.min(currentPage * pageSize, data.length);
-        const from = data.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
 
         // Build page number buttons (show at most 5 around current)
         let pages = [];
@@ -1849,26 +1849,37 @@ window.renderPagination = function (options) {
             return `<li class="page-item ${active}"><button class="page-link srm-page-btn" data-page="${p}">${p}</button></li>`;
         }).join('');
 
+        const buttonsHtml = totalPages <= 1 ? '' : `
+            <nav aria-label="Table pagination">
+                <ul class="pagination pagination-sm srm-pagination mb-0">
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <button class="page-link srm-page-btn" data-page="${currentPage - 1}" aria-label="Previous">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                    </li>
+                    ${pageButtons}
+                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <button class="page-link srm-page-btn" data-page="${currentPage + 1}" aria-label="Next">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </li>
+                </ul>
+            </nav>`;
+
         paginationContainer.innerHTML = `
             <div class="srm-pagination-bar">
-                <span class="srm-pagination-info">
-                    Showing <strong>${from}–${showing}</strong> of <strong>${data.length}</strong>
-                </span>
-                <nav aria-label="Table pagination">
-                    <ul class="pagination pagination-sm srm-pagination mb-0">
-                        <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                            <button class="page-link srm-page-btn" data-page="${currentPage - 1}" aria-label="Previous">
-                                <i class="bi bi-chevron-left"></i>
-                            </button>
-                        </li>
-                        ${pageButtons}
-                        <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                            <button class="page-link srm-page-btn" data-page="${currentPage + 1}" aria-label="Next">
-                                <i class="bi bi-chevron-right"></i>
-                            </button>
-                        </li>
-                    </ul>
-                </nav>
+                <div class="d-flex align-items-center gap-3">
+                    <span class="srm-pagination-info">
+                        Showing <strong>${from}–${showing}</strong> of <strong>${data.length}</strong>
+                    </span>
+                    <select class="form-select form-select-sm border-0 bg-light py-0 px-2" style="width: auto; font-size: 0.7rem; height: 24px; border-radius: 6px; cursor: pointer;" onchange="localStorage.setItem('srm_setting_pagination_limit', this.value); window.location.reload();">
+                        <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+                        <option value="25" ${pageSize === 25 ? 'selected' : ''}>25 / page</option>
+                        <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
+                        <option value="100" ${pageSize === 100 ? 'selected' : ''}>100 / page</option>
+                    </select>
+                </div>
+                ${buttonsHtml}
             </div>`;
 
         // Wire up click events
@@ -1877,17 +1888,6 @@ window.renderPagination = function (options) {
                 const p = parseInt(btn.dataset.page, 10);
                 if (!isNaN(p) && p >= 1 && p <= totalPages) {
                     renderPage(p);
-                    /* 
-                    // Scroll to top of containing card — disabled per user request
-                    const scrollTargetId = tbodyId || (targets && targets[0] ? targets[0].id : null);
-                    if (scrollTargetId) {
-                        const targetEl = document.getElementById(scrollTargetId);
-                        if (targetEl) {
-                            const el = targetEl.closest('.card, .table-responsive, [class*="card"]');
-                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        }
-                    }
-                    */
                 }
             });
         });
