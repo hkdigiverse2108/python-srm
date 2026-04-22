@@ -19,19 +19,61 @@ class SalaryService:
         # No db session needed in Beanie!
         pass
 
-    async def _get_leave_data(self, user_id: PydanticObjectId, year: int, month_num: int):
-        """Fetch approved leaves for a user in given year/month.
-        Handles cross-month overlaps by clipping the leave to month boundaries.
-        Simple rule: FULL leave = 1 day cut, HALF leave = 0.5 day cut.
-        """
-        from datetime import date
+    async def _get_working_days_for_month(self, year: int, month_num: int) -> float:
+        from datetime import date, timedelta
         import calendar
+        from app.modules.settings.models import SystemSettings
+        
+        settings = await SystemSettings.find_one()
+        saturday_policy = settings.saturday_policy if settings and hasattr(settings, 'saturday_policy') else "FULL_WORKING"
         
         _, last_day = calendar.monthrange(year, month_num)
         month_start = date(year, month_num, 1)
         month_end = date(year, month_num, last_day)
 
-        # Find all leaves that have ANY overlap with this month
+        total_working_days_in_month = 0.0
+        curr = month_start
+        while curr <= month_end:
+            wd = curr.weekday()
+            if wd == 6:  # Sunday
+                pass
+            elif wd == 5:  # Saturday
+                sat_nth = (curr.day - 1) // 7 + 1
+                if saturday_policy == "FULL_OFF":
+                    pass
+                elif saturday_policy == "HALF_WORKING":
+                    total_working_days_in_month += 0.5
+                elif saturday_policy == "SECOND_AND_FOURTH_OFF":
+                    if sat_nth not in [2, 4]:
+                        total_working_days_in_month += 1.0
+                elif saturday_policy == "ALTERNATE":
+                    if sat_nth in [1, 3, 5]:
+                        total_working_days_in_month += 1.0
+                else: # FULL_WORKING
+                    total_working_days_in_month += 1.0
+            else:
+                total_working_days_in_month += 1.0
+            curr += timedelta(days=1)
+        return float(total_working_days_in_month)
+
+    async def _get_leave_data(self, user_id: PydanticObjectId, year: int, month_num: int):
+        """Fetch approved leaves for a user in given year/month.
+        Handles cross-month overlaps by clipping the leave to month boundaries.
+        Skips Sundays and handles Saturday policy.
+        """
+        from datetime import date, timedelta
+        import calendar
+        from app.modules.settings.models import SystemSettings
+        
+        settings = await SystemSettings.find_one()
+        saturday_policy = settings.saturday_policy if settings and hasattr(settings, 'saturday_policy') else "FULL_WORKING"
+        
+        _, last_day = calendar.monthrange(year, month_num)
+        month_start = date(year, month_num, 1)
+        month_end = date(year, month_num, last_day)
+        
+        total_working_days_in_month = await self._get_working_days_for_month(year, month_num)
+
         all_approved = await LeaveRecord.find(
             LeaveRecord.user_id == user_id,
             LeaveRecord.status == LeaveStatus.APPROVED,
@@ -42,71 +84,123 @@ class SalaryService:
         total_leave_days = 0.0
 
         for lv in all_approved:
-            # Overlap check: leave starts before month ends AND ends after month starts
             if lv.start_date <= month_end and lv.end_date >= month_start:
-                # Clip to month boundaries
                 effective_start = max(lv.start_date, month_start)
                 effective_end = min(lv.end_date, month_end)
                 
-                overlap_days = (effective_end - effective_start).days + 1
+                leave_multiplier = 0.5 if getattr(lv, 'day_type', 'FULL') == 'HALF' else 1.0
+                curr = effective_start
+                overlap_days = 0.0
+                while curr <= effective_end:
+                    wd = curr.weekday()
+                    if wd == 6: # Sunday
+                        pass
+                    elif wd == 5: # Saturday
+                        day_num = curr.day
+                        sat_nth = (day_num - 1) // 7 + 1
+                        if saturday_policy == "FULL_OFF":
+                            pass
+                        elif saturday_policy == "HALF_WORKING":
+                            overlap_days += 0.5 * leave_multiplier
+                        elif saturday_policy == "SECOND_AND_FOURTH_OFF":
+                            if sat_nth not in [2, 4]:
+                                overlap_days += 1.0 * leave_multiplier
+                        elif saturday_policy == "ALTERNATE":
+                            if sat_nth in [1, 3, 5]:
+                                overlap_days += 1.0 * leave_multiplier
+                        else: # FULL_WORKING
+                            overlap_days += 1.0 * leave_multiplier
+                    else:
+                        overlap_days += 1.0 * leave_multiplier
+                    curr += timedelta(days=1)
                 
-                # Apply multiplier (FULL=1.0, HALF=0.5)
-                multiplier = 0.5 if getattr(lv, 'day_type', 'FULL') == 'HALF' else 1.0
-                total_leave_days += overlap_days * multiplier
-                month_leaves.append(lv)
+                if overlap_days > 0:
+                    total_leave_days += overlap_days
+                    month_leaves.append(lv)
 
-        return month_leaves, total_leave_days
+        return month_leaves, total_leave_days, total_working_days_in_month
 
     async def _get_incentive_data(self, user_id: PydanticObjectId, month_str: str, current_slip_id: PydanticObjectId = None):
         """Read all UNPAID incentive and slab bonuses for this user.
-        Groups them by month to provide a breakdown.
+        Splits them into prev_month and curr_month.
         """
         from app.modules.incentives.models import IncentiveSlip as IncSlip
         from beanie import PydanticObjectId as BsonId
         from beanie.operators import Or
+        from datetime import datetime
 
         uid = BsonId(str(user_id)) if not isinstance(user_id, BsonId) else user_id
 
-        # Find slips that are either:
-        # 1. Not linked to any salary slip (unpaid)
-        # 2. Linked to the current slip (for regeneration/preview of a draft)
         slips = await IncSlip.find(
             IncSlip.user_id == uid,
             Or(IncSlip.salary_slip_id == None, IncSlip.salary_slip_id == current_slip_id)
         ).to_list()
 
+        y, m = map(int, month_str.split('-'))
+        if m == 1:
+            prev_y, prev_m = y - 1, 12
+        else:
+            prev_y, prev_m = y, m - 1
+        prev_month_str = f"{prev_y}-{prev_m:02d}"
+
+        prev_inc = 0.0
+        prev_slab = 0.0
+        curr_inc = 0.0
+        curr_slab = 0.0
+        
         total_inc = 0.0
         total_bonus = 0.0
-        breakdown = {} # { period: amount }
+        breakdown = {}
 
         for s in slips:
             amt = (s.total_incentive or 0.0) - (s.slab_bonus_amount or 0.0)
             bonus = (s.slab_bonus_amount or 0.0)
             
+            if s.period == prev_month_str:
+                prev_inc += amt
+                prev_slab += bonus
+            elif s.period == month_str:
+                curr_inc += amt
+                curr_slab += bonus
+            else:
+                prev_inc += amt
+                prev_slab += bonus
+                
             total_inc += amt
             total_bonus += bonus
 
-            # Group for the UI breakdown (period string like 2026-04)
             period = s.period
             breakdown[period] = breakdown.get(period, 0.0) + amt
 
-        return round(total_inc, 2), round(total_bonus, 2), breakdown
+        return {
+            "prev_inc": round(prev_inc, 2),
+            "prev_slab": round(prev_slab, 2),
+            "curr_inc": round(curr_inc, 2),
+            "curr_slab": round(curr_slab, 2),
+            "total_inc": round(total_inc, 2),
+            "total_bonus": round(total_bonus, 2),
+            "breakdown": breakdown
+        }
 
-    def _compute_salary(self, base: float, unpaid_leaves: float, incentive_amount: float,
-                        slab_bonus: float, extra_deduction: float, days_in_month: int = 30):
-        """Standard Compute Engine for Salary Figures using actual days in month."""
-        daily_wage = base / days_in_month
-        gross_salary = daily_wage * max(0, days_in_month - unpaid_leaves)
+    def _compute_salary(self, base: float, unpaid_leaves: float, prev_inc: float, prev_slab: float, curr_inc: float, curr_slab: float, extra_deduction: float, total_working_days: float = 30):
+        """Standard Compute Engine for Salary Figures using actual working days."""
+        if total_working_days <= 0:
+            total_working_days = 30
+        daily_wage = base / total_working_days
+        days_worked = max(0, total_working_days - unpaid_leaves)
+        gross_salary = daily_wage * days_worked
         leave_deduction = round(daily_wage * unpaid_leaves, 2)
-        total_earnings = round(gross_salary + incentive_amount + slab_bonus, 2)
-        final_salary = round(total_earnings - extra_deduction, 2)
+        total_incentive = prev_inc + prev_slab + curr_inc + curr_slab
+        total_earnings = round(base + total_incentive, 2)
+        final_salary = round(total_earnings - leave_deduction - extra_deduction, 2)
         return {
             'daily_wage': daily_wage,
             'gross_salary': round(gross_salary, 2),
             'leave_deduction': leave_deduction,
             'total_earnings': total_earnings,
             'final_salary': final_salary,
-            'days_in_month': days_in_month
+            'total_working_days': total_working_days,
+            'days_worked': days_worked
         }
 
     # TODO: Implement MongoDB transactions for financial safety
@@ -122,34 +216,63 @@ class SalaryService:
             SalarySlip.month == salary_in.month,
             SalarySlip.is_deleted != True
         )
-        if existing:
-            raise HTTPException(status_code=400, detail="Salary slip already exists")
+        
+        # If the slip is confirmed, we prevent automatic overwrites. 
+        # The admin must revert it to draft manually first to prevent accidental payment overwrites.
+        if existing and existing.status == "CONFIRMED":
+            raise HTTPException(status_code=400, detail="Salary slip already CONFIRMED. Revert to draft first to recalculate.")
 
         year, month_num = map(int, salary_in.month.split('-'))
-        _, days_in_month = calendar.monthrange(year, month_num)
         
-        month_leaves, total_leave_days = await self._get_leave_data(salary_in.user_id, year, month_num)
-        resolved_inc, resolved_bonus, breakdown = await self._get_incentive_data(salary_in.user_id, salary_in.month)
+        month_leaves, total_leave_days, total_working_days = await self._get_leave_data(salary_in.user_id, year, month_num)
+        inc_data = await self._get_incentive_data(salary_in.user_id, salary_in.month)
         
         base = salary_in.base_salary if salary_in.base_salary is not None else (user.base_salary or 0.0)
-        calc = self._compute_salary(base, total_leave_days, resolved_inc, resolved_bonus, salary_in.extra_deduction, days_in_month)
+        calc = self._compute_salary(base, total_leave_days, 
+                                    inc_data["prev_inc"], inc_data["prev_slab"], 
+                                    inc_data["curr_inc"], inc_data["curr_slab"], 
+                                    salary_in.extra_deduction, total_working_days)
 
-        slip = SalarySlip(
-            user_id=salary_in.user_id,
-            month=salary_in.month,
-            base_salary=base,
-            paid_leaves=0.0,
-            unpaid_leaves=total_leave_days,
-            deduction_amount=salary_in.extra_deduction,
-            incentive_amount=resolved_inc,
-            slab_bonus=resolved_bonus,
-            incentive_breakdown=breakdown,
-            total_earnings=calc['total_earnings'],
-            final_salary=calc['final_salary'],
-            status="DRAFT",
-            generated_at=datetime.now(UTC).date()
-        )
-        await slip.insert()
+        if existing:
+            slip = existing
+            slip.base_salary = base
+            slip.unpaid_leaves = total_leave_days
+            slip.deduction_amount = salary_in.extra_deduction
+            slip.prev_month_incentive = inc_data["prev_inc"]
+            slip.prev_month_slab = inc_data["prev_slab"]
+            slip.curr_month_incentive = inc_data["curr_inc"]
+            slip.curr_month_slab = inc_data["curr_slab"]
+            slip.incentive_amount = inc_data["total_inc"]
+            slip.slab_bonus = inc_data["total_bonus"]
+            slip.incentive_breakdown = inc_data["breakdown"]
+            slip.total_earnings = calc['total_earnings']
+            slip.final_salary = calc['final_salary']
+            slip.status = "DRAFT"
+            slip.is_visible_to_employee = False
+            slip.generated_at = datetime.now(UTC).date()
+            await slip.save()
+        else:
+            slip = SalarySlip(
+                user_id=salary_in.user_id,
+                month=salary_in.month,
+                base_salary=base,
+                paid_leaves=0.0,
+                unpaid_leaves=total_leave_days,
+                deduction_amount=salary_in.extra_deduction,
+                prev_month_incentive=inc_data["prev_inc"],
+                prev_month_slab=inc_data["prev_slab"],
+                curr_month_incentive=inc_data["curr_inc"],
+                curr_month_slab=inc_data["curr_slab"],
+                incentive_amount=inc_data["total_inc"],
+                slab_bonus=inc_data["total_bonus"],
+                incentive_breakdown=inc_data["breakdown"],
+                total_earnings=calc['total_earnings'],
+                final_salary=calc['final_salary'],
+                status="DRAFT",
+                generated_at=datetime.now(UTC).date()
+            )
+            await slip.insert()
+            
         return await self._format_slip(slip)
 
     async def confirm_salary_slip(self, slip_id: PydanticObjectId, confirmed_by_id: PydanticObjectId):
@@ -241,6 +364,7 @@ class SalaryService:
         if not user:
             raise HTTPException(status_code=404, detail="User not found")
         year, month_num = map(int, month.split('-'))
+        import calendar
         _, days_in_month = calendar.monthrange(year, month_num)
         
         # Pull any existing draft to cross-reference currently linked incentives
@@ -252,23 +376,31 @@ class SalaryService:
         )
         current_slip_id = existing_draft.id if existing_draft else None
 
-        month_leaves, total_leave_days = await self._get_leave_data(user_id, year, month_num)
-        resolved_inc, resolved_bonus, breakdown = await self._get_incentive_data(user_id, month, current_slip_id=current_slip_id)
+        month_leaves, total_leave_days, total_working_days = await self._get_leave_data(user_id, year, month_num)
+        inc_data = await self._get_incentive_data(user_id, month, current_slip_id=current_slip_id)
         
         base = base_salary if base_salary is not None else (user.base_salary or 0.0)
-        calc = self._compute_salary(base, total_leave_days, resolved_inc, resolved_bonus, extra_deduction, days_in_month)
+        calc = self._compute_salary(base, total_leave_days, 
+                                    inc_data["prev_inc"], inc_data["prev_slab"], 
+                                    inc_data["curr_inc"], inc_data["curr_slab"], 
+                                    extra_deduction, total_working_days)
 
         res = await self._format_slip_base(user)
         res.update({
             "month": month,
             "base_salary": base,
             "total_leave_days": total_leave_days,
-            "working_days": max(0, days_in_month - total_leave_days),
+            "working_days": calc['total_working_days'],
+            "days_worked": calc['days_worked'],
             "days_in_month": days_in_month,
             "leave_deduction": calc['leave_deduction'],
-            "incentive_amount": resolved_inc,
-            "slab_bonus": resolved_bonus,
-            "incentive_breakdown": breakdown,
+            "prev_month_incentive": inc_data["prev_inc"],
+            "prev_month_slab": inc_data["prev_slab"],
+            "curr_month_incentive": inc_data["curr_inc"],
+            "curr_month_slab": inc_data["curr_slab"],
+            "incentive_amount": inc_data["total_inc"],
+            "slab_bonus": inc_data["total_bonus"],
+            "incentive_breakdown": inc_data["breakdown"],
             "total_earnings": calc['total_earnings'],
             "final_salary": calc['final_salary'],
             "extra_deduction": extra_deduction,
@@ -276,7 +408,7 @@ class SalaryService:
             "has_existing_slip": existing_draft is not None,
             "existing_slip_id": str(existing_draft.id) if existing_draft else None,
             "existing_slip_status": existing_draft.status if existing_draft else None,
-            **calc
+            "total_working_days_in_month": calc['total_working_days']
         })
         return res
 
@@ -299,22 +431,28 @@ class SalaryService:
             )
 
         year, month_num = map(int, salary_in.month.split('-'))
-        _, days_in_month = calendar.monthrange(year, month_num)
         
-        month_leaves, total_leave_days = await self._get_leave_data(salary_in.user_id, year, month_num)
+        month_leaves, total_leave_days, total_working_days = await self._get_leave_data(salary_in.user_id, year, month_num)
         
         # Fetch unlinked incentives + anything already linked to this slip
-        resolved_inc, resolved_bonus, breakdown = await self._get_incentive_data(slip.user_id, slip.month, current_slip_id=slip.id)
+        inc_data = await self._get_incentive_data(slip.user_id, slip.month, current_slip_id=slip.id)
         
         base = salary_in.base_salary if salary_in.base_salary is not None else (slip.base_salary or 0.0)
-        calc = self._compute_salary(base, total_leave_days, resolved_inc, resolved_bonus, salary_in.extra_deduction, days_in_month)
+        calc = self._compute_salary(base, total_leave_days, 
+                                    inc_data["prev_inc"], inc_data["prev_slab"], 
+                                    inc_data["curr_inc"], inc_data["curr_slab"], 
+                                    salary_in.extra_deduction, total_working_days)
 
         slip.base_salary = base
         slip.unpaid_leaves = total_leave_days
         slip.deduction_amount = salary_in.extra_deduction
-        slip.incentive_amount = resolved_inc
-        slip.slab_bonus = resolved_bonus
-        slip.incentive_breakdown = breakdown
+        slip.prev_month_incentive = inc_data["prev_inc"]
+        slip.prev_month_slab = inc_data["prev_slab"]
+        slip.curr_month_incentive = inc_data["curr_inc"]
+        slip.curr_month_slab = inc_data["curr_slab"]
+        slip.incentive_amount = inc_data["total_inc"]
+        slip.slab_bonus = inc_data["total_bonus"]
+        slip.incentive_breakdown = inc_data["breakdown"]
         slip.total_earnings = calc['total_earnings']
         slip.final_salary = calc['final_salary']
         # Regeneration always resets to DRAFT for review
@@ -334,23 +472,29 @@ class SalaryService:
             raise HTTPException(status_code=400, detail="Only DRAFT slips can be manually updated here")
 
         year, month_num = map(int, slip.month.split('-'))
-        _, days_in_month = calendar.monthrange(year, month_num)
 
         # Recalculate leaves and incentives completely so the preview figures match the updated draft!
-        month_leaves, total_leave_days = await self._get_leave_data(slip.user_id, year, month_num)
-        resolved_inc, resolved_bonus, breakdown = await self._get_incentive_data(slip.user_id, slip.month, current_slip_id=slip.id)
+        month_leaves, total_leave_days, total_working_days = await self._get_leave_data(slip.user_id, year, month_num)
+        inc_data = await self._get_incentive_data(slip.user_id, slip.month, current_slip_id=slip.id)
 
         # Handle overrides - use existing if not provided
         base = salary_in.base_salary if salary_in.base_salary is not None else (slip.base_salary or 0.0)
         
-        calc = self._compute_salary(base, total_leave_days, resolved_inc, resolved_bonus, salary_in.extra_deduction, days_in_month)
+        calc = self._compute_salary(base, total_leave_days, 
+                                    inc_data["prev_inc"], inc_data["prev_slab"], 
+                                    inc_data["curr_inc"], inc_data["curr_slab"], 
+                                    salary_in.extra_deduction, total_working_days)
         
         slip.base_salary = base
         slip.unpaid_leaves = total_leave_days
         slip.deduction_amount = salary_in.extra_deduction
-        slip.incentive_amount = resolved_inc
-        slip.slab_bonus = resolved_bonus
-        slip.incentive_breakdown = breakdown
+        slip.prev_month_incentive = inc_data["prev_inc"]
+        slip.prev_month_slab = inc_data["prev_slab"]
+        slip.curr_month_incentive = inc_data["curr_inc"]
+        slip.curr_month_slab = inc_data["curr_slab"]
+        slip.incentive_amount = inc_data["total_inc"]
+        slip.slab_bonus = inc_data["total_bonus"]
+        slip.incentive_breakdown = inc_data["breakdown"]
         slip.total_earnings = calc['total_earnings']
         slip.final_salary = calc['final_salary']
         
@@ -373,6 +517,17 @@ class SalaryService:
         if user:
             data["user_name"] = user.name or user.email
             data["employee_name"] = user.name or user.email
+            
+        try:
+            year, month_num = map(int, slip.month.split('-'))
+            total_working_days = await self._get_working_days_for_month(year, month_num)
+            data["total_working_days_in_month"] = total_working_days
+            daily_wage = (slip.base_salary or 0) / (total_working_days if total_working_days > 0 else 30)
+            data["leave_deduction"] = round(daily_wage * (slip.unpaid_leaves or 0), 2)
+        except:
+            data["total_working_days_in_month"] = 30
+            data["leave_deduction"] = 0.0
+
         return data
 
     async def revert_to_draft(self, slip_id: PydanticObjectId):
@@ -451,14 +606,24 @@ class SalaryService:
         year, month_num = map(int, slip.month.split('-'))
         _, days_in_month = calendar.monthrange(year, month_num)
 
+        _, _, total_working_days = await self._get_leave_data(slip.user_id, year, month_num)
+        working_days = max(0, total_working_days - float(slip.unpaid_leaves))
+        month_name = f"{calendar.month_name[month_num]} {year}"
+
         slab_bonus = slip.slab_bonus or 0.0
         incentive_amount = slip.incentive_amount or 0.0
         extra_deduction = slip.deduction_amount or 0.0
-        gross_earnings = round(slip.base_salary + incentive_amount + slab_bonus, 2)
-        total_deductions = round(gross_earnings - slip.final_salary, 2)
-        leave_deduction = round(total_deductions - extra_deduction, 2)
         
-        working_days = max(0, days_in_month - int(slip.unpaid_leaves))
+        base_salary = float(slip.base_salary or 0.0)
+        unpaid_leaves = float(slip.unpaid_leaves or 0.0)
+        paid_leaves = float(slip.paid_leaves or 0.0)
+        
+        daily_wage = base_salary / total_working_days if total_working_days > 0 else 0
+        leave_deduction = round(daily_wage * unpaid_leaves, 2)
+        
+        gross_salary = base_salary - leave_deduction
+        gross_earnings = round(base_salary + incentive_amount + slab_bonus, 2)
+        total_deductions = leave_deduction + extra_deduction
         month_name = f"{calendar.month_name[month_num]} {year}"
 
         raw_date = slip.confirmed_at or slip.generated_at
@@ -471,6 +636,9 @@ class SalaryService:
         designation = str(user.role).replace('_', ' ').title()
 
         def amount_in_words(amount: float) -> str:
+            if amount < 0:
+                return "Negative " + amount_in_words(abs(amount))
+            
             ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
                     "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen",
                     "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"]
@@ -485,7 +653,8 @@ class SalaryService:
 
             rupees = int(amount)
             paise = round((amount - rupees) * 100)
-            if rupees == 0: return "Zero Rupees Only"
+            if rupees == 0 and paise == 0: return "Zero Rupees Only"
+            
             result = ""
             if rupees >= 100000:
                 result += below_thousand(rupees // 100000) + "Lakh "
@@ -495,11 +664,13 @@ class SalaryService:
                 rupees %= 1000
             result += below_thousand(rupees)
             result = result.strip() + " Rupees"
-            if paise:
+            
+            if paise > 0:
                 result += f" and {below_thousand(paise).strip()} Paise"
+            
             return result + " Only"
 
-        net_in_words = amount_in_words(slip.final_salary)
+        net_in_words = amount_in_words(float(slip.final_salary or 0.0))
         status_str = slip.status if isinstance(slip.status, str) else slip.status.value
 
         if not slip.slip_no:
@@ -518,44 +689,44 @@ class SalaryService:
         company_phone = settings.payslip_phone if (settings and settings.payslip_phone) else _DEFAULT_PHONE
 
         incentive_rows_html = ""
-        breakdown = getattr(slip, "incentive_breakdown", None) or {}
         
-        if breakdown:
-            sorted_periods = sorted(breakdown.keys())
-            for period in sorted_periods:
-                amt = breakdown[period]
-                if amt <= 0: continue
-                try:
-                    py, pm = map(int, period.split('-'))
-                    p_name = f"{calendar.month_name[pm]} {py}"
-                except:
-                    p_name = period
-                
-                incentive_rows_html += f"""
-                <div class="pay-row">
-                    <div class="pay-desc">Incentive ({p_name})</div>
-                    <div class="pay-amt earn">&#8377;&nbsp;{amt:,.2f}</div>
-                </div>"""
-            
-            if slab_bonus > 0:
-                incentive_rows_html += f"""
-                <div class="pay-row">
-                    <div class="pay-desc">Slab Bonus</div>
-                    <div class="pay-amt earn">&#8377;&nbsp;{slab_bonus:,.2f}</div>
-                </div>"""
+        prev_inc = float(getattr(slip, "prev_month_incentive", 0.0) or 0.0)
+        prev_slab = float(getattr(slip, "prev_month_slab", 0.0) or 0.0)
+        curr_inc = float(getattr(slip, "curr_month_incentive", 0.0) or 0.0)
+        curr_slab = float(getattr(slip, "curr_month_slab", 0.0) or 0.0)
+        
+        if month_num == 1:
+            prev_year, prev_m_num = year - 1, 12
         else:
-            if incentive_amount > 0:
-                incentive_rows_html += f"""
-                <div class="pay-row">
-                    <div class="pay-desc">Performance Incentive</div>
-                    <div class="pay-amt earn">&#8377;&nbsp;{incentive_amount:,.2f}</div>
-                </div>"""
-            if slab_bonus > 0:
-                incentive_rows_html += f"""
-                <div class="pay-row">
-                    <div class="pay-desc">Slab Bonus</div>
-                    <div class="pay-amt earn">&#8377;&nbsp;{slab_bonus:,.2f}</div>
-                </div>"""
+            prev_year, prev_m_num = year, month_num - 1
+        
+        curr_m_name = f"{calendar.month_name[month_num]} {year}"
+        prev_m_name = f"{calendar.month_name[prev_m_num]} {prev_year}"
+        
+        if prev_inc > 0:
+            incentive_rows_html += f"""
+            <div class="pay-row">
+                <div class="pay-desc">Incentive ({prev_m_name})</div>
+                <div class="pay-amt earn">&#8377;&nbsp;{prev_inc:,.2f}</div>
+            </div>"""
+        if prev_slab > 0:
+            incentive_rows_html += f"""
+            <div class="pay-row">
+                <div class="pay-desc">Slab Bonus ({prev_m_name})</div>
+                <div class="pay-amt earn">&#8377;&nbsp;{prev_slab:,.2f}</div>
+            </div>"""
+        if curr_inc > 0:
+            incentive_rows_html += f"""
+            <div class="pay-row">
+                <div class="pay-desc">Incentive ({curr_m_name})</div>
+                <div class="pay-amt earn">&#8377;&nbsp;{curr_inc:,.2f}</div>
+            </div>"""
+        if curr_slab > 0:
+            incentive_rows_html += f"""
+            <div class="pay-row">
+                <div class="pay-desc">Slab Bonus ({curr_m_name})</div>
+                <div class="pay-amt earn">&#8377;&nbsp;{curr_slab:,.2f}</div>
+            </div>"""
 
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -643,7 +814,7 @@ class SalaryService:
         <div class="meta-cell"><div class="meta-lbl">Slip No.</div><div class="meta-val">{slip_no}</div></div>
         <div class="meta-cell"><div class="meta-lbl">Issue Date</div><div class="meta-val">{issue_date_str}</div></div>
         <div class="meta-cell"><div class="meta-lbl">Status</div><div class="meta-val {'s-confirmed' if status_str == 'CONFIRMED' else 's-draft'}">{'&#10003; PAID' if status_str == 'CONFIRMED' else '&#9679; DRAFT'}</div></div>
-        <div class="meta-cell"><div class="meta-lbl">Net Payable</div><div class="meta-val" style="color:#2563eb;">&#8377;&nbsp;{slip.final_salary:,.2f}</div></div>
+        <div class="meta-cell"><div class="meta-lbl">Net Payable</div><div class="meta-val" style="color:#2563eb;">&#8377;&nbsp;{float(slip.final_salary or 0.0):,.2f}</div></div>
     </div>
     <div class="section-box">
         <div class="section-hdr">Employee Details</div>
@@ -661,22 +832,22 @@ class SalaryService:
         </div>
     </div>
     <div class="att-strip">
-        <div class="att-cell"><div class="att-num">{days_in_month}</div><div class="att-lbl">Total Days</div></div>
-        <div class="att-cell"><div class="att-num">{working_days}</div><div class="att-lbl">Working Days</div></div>
-        <div class="att-cell"><div class="att-num green">{slip.paid_leaves}</div><div class="att-lbl">Paid Leaves</div></div>
-        <div class="att-cell"><div class="att-num red">{slip.unpaid_leaves}</div><div class="att-lbl">Unpaid Leaves</div></div>
+        <div class="att-cell"><div class="att-num">{total_working_days}</div><div class="att-lbl">Total Work Days</div></div>
+        <div class="att-cell"><div class="att-num">{working_days}</div><div class="att-lbl">Days Worked</div></div>
+        <div class="att-cell"><div class="att-num green">{paid_leaves}</div><div class="att-lbl">Paid Leaves</div></div>
+        <div class="att-cell"><div class="att-num red">{unpaid_leaves}</div><div class="att-lbl">Unpaid Leaves</div></div>
     </div>
     <div class="section-box">
         <div class="section-hdr">Earnings &amp; Deductions</div>
         <div class="pay-table-wrap">
             <div class="pay-col">
                 <div class="pay-col-hdr"><span>Earnings</span><span>Amount (&#8377;)</span></div>
-                <div class="pay-row"><div class="pay-desc">Basic Salary</div><div class="pay-amt earn">&#8377;&nbsp;{slip.base_salary:,.2f}</div></div>
+                <div class="pay-row"><div class="pay-desc">Basic Salary</div><div class="pay-amt earn">&#8377;&nbsp;{base_salary:,.2f}</div></div>
                 {incentive_rows_html}
             </div>
             <div class="pay-col">
                 <div class="pay-col-hdr"><span>Deductions</span><span>Amount (&#8377;)</span></div>
-                <div class="pay-row"><div class="pay-desc">Leave Deduction <small>{slip.unpaid_leaves} unpaid day(s)</small></div><div class="pay-amt ded">&#8377;&nbsp;{leave_deduction:,.2f}</div></div>
+                <div class="pay-row"><div class="pay-desc">Leave Deduction <small>{unpaid_leaves} unpaid day(s)</small></div><div class="pay-amt ded">&#8377;&nbsp;{leave_deduction:,.2f}</div></div>
                 <div class="pay-row"><div class="pay-desc">Other Deductions</div><div class="pay-amt ded">&#8377;&nbsp;{extra_deduction:,.2f}</div></div>
             </div>
         </div>
@@ -687,7 +858,7 @@ class SalaryService:
     </div>
     <div class="net-bar">
         <div><div class="net-words-lbl">Net Salary in Words</div><div class="net-words">{net_in_words}</div></div>
-        <div><div class="net-amt-lbl">Net Amount Payable</div><div class="net-amt">&#8377;&nbsp;{slip.final_salary:,.2f}</div></div>
+        <div><div class="net-amt-lbl">Net Amount Payable</div><div class="net-amt">&#8377;&nbsp;{float(slip.final_salary or 0.0):,.2f}</div></div>
     </div>
     <div class="sig-section">
         <div class="sig-line" style="margin-top: 40px;">Employee Signature</div>
@@ -697,7 +868,7 @@ class SalaryService:
     <div class="slip-footer">Computer generated document. No signature required.</div>
 </div>
 <div class="print-bar">
-    <button class="btn-close-w" onclick="window.close()">&#10005;&nbsp; Close</button>
+    <button class="btn-close-w" onclick="window.top.location.href='/frontend/template/salary.html'">&#10005;&nbsp; Close</button>
     <button class="btn-print" onclick="window.print()">&#128438;&nbsp; Print / Save as PDF</button>
 </div>
 </body>

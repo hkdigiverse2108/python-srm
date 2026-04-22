@@ -75,6 +75,15 @@ class SalaryPreviewResponse(MongoBaseSchema):
     working_days: float
     total_leave_days: float
     leave_deduction: float
+    
+    prev_month_incentive: float = 0.0
+    prev_month_slab: float = 0.0
+    curr_month_incentive: float = 0.0
+    curr_month_slab: float = 0.0
+    
+    total_working_days_in_month: int = 0
+    days_worked: float = 0.0
+    
     incentive_amount: float
     slab_bonus: float
     incentive_breakdown: typing.Dict[str, float] = {}
@@ -95,6 +104,12 @@ class SalarySlipRead(MongoBaseSchema):
     paid_leaves: float
     unpaid_leaves: float
     deduction_amount: float
+    
+    prev_month_incentive: float = 0.0
+    prev_month_slab: float = 0.0
+    curr_month_incentive: float = 0.0
+    curr_month_slab: float = 0.0
+    
     incentive_amount: float
     slab_bonus: float = 0.0
     total_earnings: float

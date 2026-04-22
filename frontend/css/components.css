@@ -317,8 +317,14 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.22s ease, visibility 0.22s ease;
-    padding-left: var(--current-sb-width, 0);
-    /* Offset centering to account for sidebar */
+    padding: 16px;
+    padding-left: calc(var(--current-sb-width, 0px) + 16px);
+}
+
+@media (max-width: 991.98px) {
+    .srm-overlay {
+        padding-left: 16px !important;
+    }
 }
 
 .srm-overlay.show {

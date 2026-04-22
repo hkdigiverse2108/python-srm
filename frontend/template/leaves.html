@@ -78,58 +78,54 @@
 
                 <!-- Summary Cards (admin view) -->
                 <div id="leave-summary-bar" class="row g-2 g-md-3 mb-4" style="display:none;">
-                    <div class="col-6 col-md-3">
-                        <div class="grid-card card-premium-stat variant-warning" style="padding: 24px 20px; border-radius: 12px; min-height: 100px;">
-                            <div class="d-flex align-items-center justify-content-center gap-3 h-100">
-                                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:48px;height:48px;background:var(--warning-light);border-radius:12px;">
-                                    <i class="bi bi-hourglass-split fs-5" style="color:var(--warning-text);"></i>
+                    <div class="col-6 col-xl-3">
+                        <div class="kpi-card h-100">
+                            <div class="d-flex align-items-center gap-3 w-100 kpi-inner-mobile">
+                                <div class="kpi-icon-wrapper icon-yellow" style="flex-shrink:0;">
+                                    <i class="bi bi-hourglass-split"></i>
                                 </div>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <div class="text-muted fw-bold" style="letter-spacing:0.05em; font-size:0.72rem; text-transform:uppercase; margin-bottom:2px; line-height:1;">PENDING</div>
-                                    <div class="fw-bold" style="color:var(--text-main); font-size:1.6rem; line-height:1;" id="sum-pending">0</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="grid-card card-premium-stat variant-success" style="padding: 24px 20px; border-radius: 12px; min-height: 100px;">
-                            <div class="d-flex align-items-center justify-content-center gap-3 h-100">
-                                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:48px;height:48px;background:var(--success-light);border-radius:12px;">
-                                    <i class="bi bi-check-circle fs-5" style="color:var(--success-text);"></i>
-                                </div>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <div class="text-muted fw-bold" style="letter-spacing:0.05em; font-size:0.72rem; text-transform:uppercase; margin-bottom:2px; line-height:1;">APPROVED</div>
-                                    <div class="fw-bold" style="color:var(--text-main); font-size:1.6rem; line-height:1;" id="sum-approved">0</div>
+                                <div class="flex-grow-1 kpi-text-container">
+                                    <div class="kpi-title">Pending</div>
+                                    <div class="kpi-value" id="sum-pending" style="color:var(--warning-text);">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="grid-card card-premium-stat variant-danger" style="padding: 24px 20px; border-radius: 12px; min-height: 100px;">
-                            <div class="d-flex align-items-center justify-content-center gap-3 h-100">
-                                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:48px;height:48px;background:var(--danger-light);border-radius:12px;">
-                                    <i class="bi bi-x-circle fs-5" style="color:var(--danger-text);"></i>
+                    <div class="col-6 col-xl-3">
+                        <div class="kpi-card h-100">
+                            <div class="d-flex align-items-center gap-3 w-100 kpi-inner-mobile">
+                                <div class="kpi-icon-wrapper icon-green" style="flex-shrink:0;">
+                                    <i class="bi bi-check-circle"></i>
                                 </div>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <div class="text-muted fw-bold" style="letter-spacing:0.05em; font-size:0.72rem; text-transform:uppercase; margin-bottom:2px; line-height:1;">REJECTED</div>
-                                    <div class="fw-bold" style="color:var(--text-main); font-size:1.6rem; line-height:1;" id="sum-rejected">0</div>
+                                <div class="flex-grow-1 kpi-text-container">
+                                    <div class="kpi-title">Approved</div>
+                                    <div class="kpi-value" id="sum-approved" style="color:var(--success-text);">0</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="grid-card card-premium-stat variant-primary" style="padding: 24px 20px; border-radius: 12px; min-height: 100px;">
-                            <div class="d-flex align-items-center justify-content-center gap-3 h-100">
-                                <div class="d-flex align-items-center justify-content-center flex-shrink-0"
-                                    style="width:48px;height:48px;background:var(--primary-light);border-radius:12px;">
-                                    <i class="bi bi-calendar-check fs-5" style="color:var(--primary);"></i>
+                    <div class="col-6 col-xl-3">
+                        <div class="kpi-card h-100">
+                            <div class="d-flex align-items-center gap-3 w-100 kpi-inner-mobile">
+                                <div class="kpi-icon-wrapper icon-red" style="flex-shrink:0;">
+                                    <i class="bi bi-x-circle"></i>
                                 </div>
-                                <div class="d-flex flex-column justify-content-center">
-                                    <div class="text-muted fw-bold" style="letter-spacing:0.05em; font-size:0.72rem; text-transform:uppercase; margin-bottom:2px; line-height:1;">TOTAL DAYS</div>
-                                    <div class="fw-bold" style="color:var(--text-main); font-size:1.6rem; line-height:1;" id="sum-total">0</div>
+                                <div class="flex-grow-1 kpi-text-container">
+                                    <div class="kpi-title">Rejected</div>
+                                    <div class="kpi-value" id="sum-rejected" style="color:var(--danger-text);">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-xl-3">
+                        <div class="kpi-card h-100">
+                            <div class="d-flex align-items-center gap-3 w-100 kpi-inner-mobile">
+                                <div class="kpi-icon-wrapper icon-blue" style="flex-shrink:0;">
+                                    <i class="bi bi-calendar-check"></i>
+                                </div>
+                                <div class="flex-grow-1 kpi-text-container">
+                                    <div class="kpi-title">Total Days</div>
+                                    <div class="kpi-value" id="sum-total" style="color:var(--primary);">0</div>
                                 </div>
                             </div>
                         </div>
@@ -143,13 +139,14 @@
 
                 <!-- Leaves Table -->
                 <div class="grid-card">
-                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom position-relative">
-                        <div class="d-flex align-items-center gap-3">
+                    <div
+                        class="d-flex justify-content-between align-items-center flex-wrap gap-3 p-3 border-bottom position-relative">
+                        <div class="d-flex align-items-center flex-wrap gap-3">
                             <h6 class="fw-bold mb-0" style="color:var(--text-main);"><i
                                     class="bi bi-list-check me-2 text-primary"></i>Leave Applications</h6>
                             <!-- Bulk Actions Bar (Admin Only) -->
                             <div id="bulk-actions-bar"
-                                class="d-none animate__animated animate__fadeIn d-flex align-items-center gap-2 px-3 py-1 bg-primary-soft border border-primary rounded-pill shadow-sm"
+                                class="d-none animate__animated animate__fadeIn d-flex align-items-center flex-wrap gap-2 px-3 py-1 bg-primary-soft border border-primary rounded-pill shadow-sm"
                                 style="transition: all 0.3s ease;">
                                 <span class="small fw-bold text-primary" id="selected-count">0 Selected</span>
                                 <div class="vr mx-1" style="height: 15px; opacity: 0.15;"></div>
@@ -208,8 +205,8 @@
 
     <!-- Apply Leave Modal -->
     <div class="srm-overlay" id="leaveModal">
-        <div class="srm-box d-flex flex-column"
-            style="max-width:560px; max-height:90vh; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
+        <div class="srm-box d-flex flex-column mx-3"
+            style="max-width:560px; width:calc(100% - 2rem); max-height:90vh; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
             <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center"
                 style="flex-shrink:0;">
                 <div class="d-flex align-items-center gap-3">
@@ -306,7 +303,8 @@
 
     <!-- Remarks Modal (Admin: Approve/Reject with remarks) -->
     <div class="srm-overlay" id="remarksModal" style="z-index: 1200;">
-        <div class="srm-box" style="max-width:480px; box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
+        <div class="srm-box mx-3"
+            style="max-width:480px; width:calc(100% - 2rem); box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);">
             <div class="p-4 border-bottom d-flex justify-content-between align-items-center" id="remarks-modal-header">
                 <div class="d-flex align-items-center gap-3">
                     <div id="remarks-icon-container"

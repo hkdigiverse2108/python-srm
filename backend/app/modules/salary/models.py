@@ -58,8 +58,14 @@ class SalarySlip(Document):
     paid_leaves: float = 0.0
     unpaid_leaves: float = 0.0
     deduction_amount: float = 0.0
-    incentive_amount: float = 0.0
-    slab_bonus: float = 0.0
+    
+    prev_month_incentive: float = 0.0
+    prev_month_slab: float = 0.0
+    curr_month_incentive: float = 0.0
+    curr_month_slab: float = 0.0
+    
+    incentive_amount: float = 0.0 # total
+    slab_bonus: float = 0.0 # total
     total_earnings: float = 0.0
     final_salary: float
     incentive_breakdown: Optional[dict] = None  # e.g. {"2026-04": 2000.0, "2026-05": 5000.0}

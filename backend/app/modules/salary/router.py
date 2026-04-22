@@ -415,8 +415,8 @@ async def get_all_salary_slips(
 async def get_my_salary_slips(
     current_user: User = Depends(staff_checker)
 ) -> Any:
-    # Non-admins only see CONFIRMED slips
-    return await SalaryService().get_user_salary_slips(current_user.id, show_drafts=False, only_visible=True)
+    # Non-admins see any slip that is explicitly made visible to them (Draft or Confirmed)
+    return await SalaryService().get_user_salary_slips(current_user.id, show_drafts=True, only_visible=True)
 
 @router.get("/salary/{user_id}", response_model=List[SalarySlipRead])
 async def get_user_salary_slips(
@@ -448,8 +448,8 @@ async def update_salary_slip_remarks(
     else:
         if slip.user_id != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
-        if slip.status != "CONFIRMED" or not slip.is_visible_to_employee:
-            raise HTTPException(status_code=400, detail="Remarks can be added only on visible confirmed slips")
+        if not slip.is_visible_to_employee:
+            raise HTTPException(status_code=400, detail="Remarks can be added only on visible slips")
         if employee_remarks is None:
             raise HTTPException(status_code=400, detail="employee_remarks is required")
         slip.employee_remarks = str(employee_remarks).strip() or None
@@ -499,11 +499,17 @@ async def get_salary_invoice(
     if not can_view_all and slip.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Access denied")
 
-    if current_user.role != UserRole.ADMIN and slip.status != "CONFIRMED":
-        raise HTTPException(status_code=403, detail="Slip not yet confirmed")
+    if current_user.role != UserRole.ADMIN and not slip.is_visible_to_employee:
+        raise HTTPException(status_code=403, detail="Slip is not visible to you yet")
 
-    html = await SalaryService().generate_invoice_html(slip_id)
-    return HTMLResponse(content=html)
+    try:
+        html = await SalaryService().generate_invoice_html(slip_id)
+        return HTMLResponse(content=html)
+    except Exception as e:
+        import traceback
+        print(f"Error generating salary invoice: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to generate invoice: {str(e)}")
 
 # ═══════════════════════════════════════════════════════
 # PAYSLIP COMPANY SETTINGS
