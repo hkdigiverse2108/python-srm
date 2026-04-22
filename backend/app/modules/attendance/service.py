@@ -450,7 +450,8 @@ class AttendanceService:
         start_date: Optional[date],
         end_date: Optional[date],
         reconcile: bool,
-        current_user: User
+        current_user: User,
+        status: Optional[str] = None
     ):
         if not end_date:
             end_date = AttendanceService.get_ist_today()
@@ -536,6 +537,9 @@ class AttendanceService:
                         day_status = "HALF"
 
                 day_leave_status = leave_map.get((uid_str, day))
+
+                if status and status.upper() != "ALL" and day_status != status.upper():
+                    continue
 
                 records.append({
                     "date":           day,
