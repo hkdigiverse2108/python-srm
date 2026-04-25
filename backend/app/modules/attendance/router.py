@@ -63,6 +63,7 @@ async def get_attendance_logs(
 async def get_attendance_summary(
     background_tasks: BackgroundTasks,
     user_id: Optional[PydanticObjectId] = Query(None),
+    status: Optional[str] = Query(None),
     start_date: Optional[dt_date] = Query(None),
     end_date: Optional[dt_date] = Query(None),
     reconcile: bool = Query(False),
@@ -100,7 +101,7 @@ async def get_attendance_summary(
             background_tasks.add_task(AttendanceService.reconcile_all_users, start_date, end_date, settings)
 
     return await AttendanceService.get_attendance_summary(
-        target_user, start_date, end_date, False, current_user
+        target_user, start_date, end_date, False, current_user, status
     )
 
 @router.get("/settings", response_model=AttendanceSettings)

@@ -2035,8 +2035,8 @@ input[type="password"]::-ms-clear {
     align-items: center;
     justify-content: space-between;
     padding: 12px 20px;
-    border-top: 1px solid var(--border-subtle);
-    background: var(--bg-app);
+    border-top: 1px solid var(--border);
+    background: var(--surface);
     border-radius: 0 0 14px 14px;
     flex-wrap: wrap;
     gap: 10px;
