@@ -436,6 +436,21 @@ class ReportService:
             },
             {
                 "$lookup": {
+                    "from": "srm_bills",
+                    "let": { "u_id": "$_id" },
+                    "pipeline": [
+                        { "$match": { 
+                            "$expr": { "$eq": ["$created_by_id", "$$u_id"] },
+                            "verified_at": { "$gte": start_dt, "$lte": end_dt },
+                            "invoice_status": "VERIFIED",
+                            "is_deleted": False
+                        }}
+                    ],
+                    "as": "bills"
+                }
+            },
+            {
+                "$lookup": {
                     "from": "srm_projects",
                     "localField": "_id",
                     "foreignField": "pm_id",
@@ -472,7 +487,12 @@ class ReportService:
                     "employee_code": 1,
                     "total_visits": {"$size": "$visits"},
                     "total_leads": {"$size": {"$filter": {"input": "$visits", "cond": {"$eq": ["$$this.status", "COMPLETED"]}}}},
-                    "revenue": {"$sum": "$payments.amount"},
+                    "revenue": {
+                        "$add": [
+                            {"$sum": "$payments.amount"},
+                            {"$sum": "$bills.amount"}
+                        ]
+                    },
                     "incentive_amt": {"$sum": "$incentive_slips.total_incentive"},
                     "total_projects": {"$size": {"$filter": {"input": "$all_projects", "cond": {"$eq": ["$$this.is_deleted", False]}}}},
                     "total_open_issues": {"$size": {"$filter": {"input": "$all_issues", "cond": {"$and": [{"$eq": ["$$this.status", "OPEN"]}, {"$eq": ["$$this.is_deleted", False]}]}}}}
