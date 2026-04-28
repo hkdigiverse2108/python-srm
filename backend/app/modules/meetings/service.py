@@ -259,14 +259,16 @@ class MeetingService:
         await db_meeting.save()
         return db_meeting
 
-    async def reschedule_meeting(self, meeting_id: PydanticObjectId, new_date: datetime, current_user: User, request: Request):
+    async def reschedule_meeting(self, meeting_id: PydanticObjectId, new_date: datetime, current_user: User, request: Request, start_time: Optional[str] = None, end_time: Optional[str] = None):
         """Reschedules a meeting, updates linked calendar events and notifies stakeholders."""
         db_meeting = await self.get_meeting(meeting_id)
         if not db_meeting: 
              raise HTTPException(status_code=404, detail="Meeting not found")
 
         db_meeting.date = new_date
-        db_meeting.status = GlobalTaskStatus.IN_PROGRESS
+        if start_time: db_meeting.start_time = start_time
+        if end_time: db_meeting.end_time = end_time
+        
         db_meeting.cancellation_reason = None
         db_meeting.reminder_sent = False
         await db_meeting.save()
@@ -274,7 +276,10 @@ class MeetingService:
         # Update linked Todo
         if db_meeting.todo_id:
             from app.modules.todos.models import Todo
-            await Todo.find(Todo.id == db_meeting.todo_id).update({"$set": {"due_date": new_date}})
+            update_fields = {"due_date": new_date}
+            if start_time: update_fields["start_time"] = start_time
+            if end_time: update_fields["end_time"] = end_time
+            await Todo.find(Todo.id == db_meeting.todo_id).update({"$set": update_fields})
 
         # Google Calendar Sync
         if db_meeting.calendar_event_id:

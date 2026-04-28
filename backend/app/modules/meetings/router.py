@@ -228,7 +228,9 @@ async def reschedule_meeting(
         meeting_id=meeting_id,
         new_date=reschedule_in.new_date,
         current_user=current_user,
-        request=request
+        request=request,
+        start_time=reschedule_in.start_time,
+        end_time=reschedule_in.end_time
     )
 
 
